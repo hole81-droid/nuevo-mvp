@@ -147,6 +147,67 @@ export interface Database {
           created_at?: string;
         };
       };
+      payout_requests: {
+        Row: {
+          id: string;
+          creator_id: string;
+          month: string;
+          amount_krw: number;
+          status: 'requested' | 'reviewing' | 'approved' | 'paid' | 'rejected';
+          requested_at: string;
+          processed_at: string | null;
+          rejection_reason: string | null;
+        };
+        Insert: {
+          id?: string;
+          creator_id: string;
+          month: string;
+          amount_krw: number;
+          status?: 'requested' | 'reviewing' | 'approved' | 'paid' | 'rejected';
+          requested_at?: string;
+          processed_at?: string | null;
+          rejection_reason?: string | null;
+        };
+        Update: {
+          id?: string;
+          creator_id?: string;
+          month?: string;
+          amount_krw?: number;
+          status?: 'requested' | 'reviewing' | 'approved' | 'paid' | 'rejected';
+          requested_at?: string;
+          processed_at?: string | null;
+          rejection_reason?: string | null;
+        };
+      };
+    };
+    Views: {
+      post_monthly_wes: {
+        Row: {
+          post_id: string;
+          author_id: string;
+          title: string;
+          content_type: ContentType;
+          month: string;
+          sessions: number;
+          minutes: number;
+          reactions: number;
+          comments: number;
+          remixes: number;
+          wes: number;
+        };
+      };
+      creator_monthly_wes: {
+        Row: {
+          author_id: string;
+          month: string;
+          sessions: number;
+          minutes: number;
+          reactions: number;
+          comments: number;
+          remixes: number;
+          wes: number;
+        };
+      };
     };
   };
 }
@@ -156,6 +217,9 @@ export type UserRow = Database['public']['Tables']['users']['Row'];
 export type PostRow = Database['public']['Tables']['posts']['Row'];
 export type NotificationRow = Database['public']['Tables']['notifications']['Row'];
 export type ExperienceEventRow = Database['public']['Tables']['experience_events']['Row'];
+export type PayoutRequestRow = Database['public']['Tables']['payout_requests']['Row'];
+export type PostMonthlyWesRow = Database['public']['Views']['post_monthly_wes']['Row'];
+export type CreatorMonthlyWesRow = Database['public']['Views']['creator_monthly_wes']['Row'];
 
 // PostRow with joined author
 export type PostWithAuthor = PostRow & { author: UserRow };

@@ -1,13 +1,25 @@
 import Link from 'next/link';
 import BottomNav from '@/components/layout/BottomNav';
 import RemixMap from '@/components/studio/RemixMap';
+import PayoutRequestPanel from '@/components/studio/PayoutRequestPanel';
+import TierSyncNotice from '@/components/studio/TierSyncNotice';
 import NuevoGlyph from '@/components/ui/NuevoGlyph';
-
-const MONTHLY_POOL = 10_000_000;
-const REVENUE_SHARE = 0.70;
+import { createClient } from '@/lib/supabase/server';
+import type { ContentType } from '@/lib/types';
+import type { CreatorMonthlyWesRow, PayoutRequestRow, PostMonthlyWesRow } from '@/lib/supabase/types';
+import {
+  calcWes,
+  getTierBySessions,
+  monthKey,
+  monthLabel,
+  MONTHLY_POOL,
+  PostWesBreakdown,
+  TIERS,
+  WES_WEIGHTS,
+  WesStats,
+} from '@/lib/wes';
 
 const MY_STATS = {
-  month: '2026년 5월',
   sessions: 8234,
   minutes: 3456,
   reactions: 3126,
@@ -15,62 +27,24 @@ const MY_STATS = {
   remixes: 89,
 };
 
-const WES_WEIGHTS = { sessions: 1.0, minutes: 0.8, reactions: 1.5, comments: 2.0, remixes: 5.0 };
-
-function calcWes(s: typeof MY_STATS) {
-  return (
-    s.sessions * WES_WEIGHTS.sessions +
-    s.minutes * WES_WEIGHTS.minutes +
-    s.reactions * WES_WEIGHTS.reactions +
-    s.comments * WES_WEIGHTS.comments +
-    s.remixes * WES_WEIGHTS.remixes
-  );
-}
-
-const TOTAL_WES = calcWes(MY_STATS);
-const TOTAL_PLATFORM_WES = 500_000;
-const MY_SHARE = TOTAL_WES / TOTAL_PLATFORM_WES;
-const ESTIMATED_REVENUE = Math.round(MONTHLY_POOL * REVENUE_SHARE * MY_SHARE);
-
-const TIERS = [
-  { id: 'seedling', label: '새싹',  badge: '✦',    minSessions: 500,     color: '#22C55E', track: 'bg-emerald-500' },
-  { id: 'growth',   label: '성장',  badge: '✦✦',   minSessions: 5_000,   color: '#3B82F6', track: 'bg-blue-500'    },
-  { id: 'pro',      label: '프로',  badge: '✦✦✦',  minSessions: 50_000,  color: '#8B5CF6', track: 'bg-purple-500'  },
-  { id: 'champion', label: '챔피언', badge: '✦✦✦✦', minSessions: 500_000, color: '#F59E0B', track: 'bg-amber-500'   },
-];
-
-const CURRENT_TIER_IDX = 1; // 성장
-const NEXT_TIER = TIERS[2];
-const TIER_PROGRESS = Math.min((MY_STATS.sessions / NEXT_TIER.minSessions) * 100, 100);
-
-const POST_BREAKDOWN = [
+const MOCK_POST_BREAKDOWN: PostWesBreakdown[] = [
   {
-    id: '1', kind: 'interactive' as const, title: '회의 내용 → 슬픈 밈 생성기',
+    id: '1', kind: 'interactive', title: '회의 내용 → 슬픈 밈 생성기',
     sessions: 1234, minutes: 892, reactions: 1137, comments: 124, remixes: 89,
   },
   {
-    id: 'A', kind: 'interactive' as const, title: '매운맛 GPT 면접관',
+    id: 'A', kind: 'interactive', title: '매운맛 GPT 면접관',
     sessions: 3560, minutes: 1244, reactions: 1234, comments: 0, remixes: 0,
   },
   {
-    id: 'B', kind: 'audio' as const, title: '내 영어 발음 세계지도',
+    id: 'B', kind: 'audio', title: '내 영어 발음 세계지도',
     sessions: 2340, minutes: 890, reactions: 567, comments: 0, remixes: 0,
   },
   {
-    id: 'C', kind: 'interactive' as const, title: '랜덤 직업 MBTI 분석기',
+    id: 'C', kind: 'interactive', title: '랜덤 직업 MBTI 분석기',
     sessions: 1100, minutes: 430, reactions: 188, comments: 0, remixes: 0,
   },
 ];
-
-function postWes(p: typeof POST_BREAKDOWN[0]) {
-  return (
-    p.sessions * WES_WEIGHTS.sessions +
-    p.minutes * WES_WEIGHTS.minutes +
-    p.reactions * WES_WEIGHTS.reactions +
-    p.comments * WES_WEIGHTS.comments +
-    p.remixes * WES_WEIGHTS.remixes
-  );
-}
 
 function fmt(n: number) {
   if (n >= 10000) return `${(n / 10000).toFixed(1)}만`;
@@ -83,13 +57,112 @@ function fmtKRW(n: number) {
   return `${n.toLocaleString()}원`;
 }
 
-export default function StudioPage() {
+type StudioData = {
+  month: string;
+  monthKey: string;
+  stats: WesStats;
+  platformWes: number;
+  postBreakdown: PostWesBreakdown[];
+  payoutRequest: PayoutRequestRow | null;
+  isLive: boolean;
+};
+
+function fallbackStudioData(): StudioData {
+  return {
+    month: monthLabel(),
+    monthKey: monthKey(),
+    stats: MY_STATS,
+    platformWes: 500_000,
+    postBreakdown: MOCK_POST_BREAKDOWN,
+    payoutRequest: null,
+    isLive: false,
+  };
+}
+
+async function getStudioData(): Promise<StudioData> {
+  const fallback = fallbackStudioData();
+  const supabase = await createClient();
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) return fallback;
+
+  const month = monthKey();
+  const { data: creatorRow }: { data: CreatorMonthlyWesRow | null } = await (supabase
+    .from('creator_monthly_wes') as any)
+    .select('*')
+    .eq('author_id', user.id)
+    .eq('month', month)
+    .maybeSingle();
+
+  const { data: platformRows }: { data: Pick<CreatorMonthlyWesRow, 'wes'>[] | null } = await (supabase
+    .from('creator_monthly_wes') as any)
+    .select('wes')
+    .eq('month', month);
+
+  const { data: postRows }: { data: PostMonthlyWesRow[] | null } = await (supabase
+    .from('post_monthly_wes') as any)
+    .select('*')
+    .eq('author_id', user.id)
+    .eq('month', month)
+    .order('wes', { ascending: false })
+    .limit(8);
+
+  const { data: payoutRequest }: { data: PayoutRequestRow | null } = await supabase
+    .from('payout_requests')
+    .select('*')
+    .eq('creator_id', user.id)
+    .eq('month', month)
+    .maybeSingle();
+
+  const platformWes = Math.max(
+    1,
+    (platformRows ?? []).reduce((sum, row) => sum + Number(row.wes ?? 0), 0),
+  );
+
+  const stats: WesStats = {
+    sessions: creatorRow?.sessions ?? 0,
+    minutes: creatorRow?.minutes ?? 0,
+    reactions: creatorRow?.reactions ?? 0,
+    comments: creatorRow?.comments ?? 0,
+    remixes: creatorRow?.remixes ?? 0,
+  };
+
+  return {
+    month: monthLabel(),
+    monthKey: month,
+    stats,
+    platformWes,
+    postBreakdown: (postRows ?? []).map((row) => ({
+      id: row.post_id,
+      title: row.title,
+      kind: row.content_type as ContentType,
+      sessions: row.sessions,
+      minutes: row.minutes,
+      reactions: row.reactions,
+      comments: row.comments,
+      remixes: row.remixes,
+    })),
+    payoutRequest,
+    isLive: true,
+  };
+}
+
+export default async function StudioPage() {
+  const studio = await getStudioData();
+  const totalWes = calcWes(studio.stats);
+  const myShare = studio.platformWes > 0 ? totalWes / studio.platformWes : 0;
+  const { current, currentIdx, next } = getTierBySessions(studio.stats.sessions);
+  const tierProgress = next.id === current.id
+    ? 100
+    : Math.min((studio.stats.sessions / next.minSessions) * 100, 100);
+  const estimatedRevenue = Math.round(MONTHLY_POOL * current.revenueShare * myShare);
+  const postBreakdown = studio.postBreakdown.length ? studio.postBreakdown : MOCK_POST_BREAKDOWN;
+
   const wesBreakdown = [
-    { label: '체험 세션', value: MY_STATS.sessions, weight: WES_WEIGHTS.sessions, score: MY_STATS.sessions * WES_WEIGHTS.sessions },
-    { label: '체험 시간(분)', value: MY_STATS.minutes, weight: WES_WEIGHTS.minutes, score: MY_STATS.minutes * WES_WEIGHTS.minutes },
-    { label: '반응', value: MY_STATS.reactions, weight: WES_WEIGHTS.reactions, score: MY_STATS.reactions * WES_WEIGHTS.reactions },
-    { label: '댓글', value: MY_STATS.comments, weight: WES_WEIGHTS.comments, score: MY_STATS.comments * WES_WEIGHTS.comments },
-    { label: '리믹스', value: MY_STATS.remixes, weight: WES_WEIGHTS.remixes, score: MY_STATS.remixes * WES_WEIGHTS.remixes },
+    { label: '체험 세션', value: studio.stats.sessions, weight: WES_WEIGHTS.sessions, score: studio.stats.sessions * WES_WEIGHTS.sessions },
+    { label: '체험 시간(분)', value: studio.stats.minutes, weight: WES_WEIGHTS.minutes, score: studio.stats.minutes * WES_WEIGHTS.minutes },
+    { label: '반응', value: studio.stats.reactions, weight: WES_WEIGHTS.reactions, score: studio.stats.reactions * WES_WEIGHTS.reactions },
+    { label: '댓글', value: studio.stats.comments, weight: WES_WEIGHTS.comments, score: studio.stats.comments * WES_WEIGHTS.comments },
+    { label: '리믹스', value: studio.stats.remixes, weight: WES_WEIGHTS.remixes, score: studio.stats.remixes * WES_WEIGHTS.remixes },
   ];
 
   return (
@@ -103,7 +176,9 @@ export default function StudioPage() {
         </Link>
         <div className="flex-1">
           <div className="font-bold text-[17px] text-gray-900">크리에이터 스튜디오</div>
-          <div className="text-[12px] text-gray-500">{MY_STATS.month} 기준</div>
+          <div className="text-[12px] text-gray-500">
+            {studio.month} 기준 · {studio.isLive ? '실 데이터' : '데모 데이터'}
+          </div>
         </div>
         <Link href="/guide" className="text-[12px] text-warm font-medium">
           수익 가이드
@@ -111,22 +186,23 @@ export default function StudioPage() {
       </header>
 
       <main className="flex-1 overflow-y-auto pb-[54px] scrollbar-hide">
+        <TierSyncNotice enabled={studio.isLive} />
 
         {/* Revenue summary cards */}
         <div className="p-4 grid grid-cols-3 gap-3">
           <div className="bg-[#F7F7F2] border-2 border-[#D8D8D0] rounded-[28px] p-3">
             <div className="text-[11px] text-gray-500 leading-tight">총 체험</div>
-            <div className="text-[22px] font-bold text-gray-900 mt-1">{fmt(MY_STATS.sessions)}</div>
+            <div className="text-[22px] font-bold text-gray-900 mt-1">{fmt(studio.stats.sessions)}</div>
             <div className="text-[11px] text-warm font-medium mt-0.5">회</div>
           </div>
           <div className="bg-[#F7F7F2] border-2 border-[#D8D8D0] rounded-[28px] p-3">
             <div className="text-[11px] text-gray-500 leading-tight">총 체험 시간</div>
-            <div className="text-[22px] font-bold text-gray-900 mt-1">{fmt(MY_STATS.minutes)}</div>
+            <div className="text-[22px] font-bold text-gray-900 mt-1">{fmt(studio.stats.minutes)}</div>
             <div className="text-[11px] text-blue-500 font-medium mt-0.5">분</div>
           </div>
           <div className="bg-[#F7F7F2] border-2 border-[#D8D8D0] rounded-[28px] p-3">
             <div className="text-[11px] text-gray-500 leading-tight">예상 수익</div>
-            <div className="text-[19px] font-bold text-gray-900 mt-1">{fmtKRW(ESTIMATED_REVENUE)}</div>
+            <div className="text-[19px] font-bold text-gray-900 mt-1">{fmtKRW(estimatedRevenue)}</div>
             <div className="text-[11px] text-emerald-600 font-medium mt-0.5">이번 달</div>
           </div>
         </div>
@@ -137,13 +213,13 @@ export default function StudioPage() {
             <div>
               <div className="text-[13px] text-gray-500">현재 등급</div>
               <div className="flex items-center gap-1.5 mt-0.5">
-                <span className="text-[20px] font-bold text-blue-600">✦✦</span>
-                <span className="text-[18px] font-bold text-gray-900">성장 파트너</span>
+                <span className="text-[20px] font-bold text-blue-600">{current.badge}</span>
+                <span className="text-[18px] font-bold text-gray-900">{current.label} 파트너</span>
               </div>
             </div>
             <div className="text-right">
               <div className="text-[13px] text-gray-500">수익 배분율</div>
-              <div className="text-[24px] font-bold text-blue-600">70%</div>
+              <div className="text-[24px] font-bold text-blue-600">{Math.round(current.revenueShare * 100)}%</div>
             </div>
           </div>
 
@@ -151,23 +227,25 @@ export default function StudioPage() {
           <div className="mt-2">
             <div className="flex justify-between text-[12px] text-gray-500 mb-1.5">
               <span>프로 파트너까지</span>
-              <span className="font-medium text-gray-700">{fmt(MY_STATS.sessions)} / {fmt(NEXT_TIER.minSessions)} 체험</span>
+              <span className="font-medium text-gray-700">{fmt(studio.stats.sessions)} / {fmt(next.minSessions)} 체험</span>
             </div>
             <div className="h-2 bg-blue-100 rounded-full overflow-hidden">
               <div
                 className="h-full bg-blue-500 rounded-full transition-all"
-                style={{ width: `${TIER_PROGRESS}%` }}
+                style={{ width: `${tierProgress}%` }}
               />
             </div>
             <div className="text-[11px] text-blue-500 mt-1.5 font-medium">
-              {fmt(NEXT_TIER.minSessions - MY_STATS.sessions)}회 더 → 수익 배분 75%로 상승
+              {next.id === current.id
+                ? '최상위 파트너 등급입니다'
+                : `${fmt(Math.max(0, next.minSessions - studio.stats.sessions))}회 더 → 수익 배분 ${Math.round(next.revenueShare * 100)}%로 상승`}
             </div>
           </div>
 
           {/* All tiers */}
           <div className="flex gap-1 mt-3">
             {TIERS.map((tier, i) => (
-              <div key={tier.id} className={`flex-1 text-center py-1.5 rounded-lg text-[11px] font-bold ${i === CURRENT_TIER_IDX ? 'bg-blue-500 text-white' : i < CURRENT_TIER_IDX ? 'bg-blue-200 text-blue-700' : 'bg-white/60 text-gray-400'}`}>
+              <div key={tier.id} className={`flex-1 text-center py-1.5 rounded-lg text-[11px] font-bold ${i === currentIdx ? 'bg-blue-500 text-white' : i < currentIdx ? 'bg-blue-200 text-blue-700' : 'bg-white/60 text-gray-400'}`}>
                 {tier.badge}<br/>{tier.label}
               </div>
             ))}
@@ -178,11 +256,11 @@ export default function StudioPage() {
         <div className="mx-4 mb-4">
           <div className="flex items-center justify-between mb-3">
             <h2 className="text-[16px] font-bold text-gray-900">WES 점수 분해</h2>
-            <span className="text-[13px] font-bold text-warm">{Math.round(TOTAL_WES).toLocaleString()} WES</span>
+            <span className="text-[13px] font-bold text-warm">{Math.round(totalWes).toLocaleString()} WES</span>
           </div>
           <div className="rounded-[28px] border-2 border-[#D8D8D0] overflow-hidden bg-[#F7F7F2]">
             {wesBreakdown.map((item, i) => {
-              const pct = (item.score / TOTAL_WES) * 100;
+              const pct = totalWes > 0 ? (item.score / totalWes) * 100 : 0;
               return (
                 <div key={i} className={`px-4 py-3 ${i < wesBreakdown.length - 1 ? 'border-b border-gray-50' : ''}`}>
                   <div className="flex items-center justify-between mb-1.5">
@@ -203,11 +281,11 @@ export default function StudioPage() {
             })}
             <div className="px-4 py-3 bg-orange-50 border-t border-orange-100 flex justify-between">
               <span className="text-[13px] font-bold text-warm">플랫폼 전체 대비 내 비중</span>
-              <span className="text-[13px] font-bold text-warm">{(MY_SHARE * 100).toFixed(2)}%</span>
+              <span className="text-[13px] font-bold text-warm">{(myShare * 100).toFixed(2)}%</span>
             </div>
           </div>
           <div className="mt-2 text-[12px] text-gray-400 text-center">
-            플랫폼 월 배분 {(MONTHLY_POOL / 10000).toLocaleString()}만원 × 70% × {(MY_SHARE * 100).toFixed(2)}% = {fmtKRW(ESTIMATED_REVENUE)}
+            플랫폼 월 배분 {(MONTHLY_POOL / 10000).toLocaleString()}만원 × {Math.round(current.revenueShare * 100)}% × {(myShare * 100).toFixed(2)}% = {fmtKRW(estimatedRevenue)}
           </div>
         </div>
 
@@ -215,11 +293,11 @@ export default function StudioPage() {
         <div className="mx-4 mb-4">
           <h2 className="text-[16px] font-bold text-gray-900 mb-3">작품별 WES</h2>
           <div className="flex flex-col gap-2">
-            {POST_BREAKDOWN.map((p) => {
-              const wes = postWes(p);
-              const maxWes = Math.max(...POST_BREAKDOWN.map(postWes));
+            {postBreakdown.map((p) => {
+              const wes = calcWes(p);
+              const maxWes = Math.max(1, ...postBreakdown.map(calcWes));
               const barPct = (wes / maxWes) * 100;
-              const postRevenue = Math.round(MONTHLY_POOL * REVENUE_SHARE * (wes / TOTAL_PLATFORM_WES));
+              const postRevenue = Math.round(MONTHLY_POOL * current.revenueShare * (wes / studio.platformWes));
               return (
                 <div key={p.id} className="bg-[#F7F7F2] border-2 border-[#D8D8D0] rounded-[28px] p-3">
                   <div className="flex items-center gap-2 mb-2">
@@ -250,19 +328,11 @@ export default function StudioPage() {
         {/* Remix Map */}
         <RemixMap />
 
-        {/* Payout info */}
-        <div className="mx-4 mb-6 p-4 rounded-[28px] bg-[#F7F7F2] border-2 border-[#D8D8D0]">
-          <div className="text-[14px] font-bold text-gray-900 mb-2">정산 안내</div>
-          <div className="text-[13px] text-gray-600 leading-relaxed space-y-1">
-            <div>· 매월 말일 기준 WES 집계</div>
-            <div>· 다음 달 15일 등록 계좌로 자동 입금</div>
-            <div>· 최소 출금액: 10,000원 (미달 시 이월)</div>
-            <div>· 리믹스 수익 (+10%)은 별도 정산</div>
-          </div>
-          <button className="mt-3 w-full py-3 rounded-full bg-black text-white text-[14px] font-black tracking-[-0.04em] hover:bg-gray-800 transition-colors">
-            출금 계좌 등록하기
-          </button>
-        </div>
+        <PayoutRequestPanel
+          month={studio.monthKey}
+          amountKrw={estimatedRevenue}
+          existingRequest={studio.payoutRequest}
+        />
 
       </main>
 

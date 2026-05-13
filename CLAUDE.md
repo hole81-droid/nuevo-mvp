@@ -78,6 +78,11 @@ users(id, email, handle, display_name, avatar_emoji, avatar_bg, bio, partner_tie
 posts(id, author_id, title, text, content_type, iframe_url, cover_emoji, bg_gradient, remixable, remix_of)
 notifications(id, recipient_id, type, actor_id, post_id, remix_post_id, read)
 experience_events(id, post_id, viewer_id, client_session_id, started_at, ended_at, duration_seconds)
+payout_requests(id, creator_id, month, amount_krw, status, requested_at, processed_at, rejection_reason)
+
+views:
+post_monthly_wes(post_id, author_id, title, content_type, month, sessions, minutes, reactions, comments, remixes, wes)
+creator_monthly_wes(author_id, month, sessions, minutes, reactions, comments, remixes, wes)
 ```
 
 전체 DDL: `supabase/schema.sql`
@@ -111,6 +116,18 @@ const [expandedId, setExpandedId] = useState<string | null>(null);
 ```
 
 `InteractiveDemo`는 iframe `onLoad` 시 `experience_events`에 세션을 만들고, 접힘/unmount/visibility hidden 시 `duration_seconds`를 업데이트한다. 피드/탐색/프로필 서버 조회는 `getExperienceMetrics()`로 세션 수와 체험 시간을 집계한다.
+
+### WES 집계
+
+WES 계산 상수와 티어 로직은 `src/lib/wes.ts`에 둔다. Supabase SQL view `post_monthly_wes`, `creator_monthly_wes`가 월간 집계를 담당하고, `/studio`는 현재 로그인 유저의 view row를 읽어 예상 수익을 계산한다.
+
+### 정산 요청
+
+정산 정책은 `src/lib/payout.ts`에 둔다. MVP에서는 실제 송금이 아니라 `payout_requests`에 월별 정산 요청을 남기고 상태(`requested`, `reviewing`, `approved`, `paid`, `rejected`)를 추적한다. `POST /api/payout-requests`는 로그인 유저만 호출 가능하며, 같은 달 중복 요청과 10,000원 미만 요청을 막는다.
+
+### 티어 자동 승급
+
+티어 기준은 `src/lib/wes.ts`의 `TIERS`를 단일 출처로 사용한다. `POST /api/tier-sync`는 현재 월 `creator_monthly_wes.sessions`를 기준으로 계산한 티어가 `users.partner_tier`보다 높을 때만 승급시키고 `tier_up` 알림을 생성한다. `/studio`는 진입 시 `TierSyncNotice`를 통해 이 API를 호출한다.
 
 ### 컨텐츠 타입
 | 타입 | 컬러 | 표시 방식 |

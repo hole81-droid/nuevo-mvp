@@ -83,12 +83,31 @@ create index experience_events_viewer_idx on public.experience_events(viewer_id,
 create index experience_events_session_idx on public.experience_events(client_session_id);
 
 -- ============================================================
--- 5. Row Level Security (RLS)
+-- 5. 정산 요청
+-- ============================================================
+create table public.payout_requests (
+  id              uuid primary key default uuid_generate_v4(),
+  creator_id      uuid references public.users(id) on delete cascade not null,
+  month           date not null,
+  amount_krw      integer not null check (amount_krw >= 0),
+  status          text not null default 'requested' check (status in ('requested', 'reviewing', 'approved', 'paid', 'rejected')),
+  requested_at    timestamptz not null default now(),
+  processed_at    timestamptz,
+  rejection_reason text,
+  unique (creator_id, month)
+);
+
+create index payout_requests_creator_idx on public.payout_requests(creator_id, requested_at desc);
+create index payout_requests_status_idx on public.payout_requests(status, requested_at desc);
+
+-- ============================================================
+-- 6. Row Level Security (RLS)
 -- ============================================================
 alter table public.users         enable row level security;
 alter table public.posts         enable row level security;
 alter table public.notifications enable row level security;
 alter table public.experience_events enable row level security;
+alter table public.payout_requests enable row level security;
 
 -- users: 누구나 읽기 / 본인만 쓰기
 create policy "users_select_all"
@@ -135,8 +154,72 @@ create policy "experience_events_insert_public"
 create policy "experience_events_update_public"
   on public.experience_events for update using (true);
 
+-- payout_requests: 창작자는 본인 요청만 읽기/생성, 처리는 관리자/service role에서 수행
+create policy "payout_requests_select_own"
+  on public.payout_requests for select using (auth.uid() = creator_id);
+
+create policy "payout_requests_insert_own"
+  on public.payout_requests for insert with check (auth.uid() = creator_id);
+
 -- ============================================================
--- 6. 신규 가입 시 users 행 자동 생성 트리거
+-- 7. WES 월별 집계 View
+-- ============================================================
+create or replace view public.post_monthly_wes as
+with event_rollup as (
+  select
+    post_id,
+    date_trunc('month', started_at)::date as month,
+    count(*)::integer as sessions,
+    ceil(coalesce(sum(duration_seconds), 0) / 60.0)::integer as minutes
+  from public.experience_events
+  group by post_id, date_trunc('month', started_at)::date
+),
+remix_rollup as (
+  select
+    remix_of as post_id,
+    date_trunc('month', created_at)::date as month,
+    count(*)::integer as remixes
+  from public.posts
+  where remix_of is not null
+  group by remix_of, date_trunc('month', created_at)::date
+)
+select
+  p.id as post_id,
+  p.author_id,
+  p.title,
+  p.content_type,
+  coalesce(e.month, r.month, date_trunc('month', p.created_at)::date) as month,
+  coalesce(e.sessions, 0)::integer as sessions,
+  coalesce(e.minutes, 0)::integer as minutes,
+  0::integer as reactions,
+  0::integer as comments,
+  coalesce(r.remixes, 0)::integer as remixes,
+  (
+    coalesce(e.sessions, 0) * 1.0 +
+    coalesce(e.minutes, 0) * 0.8 +
+    0 * 1.5 +
+    0 * 2.0 +
+    coalesce(r.remixes, 0) * 5.0
+  )::numeric(12, 2) as wes
+from public.posts p
+left join event_rollup e on e.post_id = p.id
+left join remix_rollup r on r.post_id = p.id and r.month = coalesce(e.month, r.month);
+
+create or replace view public.creator_monthly_wes as
+select
+  author_id,
+  month,
+  sum(sessions)::integer as sessions,
+  sum(minutes)::integer as minutes,
+  sum(reactions)::integer as reactions,
+  sum(comments)::integer as comments,
+  sum(remixes)::integer as remixes,
+  sum(wes)::numeric(12, 2) as wes
+from public.post_monthly_wes
+group by author_id, month;
+
+-- ============================================================
+-- 8. 신규 가입 시 users 행 자동 생성 트리거
 -- ============================================================
 create or replace function public.handle_new_user()
 returns trigger
