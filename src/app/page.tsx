@@ -1,65 +1,87 @@
-import Image from "next/image";
+import Link from 'next/link';
+import { mockPosts } from '@/lib/mock-data';
+import FeedClient from '@/components/feed/FeedClient';
+import BottomNav from '@/components/layout/BottomNav';
+import OnboardingBanner from '@/components/feed/OnboardingBanner';
+import { createClient } from '@/lib/supabase/server';
+import { mapDbPostToPost } from '@/lib/post-mapper';
+import NuevoGlyph from '@/components/ui/NuevoGlyph';
+import { applyExperienceMetrics, getExperienceMetrics } from '@/lib/experience-metrics';
 
-export default function Home() {
+export const dynamic = 'force-dynamic';
+
+async function getFeedPosts() {
+  const supabase = await createClient();
+  const { data, error } = await supabase
+    .from('posts')
+    .select('*, author:users(*)')
+    .order('created_at', { ascending: false })
+    .limit(50);
+
+  if (error) return mockPosts;
+  if (!data?.length) return [];
+
+  const ids = data.map((post: any) => post.id);
+  const { data: remixRows } = await supabase
+    .from('posts')
+    .select('remix_of')
+    .in('remix_of', ids);
+  const remixCounts = new Map<string, number>();
+  (remixRows as any[] | null ?? []).forEach((row) => {
+    if (!row.remix_of) return;
+    remixCounts.set(row.remix_of, (remixCounts.get(row.remix_of) ?? 0) + 1);
+  });
+
+  const posts = data.map((post: any) => mapDbPostToPost(post, { remixCount: remixCounts.get(post.id) ?? 0 }));
+  const metrics = await getExperienceMetrics(supabase, posts.map((post) => post.id));
+  return applyExperienceMetrics(posts, metrics);
+}
+
+export default async function FeedPage() {
+  const posts = await getFeedPosts();
+
   return (
-    <div className="flex flex-col flex-1 items-center justify-center bg-zinc-50 font-sans dark:bg-black">
-      <main className="flex flex-1 w-full max-w-3xl flex-col items-center justify-between py-32 px-16 bg-white dark:bg-black sm:items-start">
-        <Image
-          className="dark:invert"
-          src="/next.svg"
-          alt="Next.js logo"
-          width={100}
-          height={20}
-          priority
-        />
-        <div className="flex flex-col items-center gap-6 text-center sm:items-start sm:text-left">
-          <h1 className="max-w-xs text-3xl font-semibold leading-10 tracking-tight text-black dark:text-zinc-50">
-            To get started, edit the page.tsx file.
-          </h1>
-          <p className="max-w-md text-lg leading-8 text-zinc-600 dark:text-zinc-400">
-            Looking for a starting point or more instructions? Head over to{" "}
-            <a
-              href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Templates
-            </a>{" "}
-            or the{" "}
-            <a
-              href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Learning
-            </a>{" "}
-            center.
-          </p>
+    <div className="flex flex-col h-full max-w-[430px] mx-auto">
+      {/* Top bar */}
+      <header className="sticky top-0 z-40 bg-white/90 backdrop-blur-sm border-b border-gray-100">
+        <div className="flex items-center justify-between px-4 h-[53px]">
+          <Link href="/profile/me">
+            <NuevoGlyph kind="profile" size={34} />
+          </Link>
+          <span className="text-[21px] font-black tracking-[-0.07em] uppercase">
+            NUEVO
+          </span>
+          <Link href="/brand" className="w-8 h-8 flex items-center justify-center text-gray-500 rounded-full hover:bg-gray-100" title="브랜드 파트너십">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
+              <line x1="4" y1="6" x2="20" y2="6" />
+              <line x1="4" y1="12" x2="20" y2="12" />
+              <line x1="4" y1="18" x2="20" y2="18" />
+            </svg>
+          </Link>
         </div>
-        <div className="flex flex-col gap-4 text-base font-medium sm:flex-row">
-          <a
-            className="flex h-12 w-full items-center justify-center gap-2 rounded-full bg-foreground px-5 text-background transition-colors hover:bg-[#383838] dark:hover:bg-[#ccc] md:w-[158px]"
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <Image
-              className="dark:invert"
-              src="/vercel.svg"
-              alt="Vercel logomark"
-              width={16}
-              height={16}
-            />
-            Deploy Now
-          </a>
-          <a
-            className="flex h-12 w-full items-center justify-center rounded-full border border-solid border-black/[.08] px-5 transition-colors hover:border-transparent hover:bg-black/[.04] dark:border-white/[.145] dark:hover:bg-[#1a1a1a] md:w-[158px]"
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Documentation
-          </a>
-        </div>
+
+      </header>
+
+      {/* Feed */}
+      <main className="flex-1 overflow-y-auto pb-[54px] scrollbar-hide">
+        <OnboardingBanner />
+        {posts.length ? (
+          <FeedClient posts={posts} />
+        ) : (
+          <div className="px-6 py-16 text-center">
+            <NuevoGlyph kind="spark" size={64} />
+            <div className="mt-3 text-[20px] font-black tracking-[-0.05em] text-gray-900">아직 올라온 앱이 없어요</div>
+            <p className="mt-2 text-[14px] text-gray-500 leading-relaxed">
+              첫 번째 AI 앱 URL을 올리고 바로 놀아보는 피드를 시작해보세요.
+            </p>
+            <Link href="/upload" className="mt-5 inline-flex px-6 py-3 rounded-full bg-black text-white text-[14px] font-black tracking-[-0.04em] shadow-[0_18px_28px_rgba(0,0,0,0.16)]">
+              첫 앱 올리기
+            </Link>
+          </div>
+        )}
       </main>
+
+      <BottomNav />
     </div>
   );
 }
