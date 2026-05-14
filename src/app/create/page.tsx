@@ -42,7 +42,6 @@ export default function CreatePage() {
   const [selectedType, setSelectedType] = useState<ContentType | null>(null);
   const [prompt, setPrompt] = useState('');
   const [generating, setGenerating] = useState(false);
-  const [generated, setGenerated] = useState(false);
   const [generatedTitle, setGeneratedTitle] = useState('');
   const [postTitle, setPostTitle] = useState('');
   const [postDesc, setPostDesc] = useState('');
@@ -55,10 +54,9 @@ export default function CreatePage() {
 
     setTimeout(() => {
       const titles = MOCK_TITLES[selectedType];
-      const title = titles[Math.floor(Math.random() * titles.length)];
+      const title = titles[prompt.trim().length % titles.length];
       setGeneratedTitle(title);
       setGenerating(false);
-      setGenerated(true);
     }, 2800);
   };
 

@@ -1,7 +1,7 @@
 import type { Author, Post } from './types';
 import type { PostRow, UserRow } from './supabase/types';
 
-type DbPostWithAuthor = PostRow & {
+export type DbPostWithAuthor = PostRow & {
   author?: UserRow | null;
   users?: UserRow | null;
 };

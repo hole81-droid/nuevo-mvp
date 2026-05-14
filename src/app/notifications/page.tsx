@@ -7,6 +7,7 @@ import { useNotifications } from '@/contexts/NotificationContext';
 import { useAuth } from '@/contexts/AuthContext';
 import { createClient } from '@/lib/supabase/client';
 import NuevoGlyph from '@/components/ui/NuevoGlyph';
+import type { NotificationRow, PostRow, UserRow } from '@/lib/supabase/types';
 
 type NotifType = 'like' | 'remix' | 'follow' | 'comment' | 'reaction' | 'revenue' | 'tier_up' | 'remix_revenue';
 
@@ -55,8 +56,6 @@ const NOTIFICATIONS: Notif[] = [
   { id: '7', type: 'like', actorEmoji: '🎨', actorName: '민지', actorHandle: 'minji_draws', actorBg: '#FFEEDD', postTitle: '회의 내용 → 슬픈 밈 생성기', postId: '1', time: '2일', read: true },
   { id: '8', type: 'remix', actorEmoji: '🌊', actorName: '예솔', actorHandle: 'yesol_ai', actorBg: '#E0F0FF', postTitle: '회의 내용 → 슬픈 밈 생성기', postId: '1', time: '3일', read: true },
 ];
-
-const unread = NOTIFICATIONS.filter((n) => !n.read).length;
 
 function fmtKRW(n: number) {
   return n >= 10000 ? `${(n / 10000).toFixed(1)}만원` : `${n.toLocaleString()}원`;
@@ -200,7 +199,7 @@ export default function NotificationsPage() {
         .limit(20);
 
       if (!data?.length) return;
-      const rows = data as any[];
+      const rows = data as NotificationRow[];
 
       const actorIds = Array.from(new Set(rows.map((n) => n.actor_id).filter(Boolean))) as string[];
       const postIds = Array.from(new Set(rows.map((n) => n.post_id).filter(Boolean))) as string[];
@@ -214,8 +213,8 @@ export default function NotificationsPage() {
           : Promise.resolve({ data: [] }),
       ]);
 
-      const actorRows = (actors ?? []) as any[];
-      const postRows = (posts ?? []) as any[];
+      const actorRows = (actors ?? []) as UserRow[];
+      const postRows = (posts ?? []) as PostRow[];
       const actorById = new Map(actorRows.map((actor) => [actor.id, actor]));
       const postById = new Map(postRows.map((post) => [post.id, post]));
 

@@ -50,7 +50,7 @@ export default function EmotionComfort() {
 
   const handleSelect = (label: string) => {
     setSelected(label);
-    setMsgIdx(Math.floor(Math.random() * 3));
+    setMsgIdx(label.length % 3);
   };
 
   const handleNext = () => setMsgIdx((i) => (i + 1) % 3);

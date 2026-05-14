@@ -24,8 +24,8 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: '정산 월 형식이 올바르지 않습니다.' }, { status: 400 });
   }
 
-  const { data: existing }: { data: Pick<PayoutRequestRow, 'id' | 'status'> | null } = await (supabase
-    .from('payout_requests') as any)
+  const { data: existing }: { data: Pick<PayoutRequestRow, 'id' | 'status'> | null } = await supabase
+    .from('payout_requests')
     .select('id,status')
     .eq('creator_id', user.id)
     .eq('month', month)
@@ -36,13 +36,13 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: eligibility.reason }, { status: 400 });
   }
 
-  const { data, error }: { data: PayoutRequestRow | null; error: { message: string } | null } = await (supabase
-    .from('payout_requests') as any)
+  const { data, error }: { data: PayoutRequestRow | null; error: { message: string } | null } = await supabase
+    .from('payout_requests')
     .insert({
       creator_id: user.id,
       month,
       amount_krw: amountKrw,
-    })
+    } as never)
     .select('*')
     .single();
 

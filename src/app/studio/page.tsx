@@ -86,20 +86,20 @@ async function getStudioData(): Promise<StudioData> {
   if (!user) return fallback;
 
   const month = monthKey();
-  const { data: creatorRow }: { data: CreatorMonthlyWesRow | null } = await (supabase
-    .from('creator_monthly_wes') as any)
+  const { data: creatorRow }: { data: CreatorMonthlyWesRow | null } = await supabase
+    .from('creator_monthly_wes')
     .select('*')
     .eq('author_id', user.id)
     .eq('month', month)
     .maybeSingle();
 
-  const { data: platformRows }: { data: Pick<CreatorMonthlyWesRow, 'wes'>[] | null } = await (supabase
-    .from('creator_monthly_wes') as any)
+  const { data: platformRows }: { data: Pick<CreatorMonthlyWesRow, 'wes'>[] | null } = await supabase
+    .from('creator_monthly_wes')
     .select('wes')
     .eq('month', month);
 
-  const { data: postRows }: { data: PostMonthlyWesRow[] | null } = await (supabase
-    .from('post_monthly_wes') as any)
+  const { data: postRows }: { data: PostMonthlyWesRow[] | null } = await supabase
+    .from('post_monthly_wes')
     .select('*')
     .eq('author_id', user.id)
     .eq('month', month)

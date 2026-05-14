@@ -3,6 +3,7 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 import { createClient } from '@/lib/supabase/client';
+import { validateEmbedUrl } from '@/lib/embed-url';
 
 interface Props {
   postId?: string;
@@ -11,9 +12,14 @@ interface Props {
 }
 
 export default function InteractiveDemo({ postId, postTitle, iframeUrl }: Props) {
-  const [loaded, setLoaded] = useState(false);
+  const [loadedUrl, setLoadedUrl] = useState('');
+  const [issueUrl, setIssueUrl] = useState('');
   const { user } = useAuth();
   const supabase = useMemo(() => createClient(), []);
+  const validation = validateEmbedUrl(iframeUrl ?? '', { allowRelative: true });
+  const playableUrl = validation.ok ? validation.normalizedUrl : '';
+  const loaded = Boolean(playableUrl && loadedUrl === playableUrl);
+  const loadIssue = Boolean(playableUrl && issueUrl === playableUrl);
   const eventIdRef = useRef<string | null>(null);
   const startedAtRef = useRef<number | null>(null);
   const finalizedRef = useRef(false);
@@ -35,28 +41,30 @@ export default function InteractiveDemo({ postId, postTitle, iframeUrl }: Props)
 
     finalizedRef.current = true;
     const durationSeconds = Math.max(1, Math.round((Date.now() - startedAt) / 1000));
-    await (supabase.from('experience_events') as any)
+    await supabase
+      .from('experience_events')
       .update({
         ended_at: new Date().toISOString(),
         duration_seconds: durationSeconds,
-      })
+      } as never)
       .eq('id', eventId);
   };
 
   const startSession = async () => {
-    if (!postId || !iframeUrl || eventIdRef.current) return;
+    if (!postId || !playableUrl || eventIdRef.current) return;
 
     startedAtRef.current = Date.now();
     finalizedRef.current = false;
 
-    const { data } = await (supabase.from('experience_events') as any)
+    const { data } = await supabase
+      .from('experience_events')
       .insert({
         post_id: postId,
         viewer_id: user?.id ?? null,
         client_session_id: getClientSessionId(),
-      })
+      } as never)
       .select('id')
-      .single();
+      .single() as { data: { id: string } | null };
 
     eventIdRef.current = data?.id ?? null;
   };
@@ -74,6 +82,22 @@ export default function InteractiveDemo({ postId, postTitle, iframeUrl }: Props)
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
+  useEffect(() => {
+    eventIdRef.current = null;
+    startedAtRef.current = null;
+    finalizedRef.current = false;
+  }, [playableUrl]);
+
+  useEffect(() => {
+    if (!playableUrl || loaded) return;
+
+    const timer = window.setTimeout(() => {
+      setIssueUrl(playableUrl);
+    }, 12000);
+
+    return () => window.clearTimeout(timer);
+  }, [loaded, playableUrl]);
+
   return (
     <div className="mt-3 rounded-[28px] border-2 border-[#D8D8D0] overflow-hidden bg-[#F7F7F2]">
       {/* Label bar */}
@@ -85,9 +109,9 @@ export default function InteractiveDemo({ postId, postTitle, iframeUrl }: Props)
           인터랙티브 · 지금 실행 중
         </div>
         <span className="text-[11px] text-gray-400 truncate ml-auto max-w-[130px]">{postTitle}</span>
-        {iframeUrl && (
+        {playableUrl && (
           <a
-            href={iframeUrl}
+            href={playableUrl}
             target="_blank"
             rel="noopener noreferrer"
             onClick={(e) => e.stopPropagation()}
@@ -105,29 +129,60 @@ export default function InteractiveDemo({ postId, postTitle, iframeUrl }: Props)
 
       {/* App area */}
       <div className="relative bg-[#EFEFE8]" style={{ height: 420 }}>
-        {!loaded && (
+        {!playableUrl && (
+          <div className="absolute inset-0 flex flex-col items-center justify-center gap-3">
+            <span className="text-[13px] font-black tracking-[-0.04em] text-black">앱 URL을 실행할 수 없어요</span>
+            <span className="max-w-[240px] text-center text-[12px] text-gray-400">
+              {validation.message ?? '올바른 앱 URL이 없습니다.'}
+            </span>
+          </div>
+        )}
+        {playableUrl && !loaded && !loadIssue && (
           <div className="absolute inset-0 flex flex-col items-center justify-center gap-3">
             <div className="w-8 h-8 border-2 border-black border-t-transparent rounded-full animate-spin" />
             <span className="text-[12px] text-gray-400">앱 불러오는 중...</span>
           </div>
         )}
-        {iframeUrl ? (
+        {playableUrl && loadIssue && !loaded && (
+          <div className="absolute inset-0 z-10 flex flex-col items-center justify-center gap-3 bg-[#EFEFE8] px-7 text-center">
+            <div className="w-12 h-12 rounded-full bg-black text-white flex items-center justify-center">
+              <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.6" strokeLinecap="round">
+                <path d="M12 9v4" />
+                <path d="M12 17h.01" />
+                <path d="M10.3 3.9 1.8 18a2 2 0 0 0 1.7 3h17a2 2 0 0 0 1.7-3L13.7 3.9a2 2 0 0 0-3.4 0z" />
+              </svg>
+            </div>
+            <div>
+              <div className="text-[15px] font-black tracking-[-0.04em] text-black">앱이 오래 걸려요</div>
+              <p className="mt-1 text-[12px] text-gray-500 leading-snug">
+                앱이 iframe을 막았거나 응답이 느릴 수 있어요. 새 탭으로 열어 확인해 보세요.
+              </p>
+            </div>
+            <a
+              href={playableUrl}
+              target="_blank"
+              rel="noopener noreferrer"
+              onClick={(e) => e.stopPropagation()}
+              className="px-5 py-2.5 rounded-full bg-black text-white text-[13px] font-black"
+            >
+              새 탭에서 열기
+            </a>
+          </div>
+        )}
+        {playableUrl && (
           <iframe
-            src={iframeUrl}
+            src={playableUrl}
             className="w-full h-full border-0"
             sandbox="allow-scripts allow-same-origin allow-forms allow-popups"
             allow="camera; microphone"
             onLoad={() => {
-              setLoaded(true);
+              setLoadedUrl(playableUrl);
+              setIssueUrl('');
               void startSession();
             }}
             style={{ display: loaded ? 'block' : 'none' }}
             title={postTitle}
           />
-        ) : (
-          <div className="absolute inset-0 flex items-center justify-center">
-            <span className="text-[13px] text-gray-400">앱 URL이 없습니다</span>
-          </div>
         )}
       </div>
     </div>

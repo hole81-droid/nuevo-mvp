@@ -3,7 +3,7 @@
 import { createClient } from '@/lib/supabase/client';
 import type { UserRow } from '@/lib/supabase/types';
 import type { User } from '@supabase/supabase-js';
-import { createContext, useContext, useEffect, useMemo, useState } from 'react';
+import { createContext, useCallback, useContext, useEffect, useMemo, useState } from 'react';
 
 interface AuthContextValue {
   user: User | null;
@@ -22,7 +22,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [profile, setProfile] = useState<UserRow | null>(null);
   const [loading, setLoading] = useState(true);
 
-  const loadProfile = async (userId: string) => {
+  const loadProfile = useCallback(async (userId: string) => {
     const { data } = await supabase
       .from('users')
       .select('*')
@@ -30,7 +30,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       .maybeSingle();
 
     setProfile(data ?? null);
-  };
+  }, [supabase]);
 
   const refreshProfile = async () => {
     if (!user) return;
@@ -65,7 +65,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       mounted = false;
       subscription.unsubscribe();
     };
-  }, [supabase]);
+  }, [loadProfile, supabase]);
 
   const signInWithGoogle = async () => {
     await supabase.auth.signInWithOAuth({

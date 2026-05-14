@@ -179,6 +179,84 @@ export interface Database {
           rejection_reason?: string | null;
         };
       };
+      follows: {
+        Row: {
+          follower_id: string;
+          following_id: string;
+          created_at: string;
+        };
+        Insert: {
+          follower_id: string;
+          following_id: string;
+          created_at?: string;
+        };
+        Update: {
+          follower_id?: string;
+          following_id?: string;
+          created_at?: string;
+        };
+        Relationships: [];
+      };
+      comments: {
+        Row: {
+          id: string;
+          post_id: string;
+          author_id: string;
+          text: string;
+          created_at: string;
+        };
+        Insert: {
+          id?: string;
+          post_id: string;
+          author_id: string;
+          text: string;
+          created_at?: string;
+        };
+        Update: {
+          id?: string;
+          post_id?: string;
+          author_id?: string;
+          text?: string;
+          created_at?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: 'comments_author_id_fkey';
+            columns: ['author_id'];
+            isOneToOne: false;
+            referencedRelation: 'users';
+            referencedColumns: ['id'];
+          },
+          {
+            foreignKeyName: 'comments_post_id_fkey';
+            columns: ['post_id'];
+            isOneToOne: false;
+            referencedRelation: 'posts';
+            referencedColumns: ['id'];
+          },
+        ];
+      };
+      post_reactions: {
+        Row: {
+          post_id: string;
+          user_id: string;
+          reaction: 'funny' | 'weird' | 'genius' | 'wtf';
+          created_at: string;
+        };
+        Insert: {
+          post_id: string;
+          user_id: string;
+          reaction: 'funny' | 'weird' | 'genius' | 'wtf';
+          created_at?: string;
+        };
+        Update: {
+          post_id?: string;
+          user_id?: string;
+          reaction?: 'funny' | 'weird' | 'genius' | 'wtf';
+          created_at?: string;
+        };
+        Relationships: [];
+      };
     };
     Views: {
       post_monthly_wes: {
@@ -218,6 +296,9 @@ export type PostRow = Database['public']['Tables']['posts']['Row'];
 export type NotificationRow = Database['public']['Tables']['notifications']['Row'];
 export type ExperienceEventRow = Database['public']['Tables']['experience_events']['Row'];
 export type PayoutRequestRow = Database['public']['Tables']['payout_requests']['Row'];
+export type FollowRow = Database['public']['Tables']['follows']['Row'];
+export type CommentRow = Database['public']['Tables']['comments']['Row'];
+export type PostReactionRow = Database['public']['Tables']['post_reactions']['Row'];
 export type PostMonthlyWesRow = Database['public']['Views']['post_monthly_wes']['Row'];
 export type CreatorMonthlyWesRow = Database['public']['Views']['creator_monthly_wes']['Row'];
 

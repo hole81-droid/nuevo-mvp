@@ -1,16 +1,52 @@
 import Link from 'next/link';
-import { mockPosts, formatViews } from '@/lib/mock-data';
+import { mockPosts } from '@/lib/mock-data';
 import BottomNav from '@/components/layout/BottomNav';
 import { notFound } from 'next/navigation';
 import PostDetailClient from '@/components/post/PostDetailClient';
+import { createClient } from '@/lib/supabase/server';
+import { DbPostWithAuthor, mapDbPostToPost } from '@/lib/post-mapper';
+import { applyExperienceMetrics, getExperienceMetrics } from '@/lib/experience-metrics';
+import { applySocialMetrics, getSocialMetrics } from '@/lib/social-metrics';
+import { isUuid } from '@/lib/social';
+import type { Post } from '@/lib/types';
 
 interface Props {
   params: Promise<{ id: string }>;
 }
 
+export const dynamic = 'force-dynamic';
+
+async function getPost(id: string): Promise<Post | null> {
+  const mockPost = mockPosts.find((p) => p.id === id);
+  if (mockPost) return mockPost;
+  if (!isUuid(id)) return null;
+
+  const supabase = await createClient();
+  const { data, error } = await supabase
+    .from('posts')
+    .select('*, author:users(*)')
+    .eq('id', id)
+    .maybeSingle();
+
+  if (error || !data) return null;
+
+  const { count: remixCount } = await supabase
+    .from('posts')
+    .select('id', { count: 'exact', head: true })
+    .eq('remix_of', id);
+
+  const post = mapDbPostToPost(data as DbPostWithAuthor, { remixCount: remixCount ?? 0 });
+  const [experienceMetrics, socialMetrics] = await Promise.all([
+    getExperienceMetrics(supabase, [post.id]),
+    getSocialMetrics(supabase, [post.id]),
+  ]);
+
+  return applySocialMetrics(applyExperienceMetrics([post], experienceMetrics), socialMetrics)[0] ?? post;
+}
+
 export default async function PostDetailPage({ params }: Props) {
   const { id } = await params;
-  const post = mockPosts.find((p) => p.id === id);
+  const post = await getPost(id);
   if (!post) notFound();
 
   return (

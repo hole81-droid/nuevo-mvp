@@ -5,9 +5,11 @@ import BottomNav from '@/components/layout/BottomNav';
 import FollowButton from '@/components/profile/FollowButton';
 import Link from 'next/link';
 import { createClient } from '@/lib/supabase/server';
-import { mapDbAuthorToAuthor, mapDbPostToPost } from '@/lib/post-mapper';
+import { DbPostWithAuthor, mapDbAuthorToAuthor, mapDbPostToPost } from '@/lib/post-mapper';
 import NuevoGlyph from '@/components/ui/NuevoGlyph';
 import { applyExperienceMetrics, getExperienceMetrics } from '@/lib/experience-metrics';
+import { applySocialMetrics, getSocialMetrics } from '@/lib/social-metrics';
+import type { UserRow } from '@/lib/supabase/types';
 
 interface Props {
   params: Promise<{ username: string }>;
@@ -22,7 +24,7 @@ const PARTNER_CONFIG: Record<PartnerTier, { label: string; badge: string; color:
 
 export const dynamic = 'force-dynamic';
 
-async function mapPostsWithRemixCounts(supabase: Awaited<ReturnType<typeof createClient>>, posts: any[] | null) {
+async function mapPostsWithRemixCounts(supabase: Awaited<ReturnType<typeof createClient>>, posts: DbPostWithAuthor[] | null) {
   if (!posts?.length) return [];
 
   const ids = posts.map((post) => post.id);
@@ -31,14 +33,18 @@ async function mapPostsWithRemixCounts(supabase: Awaited<ReturnType<typeof creat
     .select('remix_of')
     .in('remix_of', ids);
   const remixCounts = new Map<string, number>();
-  (remixRows as any[] | null ?? []).forEach((row) => {
+  ((remixRows ?? []) as Array<{ remix_of: string | null }>).forEach((row) => {
     if (!row.remix_of) return;
     remixCounts.set(row.remix_of, (remixCounts.get(row.remix_of) ?? 0) + 1);
   });
 
   const mappedPosts = posts.map((post) => mapDbPostToPost(post, { remixCount: remixCounts.get(post.id) ?? 0 }));
-  const metrics = await getExperienceMetrics(supabase, mappedPosts.map((post) => post.id));
-  return applyExperienceMetrics(mappedPosts, metrics);
+  const postIds = mappedPosts.map((post) => post.id);
+  const [experienceMetrics, socialMetrics] = await Promise.all([
+    getExperienceMetrics(supabase, postIds),
+    getSocialMetrics(supabase, postIds),
+  ]);
+  return applySocialMetrics(applyExperienceMetrics(mappedPosts, experienceMetrics), socialMetrics);
 }
 
 async function getProfileData(username: string): Promise<{ author: Author; authorPosts: Post[]; handle: string }> {
@@ -54,7 +60,7 @@ async function getProfileData(username: string): Promise<{ author: Author; autho
         .maybeSingle();
 
       if (profile) {
-        const profileRow = profile as any;
+        const profileRow = profile as UserRow;
         const { data: posts } = await supabase
           .from('posts')
           .select('*, author:users(*)')
@@ -63,7 +69,7 @@ async function getProfileData(username: string): Promise<{ author: Author; autho
 
         return {
           author: mapDbAuthorToAuthor(profileRow),
-          authorPosts: await mapPostsWithRemixCounts(supabase, posts as any[] | null),
+          authorPosts: await mapPostsWithRemixCounts(supabase, posts as DbPostWithAuthor[] | null),
           handle: profileRow.handle,
         };
       }
@@ -76,7 +82,7 @@ async function getProfileData(username: string): Promise<{ author: Author; autho
       .maybeSingle();
 
     if (profile) {
-      const profileRow = profile as any;
+      const profileRow = profile as UserRow;
         const { data: posts } = await supabase
           .from('posts')
           .select('*, author:users(*)')
@@ -85,7 +91,7 @@ async function getProfileData(username: string): Promise<{ author: Author; autho
 
       return {
         author: mapDbAuthorToAuthor(profileRow),
-        authorPosts: await mapPostsWithRemixCounts(supabase, posts as any[] | null),
+        authorPosts: await mapPostsWithRemixCounts(supabase, posts as DbPostWithAuthor[] | null),
         handle: profileRow.handle,
       };
     }

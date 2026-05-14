@@ -79,6 +79,9 @@ posts(id, author_id, title, text, content_type, iframe_url, cover_emoji, bg_grad
 notifications(id, recipient_id, type, actor_id, post_id, remix_post_id, read)
 experience_events(id, post_id, viewer_id, client_session_id, started_at, ended_at, duration_seconds)
 payout_requests(id, creator_id, month, amount_krw, status, requested_at, processed_at, rejection_reason)
+follows(follower_id, following_id, created_at)
+comments(id, post_id, author_id, text, created_at)
+post_reactions(post_id, user_id, reaction, created_at)
 
 views:
 post_monthly_wes(post_id, author_id, title, content_type, month, sessions, minutes, reactions, comments, remixes, wes)
@@ -129,6 +132,10 @@ WES 계산 상수와 티어 로직은 `src/lib/wes.ts`에 둔다. Supabase SQL v
 
 티어 기준은 `src/lib/wes.ts`의 `TIERS`를 단일 출처로 사용한다. `POST /api/tier-sync`는 현재 월 `creator_monthly_wes.sessions`를 기준으로 계산한 티어가 `users.partner_tier`보다 높을 때만 승급시키고 `tier_up` 알림을 생성한다. `/studio`는 진입 시 `TierSyncNotice`를 통해 이 API를 호출한다.
 
+### 소셜 액션 저장
+
+팔로우, 댓글, 반응은 Supabase에 저장한다. 단, `mockPosts` fallback의 짧은 문자열 ID(`1`, `minsu` 등)는 DB FK와 맞지 않으므로 클라이언트 로컬 상태로만 처리한다. 실 DB UUID 포스트/유저일 때만 `follows`, `comments`, `post_reactions`에 기록한다.
+
 ### 컨텐츠 타입
 | 타입 | 컬러 | 표시 방식 |
 |------|------|-----------|
@@ -160,7 +167,7 @@ src/
 │   ├── layout/BottomNav.tsx      # 알림 뱃지 포함
 │   ├── post/PostCard.tsx         # compact ↔ expanded
 │   ├── post/PostDetailClient.tsx
-│   ├── post/CommentSection.tsx   # inputRef, replyTo(@mention)
+│   ├── post/CommentSection.tsx   # DB 댓글 + inputRef, replyTo(@mention)
 │   └── profile/ProfileTabsClient.tsx
 ├── contexts/
 │   ├── AuthContext.tsx           # 현재 유저 ← 신규
@@ -172,6 +179,7 @@ src/
     │   ├── client.ts             # 브라우저 클라이언트 ← 신규
     │   ├── server.ts             # 서버 클라이언트 ← 신규
     │   └── types.ts              # DB 타입 ← 신규
+    ├── social.ts                 # UUID 판별, 댓글/반응 변환 헬퍼
     ├── types.ts                  # Post, Author 등 프론트 타입
     └── mock-data.ts              # 목업 데이터 (데모/fallback용)
 ```

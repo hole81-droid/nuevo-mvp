@@ -4,9 +4,10 @@ import FeedClient from '@/components/feed/FeedClient';
 import BottomNav from '@/components/layout/BottomNav';
 import OnboardingBanner from '@/components/feed/OnboardingBanner';
 import { createClient } from '@/lib/supabase/server';
-import { mapDbPostToPost } from '@/lib/post-mapper';
+import { DbPostWithAuthor, mapDbPostToPost } from '@/lib/post-mapper';
 import NuevoGlyph from '@/components/ui/NuevoGlyph';
 import { applyExperienceMetrics, getExperienceMetrics } from '@/lib/experience-metrics';
+import { applySocialMetrics, getSocialMetrics } from '@/lib/social-metrics';
 
 export const dynamic = 'force-dynamic';
 
@@ -21,20 +22,25 @@ async function getFeedPosts() {
   if (error) return mockPosts;
   if (!data?.length) return [];
 
-  const ids = data.map((post: any) => post.id);
+  const rows = data as DbPostWithAuthor[];
+  const ids = rows.map((post) => post.id);
   const { data: remixRows } = await supabase
     .from('posts')
     .select('remix_of')
     .in('remix_of', ids);
   const remixCounts = new Map<string, number>();
-  (remixRows as any[] | null ?? []).forEach((row) => {
+  ((remixRows ?? []) as Array<{ remix_of: string | null }>).forEach((row) => {
     if (!row.remix_of) return;
     remixCounts.set(row.remix_of, (remixCounts.get(row.remix_of) ?? 0) + 1);
   });
 
-  const posts = data.map((post: any) => mapDbPostToPost(post, { remixCount: remixCounts.get(post.id) ?? 0 }));
-  const metrics = await getExperienceMetrics(supabase, posts.map((post) => post.id));
-  return applyExperienceMetrics(posts, metrics);
+  const posts = rows.map((post) => mapDbPostToPost(post, { remixCount: remixCounts.get(post.id) ?? 0 }));
+  const postIds = posts.map((post) => post.id);
+  const [experienceMetrics, socialMetrics] = await Promise.all([
+    getExperienceMetrics(supabase, postIds),
+    getSocialMetrics(supabase, postIds),
+  ]);
+  return applySocialMetrics(applyExperienceMetrics(posts, experienceMetrics), socialMetrics);
 }
 
 export default async function FeedPage() {

@@ -101,13 +101,48 @@ create index payout_requests_creator_idx on public.payout_requests(creator_id, r
 create index payout_requests_status_idx on public.payout_requests(status, requested_at desc);
 
 -- ============================================================
--- 6. Row Level Security (RLS)
+-- 6. 소셜 액션
+-- ============================================================
+create table public.follows (
+  follower_id  uuid references public.users(id) on delete cascade not null,
+  following_id uuid references public.users(id) on delete cascade not null,
+  created_at   timestamptz not null default now(),
+  primary key (follower_id, following_id),
+  check (follower_id <> following_id)
+);
+
+create table public.comments (
+  id         uuid primary key default uuid_generate_v4(),
+  post_id    uuid references public.posts(id) on delete cascade not null,
+  author_id  uuid references public.users(id) on delete cascade not null,
+  text       text not null check (char_length(trim(text)) > 0 and char_length(text) <= 1000),
+  created_at timestamptz not null default now()
+);
+
+create table public.post_reactions (
+  post_id    uuid references public.posts(id) on delete cascade not null,
+  user_id    uuid references public.users(id) on delete cascade not null,
+  reaction   text not null check (reaction in ('funny', 'weird', 'genius', 'wtf')),
+  created_at timestamptz not null default now(),
+  primary key (post_id, user_id)
+);
+
+create index follows_following_idx on public.follows(following_id, created_at desc);
+create index comments_post_idx on public.comments(post_id, created_at asc);
+create index comments_author_idx on public.comments(author_id, created_at desc);
+create index post_reactions_post_idx on public.post_reactions(post_id, reaction);
+
+-- ============================================================
+-- 7. Row Level Security (RLS)
 -- ============================================================
 alter table public.users         enable row level security;
 alter table public.posts         enable row level security;
 alter table public.notifications enable row level security;
 alter table public.experience_events enable row level security;
 alter table public.payout_requests enable row level security;
+alter table public.follows enable row level security;
+alter table public.comments enable row level security;
+alter table public.post_reactions enable row level security;
 
 -- users: 누구나 읽기 / 본인만 쓰기
 create policy "users_select_all"
@@ -161,8 +196,41 @@ create policy "payout_requests_select_own"
 create policy "payout_requests_insert_own"
   on public.payout_requests for insert with check (auth.uid() = creator_id);
 
+-- follows: 누구나 관계 조회 / 본인 팔로우만 생성·삭제
+create policy "follows_select_all"
+  on public.follows for select using (true);
+
+create policy "follows_insert_own"
+  on public.follows for insert with check (auth.uid() = follower_id);
+
+create policy "follows_delete_own"
+  on public.follows for delete using (auth.uid() = follower_id);
+
+-- comments: 누구나 읽기 / 로그인 유저 작성 / 작성자 삭제
+create policy "comments_select_all"
+  on public.comments for select using (true);
+
+create policy "comments_insert_own"
+  on public.comments for insert with check (auth.uid() = author_id);
+
+create policy "comments_delete_own"
+  on public.comments for delete using (auth.uid() = author_id);
+
+-- post_reactions: 누구나 읽기 / 본인 반응만 upsert·삭제
+create policy "post_reactions_select_all"
+  on public.post_reactions for select using (true);
+
+create policy "post_reactions_insert_own"
+  on public.post_reactions for insert with check (auth.uid() = user_id);
+
+create policy "post_reactions_update_own"
+  on public.post_reactions for update using (auth.uid() = user_id);
+
+create policy "post_reactions_delete_own"
+  on public.post_reactions for delete using (auth.uid() = user_id);
+
 -- ============================================================
--- 7. WES 월별 집계 View
+-- 8. WES 월별 집계 View
 -- ============================================================
 create or replace view public.post_monthly_wes as
 with event_rollup as (
@@ -182,28 +250,59 @@ remix_rollup as (
   from public.posts
   where remix_of is not null
   group by remix_of, date_trunc('month', created_at)::date
+),
+reaction_rollup as (
+  select
+    post_id,
+    date_trunc('month', created_at)::date as month,
+    count(*)::integer as reactions
+  from public.post_reactions
+  group by post_id, date_trunc('month', created_at)::date
+),
+comment_rollup as (
+  select
+    post_id,
+    date_trunc('month', created_at)::date as month,
+    count(*)::integer as comments
+  from public.comments
+  group by post_id, date_trunc('month', created_at)::date
+),
+post_months as (
+  select id as post_id, date_trunc('month', created_at)::date as month
+  from public.posts
+  union
+  select post_id, month from event_rollup
+  union
+  select post_id, month from remix_rollup
+  union
+  select post_id, month from reaction_rollup
+  union
+  select post_id, month from comment_rollup
 )
 select
   p.id as post_id,
   p.author_id,
   p.title,
   p.content_type,
-  coalesce(e.month, r.month, date_trunc('month', p.created_at)::date) as month,
+  pm.month,
   coalesce(e.sessions, 0)::integer as sessions,
   coalesce(e.minutes, 0)::integer as minutes,
-  0::integer as reactions,
-  0::integer as comments,
+  coalesce(pr.reactions, 0)::integer as reactions,
+  coalesce(c.comments, 0)::integer as comments,
   coalesce(r.remixes, 0)::integer as remixes,
   (
     coalesce(e.sessions, 0) * 1.0 +
     coalesce(e.minutes, 0) * 0.8 +
-    0 * 1.5 +
-    0 * 2.0 +
+    coalesce(pr.reactions, 0) * 1.5 +
+    coalesce(c.comments, 0) * 2.0 +
     coalesce(r.remixes, 0) * 5.0
   )::numeric(12, 2) as wes
 from public.posts p
-left join event_rollup e on e.post_id = p.id
-left join remix_rollup r on r.post_id = p.id and r.month = coalesce(e.month, r.month);
+join post_months pm on pm.post_id = p.id
+left join event_rollup e on e.post_id = p.id and e.month = pm.month
+left join remix_rollup r on r.post_id = p.id and r.month = pm.month
+left join reaction_rollup pr on pr.post_id = p.id and pr.month = pm.month
+left join comment_rollup c on c.post_id = p.id and c.month = pm.month;
 
 create or replace view public.creator_monthly_wes as
 select
@@ -219,7 +318,7 @@ from public.post_monthly_wes
 group by author_id, month;
 
 -- ============================================================
--- 8. 신규 가입 시 users 행 자동 생성 트리거
+-- 9. 신규 가입 시 users 행 자동 생성 트리거
 -- ============================================================
 create or replace function public.handle_new_user()
 returns trigger

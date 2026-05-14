@@ -1,4 +1,6 @@
 import type { Post } from './types';
+import type { SupabaseClient } from '@supabase/supabase-js';
+import type { Database } from './supabase/types';
 
 export type ExperienceMetric = {
   sessions: number;
@@ -11,7 +13,7 @@ type ExperienceEventLike = {
 };
 
 export async function getExperienceMetrics(
-  supabase: { from: (table: string) => any },
+  supabase: SupabaseClient<Database>,
   postIds: string[],
 ): Promise<Map<string, ExperienceMetric>> {
   const ids = [...new Set(postIds.filter(Boolean))];

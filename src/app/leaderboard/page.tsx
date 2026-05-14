@@ -1,5 +1,5 @@
 import Link from 'next/link';
-import { mockAuthors, mockPosts, formatViews } from '@/lib/mock-data';
+import { mockAuthors, mockPosts } from '@/lib/mock-data';
 import BottomNav from '@/components/layout/BottomNav';
 import LeaderboardClient from './LeaderboardClient';
 
@@ -37,13 +37,6 @@ const POST_WES = mockPosts.map((post) => {
 
 const TOTAL_WES = CREATOR_WES.reduce((s, c) => s + c.wes, 0);
 const MONTHLY_POOL = 10_000_000 * 0.7;
-
-const MEDAL = ['🥇', '🥈', '🥉'];
-const RANK_BG = [
-  'from-amber-50 to-yellow-50 border-amber-200',
-  'from-gray-50 to-slate-50 border-gray-200',
-  'from-orange-50 to-amber-50 border-orange-200',
-];
 
 export default function LeaderboardPage() {
   return (

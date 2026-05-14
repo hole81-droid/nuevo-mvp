@@ -1,36 +1,77 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# nuevo-instagram
 
-## Getting Started
+AI로 만든 앱을 URL로 올리고, 사람들이 피드 안에서 바로 실행해보는 모바일-first 경험 플랫폼입니다.
 
-First, run the development server:
+## 핵심 UX
+
+- 창작자: 배포된 앱 URL 입력 → iframe 미리보기 → 게시
+- 유저: 피드 카드 탭 → 페이지 이동 없이 인라인 확장 → 바로 체험 / 댓글 / 반응 / 리믹스
+- 수익: 체험 세션, 체험 시간, 반응, 댓글, 리믹스 기반 WES로 창작자 수익 배분
+
+## 기술 스택
+
+- Next.js 16 App Router
+- TypeScript
+- Tailwind CSS v4
+- Supabase Auth + PostgreSQL
+- Vercel 배포 예정
+
+## 로컬 실행
 
 ```bash
+npm install
+cp .env.local.example .env.local
 npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+브라우저에서 `http://localhost:3000`을 엽니다.
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+## 환경변수
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+Supabase Dashboard > Settings > API에서 값을 복사합니다.
 
-## Learn More
+```bash
+NEXT_PUBLIC_SUPABASE_URL=https://xxxxxxxxxxxx.supabase.co
+NEXT_PUBLIC_SUPABASE_ANON_KEY=eyJ...
+```
 
-To learn more about Next.js, take a look at the following resources:
+Google OAuth를 사용할 때 Supabase Auth Redirect URL에 아래 주소를 추가합니다.
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+```text
+http://localhost:3000/setup
+https://{vercel-domain}/setup
+```
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+## DB 스키마
 
-## Deploy on Vercel
+`supabase/schema.sql`을 Supabase SQL Editor에서 실행합니다.
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+주요 테이블:
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+- `users`
+- `posts`
+- `notifications`
+- `experience_events`
+- `payout_requests`
+- `follows`
+- `comments`
+- `post_reactions`
+
+주요 View:
+
+- `post_monthly_wes`
+- `creator_monthly_wes`
+
+## 검증 명령
+
+```bash
+./node_modules/.bin/tsc --noEmit
+npm run lint
+npm run build
+```
+
+## 문서
+
+- `PRD.md`: 제품 요구사항
+- `TASK.md`: 개발 태스크와 진행 상태
+- `CLAUDE.md`: 구현 패턴과 프로젝트 컨텍스트

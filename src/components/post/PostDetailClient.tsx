@@ -1,11 +1,14 @@
 'use client';
 
-import { useState, useRef } from 'react';
+import { useEffect, useMemo, useState, useRef } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { Post } from '@/lib/types';
 import { formatViews } from '@/lib/mock-data';
 import { useSaved } from '@/contexts/SavedContext';
+import { useAuth } from '@/contexts/AuthContext';
+import { createClient } from '@/lib/supabase/client';
+import { countReactions, isUuid, ReactionKey } from '@/lib/social';
 import InteractiveDemo from './InteractiveDemo';
 import AudioPlayer from './AudioPlayer';
 import ImageGallery, { SUBWAY_SLIDES } from './ImageGallery';
@@ -22,6 +25,9 @@ const REACTIONS = [
 export default function PostDetailClient({ post }: { post: Post }) {
   const { author, createdAt, text, stats, reactions, tags, tool, remixable, detailDescription, contentType, media, title } = post;
   const router = useRouter();
+  const supabase = useMemo(() => createClient(), []);
+  const { user } = useAuth();
+  const useDbSocial = isUuid(post.id);
 
   const { isSaved, toggle: toggleSave } = useSaved();
   const saved = isSaved(post.id);
@@ -38,9 +44,34 @@ export default function PostDetailClient({ post }: { post: Post }) {
   const [likeCount, setLikeCount] = useState(stats.likes);
   const [reposted, setReposted] = useState(false);
   const [repostCount, setRepostCount] = useState(stats.reposts);
-  const [activeReaction, setActiveReaction] = useState<string | null>(null);
+  const [activeReaction, setActiveReaction] = useState<ReactionKey | null>(null);
   const [reactionCounts, setReactionCounts] = useState({ ...reactions });
   const [copied, setCopied] = useState(false);
+
+  useEffect(() => {
+    let mounted = true;
+
+    const loadReactions = async () => {
+      if (!useDbSocial) return;
+
+      const { data, error } = await supabase
+        .from('post_reactions')
+        .select('user_id, reaction')
+        .eq('post_id', post.id);
+
+      if (!mounted || error) return;
+
+      const rows = (data ?? []) as Array<{ user_id: string; reaction: ReactionKey }>;
+      setReactionCounts(countReactions(rows));
+      setActiveReaction(rows.find((row) => row.user_id === user?.id)?.reaction ?? null);
+    };
+
+    loadReactions();
+
+    return () => {
+      mounted = false;
+    };
+  }, [post.id, supabase, useDbSocial, user?.id]);
 
   const handleShare = () => {
     if (navigator.clipboard) {
@@ -60,17 +91,44 @@ export default function PostDetailClient({ post }: { post: Post }) {
     setRepostCount((c) => reposted ? c - 1 : c + 1);
   };
 
-  const handleReaction = (key: string) => {
+  const handleReaction = async (key: ReactionKey) => {
+    const previousReaction = activeReaction;
+
     if (activeReaction === key) {
       setActiveReaction(null);
-      setReactionCounts((prev) => ({ ...prev, [key]: prev[key as keyof typeof prev] - 1 }));
+      setReactionCounts((prev) => ({ ...prev, [key]: Math.max(0, prev[key] - 1) }));
     } else {
       if (activeReaction) {
-        setReactionCounts((prev) => ({ ...prev, [activeReaction]: prev[activeReaction as keyof typeof prev] - 1 }));
+        setReactionCounts((prev) => ({ ...prev, [activeReaction]: Math.max(0, prev[activeReaction] - 1) }));
       }
       setActiveReaction(key);
-      setReactionCounts((prev) => ({ ...prev, [key]: prev[key as keyof typeof prev] + 1 }));
+      setReactionCounts((prev) => ({ ...prev, [key]: prev[key] + 1 }));
     }
+
+    if (!useDbSocial || !user) return;
+
+    const { error } = previousReaction === key
+      ? await supabase
+          .from('post_reactions')
+          .delete()
+          .match({ post_id: post.id, user_id: user.id })
+      : await supabase
+          .from('post_reactions')
+          .upsert({ post_id: post.id, user_id: user.id, reaction: key } as never);
+
+    if (!error) return;
+
+    setActiveReaction(previousReaction);
+    setReactionCounts((prev) => {
+      const next = { ...prev };
+      if (previousReaction === key) {
+        next[key] += 1;
+      } else {
+        next[key] = Math.max(0, next[key] - 1);
+        if (previousReaction) next[previousReaction] += 1;
+      }
+      return next;
+    });
   };
 
   return (
@@ -216,7 +274,7 @@ export default function PostDetailClient({ post }: { post: Post }) {
 
       {/* Comments */}
       <div ref={commentRef}>
-        <CommentSection inputRef={commentInputRef} />
+        <CommentSection postId={post.id} inputRef={commentInputRef} />
       </div>
     </main>
   );

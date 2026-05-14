@@ -26,11 +26,13 @@ export default function SetupPage() {
 
   useEffect(() => {
     if (!profile) return;
-    setHandle(profile.handle.startsWith('user_') ? '' : profile.handle);
-    setDisplayName(profile.display_name);
-    setBio(profile.bio ?? '');
-    setAvatarEmoji(profile.avatar_emoji);
-    setAvatarBg(profile.avatar_bg);
+    queueMicrotask(() => {
+      setHandle(profile.handle.startsWith('user_') ? '' : profile.handle);
+      setDisplayName(profile.display_name);
+      setBio(profile.bio ?? '');
+      setAvatarEmoji(profile.avatar_emoji);
+      setAvatarBg(profile.avatar_bg);
+    });
   }, [profile]);
 
   const cleanHandle = handle.toLowerCase().replace(/[^a-z0-9_]/g, '');
@@ -43,14 +45,15 @@ export default function SetupPage() {
     setSaving(true);
     setError('');
 
-    const { error: updateError } = await (supabase.from('users') as any)
+    const { error: updateError } = await supabase
+      .from('users')
       .update({
         handle: cleanHandle,
         display_name: displayName.trim(),
         bio: bio.trim() || null,
         avatar_emoji: avatarEmoji,
         avatar_bg: avatarBg,
-      })
+      } as never)
       .eq('id', user.id);
 
     if (updateError) {

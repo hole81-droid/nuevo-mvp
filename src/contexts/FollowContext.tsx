@@ -1,6 +1,9 @@
 'use client';
 
-import { createContext, useContext, useState, ReactNode } from 'react';
+import { createContext, useContext, useEffect, useMemo, useState, ReactNode } from 'react';
+import { useAuth } from '@/contexts/AuthContext';
+import { createClient } from '@/lib/supabase/client';
+import { isUuid } from '@/lib/social';
 
 // 초기값: minsu, sujin 팔로우 중
 const INITIAL_FOLLOWING = new Set(['minsu', 'sujin']);
@@ -18,9 +21,38 @@ const FollowContext = createContext<FollowContextValue>({
 });
 
 export function FollowProvider({ children }: { children: ReactNode }) {
+  const supabase = useMemo(() => createClient(), []);
+  const { user } = useAuth();
   const [following, setFollowing] = useState<Set<string>>(new Set(INITIAL_FOLLOWING));
 
+  useEffect(() => {
+    let mounted = true;
+
+    const loadFollowing = async () => {
+      if (!user) {
+        setFollowing(new Set(INITIAL_FOLLOWING));
+        return;
+      }
+
+      const { data } = await supabase
+        .from('follows')
+        .select('following_id')
+        .eq('follower_id', user.id);
+
+      if (!mounted) return;
+      setFollowing(new Set(data?.map((row: { following_id: string }) => row.following_id) ?? []));
+    };
+
+    loadFollowing();
+
+    return () => {
+      mounted = false;
+    };
+  }, [supabase, user]);
+
   const toggle = (authorId: string) => {
+    const wasFollowing = following.has(authorId);
+
     setFollowing((prev) => {
       const next = new Set(prev);
       if (next.has(authorId)) {
@@ -30,6 +62,31 @@ export function FollowProvider({ children }: { children: ReactNode }) {
       }
       return next;
     });
+
+    if (!user || !isUuid(authorId) || user.id === authorId) return;
+
+    if (wasFollowing) {
+      supabase
+        .from('follows')
+        .delete()
+        .match({ follower_id: user.id, following_id: authorId })
+        .then(({ error }: { error: Error | null }) => {
+          if (!error) return;
+          setFollowing((prev) => new Set(prev).add(authorId));
+        });
+    } else {
+      supabase
+        .from('follows')
+        .insert({ follower_id: user.id, following_id: authorId } as never)
+        .then(({ error }: { error: Error | null }) => {
+          if (!error) return;
+          setFollowing((prev) => {
+            const next = new Set(prev);
+            next.delete(authorId);
+            return next;
+          });
+        });
+    }
   };
 
   const isFollowing = (authorId: string) => following.has(authorId);

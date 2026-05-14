@@ -7,7 +7,8 @@ import { ContentType, UploadFormData, UploadStep } from '@/lib/types';
 import { mockPosts } from '@/lib/mock-data';
 import { useAuth } from '@/contexts/AuthContext';
 import { createClient } from '@/lib/supabase/client';
-import { mapDbPostToPost } from '@/lib/post-mapper';
+import { DbPostWithAuthor, mapDbPostToPost } from '@/lib/post-mapper';
+import { validateEmbedUrl } from '@/lib/embed-url';
 import type { Post } from '@/lib/types';
 
 const INITIAL_FORM: UploadFormData = {
@@ -76,7 +77,7 @@ function UploadPageInner() {
         .maybeSingle();
 
       if (data) {
-        const post = mapDbPostToPost(data as any);
+        const post = mapDbPostToPost(data as DbPostWithAuthor);
         setDbOriginalPost(post);
         setForm((prev) => ({
           ...prev,
@@ -97,7 +98,7 @@ function UploadPageInner() {
   const canProceedStep2 =
     form.title.trim().length > 0 &&
     form.description.trim().length > 0 &&
-    (form.contentType !== 'interactive' || form.iframeUrl.trim().length > 0);
+    (form.contentType !== 'interactive' || validateEmbedUrl(form.iframeUrl, { requirePublicUrl: true }).ok);
 
   const handlePublish = async () => {
     if (!user) {
@@ -110,13 +111,17 @@ function UploadPageInner() {
     setPublishError('');
 
     const remixOf = form.remixOf && isUuid(form.remixOf) ? form.remixOf : null;
+    const embedUrl = validateEmbedUrl(form.iframeUrl, { requirePublicUrl: true });
 
-    const { data: insertedPost, error } = await (supabase.from('posts') as any).insert({
+    const {
+      data: insertedPost,
+      error,
+    } = await supabase.from('posts').insert({
       author_id: user.id,
       title: form.title.trim(),
       text: form.description.trim(),
       content_type: form.contentType,
-      iframe_url: form.contentType === 'interactive' ? form.iframeUrl.trim() : null,
+      iframe_url: form.contentType === 'interactive' ? embedUrl.normalizedUrl : null,
       cover_emoji: form.contentType === 'audio' ? '🎵' : form.contentType === 'image' ? '🖼️' : '🎮',
       bg_gradient: form.contentType === 'interactive'
         ? 'from-orange-100 to-orange-200'
@@ -125,7 +130,10 @@ function UploadPageInner() {
           : 'from-pink-100 to-pink-200',
       remixable: form.remixable,
       remix_of: remixOf,
-    }).select('id').single();
+    } as never).select('id').single() as {
+      data: { id: string } | null;
+      error: { message: string } | null;
+    };
 
     if (error) {
       setPublishError(error.message);
@@ -134,13 +142,13 @@ function UploadPageInner() {
     }
 
     if (remixOf && originalPost && originalPost.author.id !== user.id && insertedPost?.id) {
-      await (supabase.from('notifications') as any).insert({
+      await supabase.from('notifications').insert({
         recipient_id: originalPost.author.id,
         type: 'remix',
         actor_id: user.id,
         post_id: remixOf,
         remix_post_id: insertedPost.id,
-      });
+      } as never);
     }
 
     setTimeout(() => router.push('/'), 900);
@@ -522,18 +530,28 @@ function Step3({
 function IframeUrlField({ url, onChange }: { url: string; onChange: (url: string) => void }) {
   const [previewUrl, setPreviewUrl] = useState('');
   const [loaded, setLoaded] = useState(false);
+  const [loadIssue, setLoadIssue] = useState(false);
   const [showPreview, setShowPreview] = useState(false);
   const inputRef = useRef<HTMLInputElement>(null);
+  const validation = validateEmbedUrl(url, { requirePublicUrl: true });
 
   const triggerPreview = () => {
-    const trimmed = url.trim();
-    if (!trimmed) return;
+    if (!validation.ok) return;
     setLoaded(false);
-    setPreviewUrl(trimmed);
+    setLoadIssue(false);
+    setPreviewUrl(validation.normalizedUrl);
     setShowPreview(true);
   };
 
-  const isValid = url.trim().startsWith('http');
+  useEffect(() => {
+    if (!showPreview || !previewUrl || loaded) return;
+
+    const timer = window.setTimeout(() => {
+      setLoadIssue(true);
+    }, 10000);
+
+    return () => window.clearTimeout(timer);
+  }, [loaded, previewUrl, showPreview]);
 
   return (
     <FormGroup label="앱 URL" required hint="배포된 앱 주소를 붙여넣으세요">
@@ -542,19 +560,29 @@ function IframeUrlField({ url, onChange }: { url: string; onChange: (url: string
           ref={inputRef}
           type="url"
           value={url}
-          onChange={(e) => { onChange(e.target.value); setShowPreview(false); }}
+          onChange={(e) => {
+            onChange(e.target.value);
+            setLoaded(false);
+            setLoadIssue(false);
+            setShowPreview(false);
+          }}
           placeholder="https://your-app.vercel.app"
-          className="flex-1 px-4 py-3 rounded-xl border border-gray-200 text-[14px] text-gray-900 placeholder-gray-400 outline-none focus:border-warm focus:ring-2 focus:ring-orange-100 font-mono min-w-0"
+          className={`flex-1 px-4 py-3 rounded-xl border text-[14px] text-gray-900 placeholder-gray-400 outline-none focus:border-warm focus:ring-2 focus:ring-orange-100 font-mono min-w-0 ${
+            url.trim() && !validation.ok ? 'border-black' : 'border-gray-200'
+          }`}
         />
         <button
           type="button"
           onClick={triggerPreview}
-          disabled={!isValid}
+          disabled={!validation.ok}
           className="flex-shrink-0 px-4 py-3 rounded-xl bg-gray-900 text-white text-[13px] font-semibold disabled:opacity-30 disabled:cursor-not-allowed transition-opacity active:scale-95"
         >
           미리보기
         </button>
       </div>
+      {url.trim() && !validation.ok && (
+        <p className="mt-2 text-[12px] font-bold text-black">{validation.message}</p>
+      )}
 
       <div className="mt-2 flex flex-wrap items-center gap-1.5">
         {['Vercel', 'GitHub Pages', 'Glitch', 'CodePen'].map((label) => (
@@ -580,10 +608,35 @@ function IframeUrlField({ url, onChange }: { url: string; onChange: (url: string
           </div>
           {/* Phone frame */}
           <div className="mx-auto rounded-2xl border-2 border-gray-200 overflow-hidden bg-gray-50 relative" style={{ height: 440 }}>
-            {!loaded && (
+            {!loaded && !loadIssue && (
               <div className="absolute inset-0 flex flex-col items-center justify-center gap-3 bg-gray-50">
                 <div className="w-7 h-7 border-2 border-warm border-t-transparent rounded-full animate-spin" />
                 <span className="text-[12px] text-gray-400">앱 불러오는 중...</span>
+              </div>
+            )}
+            {loadIssue && !loaded && (
+              <div className="absolute inset-0 flex flex-col items-center justify-center gap-3 bg-[#EFEFE8] px-6 text-center">
+                <div className="w-12 h-12 rounded-full bg-black text-white flex items-center justify-center">
+                  <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.6" strokeLinecap="round">
+                    <path d="M12 9v4" />
+                    <path d="M12 17h.01" />
+                    <path d="M10.3 3.9 1.8 18a2 2 0 0 0 1.7 3h17a2 2 0 0 0 1.7-3L13.7 3.9a2 2 0 0 0-3.4 0z" />
+                  </svg>
+                </div>
+                <div>
+                  <div className="text-[15px] font-black tracking-[-0.04em] text-black">미리보기가 오래 걸려요</div>
+                  <p className="mt-1 text-[12px] text-[#777772] leading-snug">
+                    앱에서 iframe 임베딩을 막았거나 응답이 느릴 수 있어요. 새 탭에서 열어 확인해 주세요.
+                  </p>
+                </div>
+                <a
+                  href={previewUrl}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="px-5 py-2.5 rounded-full bg-black text-white text-[13px] font-black"
+                >
+                  새 탭에서 열기
+                </a>
               </div>
             )}
             <iframe
@@ -592,7 +645,10 @@ function IframeUrlField({ url, onChange }: { url: string; onChange: (url: string
               className="w-full h-full border-0"
               sandbox="allow-scripts allow-same-origin allow-forms allow-popups"
               allow="camera; microphone"
-              onLoad={() => setLoaded(true)}
+              onLoad={() => {
+                setLoaded(true);
+                setLoadIssue(false);
+              }}
               style={{ display: loaded ? 'block' : 'none' }}
               title="앱 미리보기"
             />

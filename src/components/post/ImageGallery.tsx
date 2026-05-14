@@ -14,7 +14,7 @@ interface Props {
   title: string;
 }
 
-export default function ImageGallery({ slides, title }: Props) {
+export default function ImageGallery({ slides }: Props) {
   const [current, setCurrent] = useState(0);
   const startX = useRef<number | null>(null);
 

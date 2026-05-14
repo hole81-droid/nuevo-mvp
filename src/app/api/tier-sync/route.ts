@@ -12,14 +12,14 @@ export async function POST() {
   }
 
   const month = monthKey();
-  const { data: profile }: { data: Pick<UserRow, 'partner_tier'> | null } = await (supabase
-    .from('users') as any)
+  const { data: profile }: { data: Pick<UserRow, 'partner_tier'> | null } = await supabase
+    .from('users')
     .select('partner_tier')
     .eq('id', user.id)
     .maybeSingle();
 
-  const { data: creatorRow }: { data: Pick<CreatorMonthlyWesRow, 'sessions'> | null } = await (supabase
-    .from('creator_monthly_wes') as any)
+  const { data: creatorRow }: { data: Pick<CreatorMonthlyWesRow, 'sessions'> | null } = await supabase
+    .from('creator_monthly_wes')
     .select('sessions')
     .eq('author_id', user.id)
     .eq('month', month)
@@ -36,18 +36,19 @@ export async function POST() {
     });
   }
 
-  const { error } = await (supabase.from('users') as any)
-    .update({ partner_tier: current.id })
+  const { error } = await supabase
+    .from('users')
+    .update({ partner_tier: current.id } as never)
     .eq('id', user.id);
 
   if (error) {
     return NextResponse.json({ error: error.message }, { status: 500 });
   }
 
-  await (supabase.from('notifications') as any).insert({
+  await supabase.from('notifications').insert({
     recipient_id: user.id,
     type: 'tier_up',
-  });
+  } as never);
 
   return NextResponse.json({
     promoted: true,

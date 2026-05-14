@@ -1,7 +1,10 @@
 'use client';
 
-import { useState, useRef, RefObject } from 'react';
+import { useEffect, useMemo, useState, useRef, RefObject } from 'react';
 import { Comment } from '@/lib/types';
+import { useAuth } from '@/contexts/AuthContext';
+import { createClient } from '@/lib/supabase/client';
+import { isUuid, mapDbCommentToComment, mapUserRowToAuthor } from '@/lib/social';
 
 const INITIAL_COMMENTS: Comment[] = [
   {
@@ -28,25 +31,99 @@ const INITIAL_COMMENTS: Comment[] = [
 ];
 
 interface Props {
+  postId?: string;
   initialComments?: Comment[];
   inputRef?: RefObject<HTMLInputElement | null>;
 }
 
-export default function CommentSection({ initialComments = INITIAL_COMMENTS, inputRef }: Props) {
+export default function CommentSection({ postId, initialComments = INITIAL_COMMENTS, inputRef }: Props) {
+  const supabase = useMemo(() => createClient(), []);
+  const { user, profile } = useAuth();
+  const useDbComments = Boolean(postId && isUuid(postId));
   const [comments, setComments] = useState<Comment[]>(initialComments);
   const [input, setInput] = useState('');
   const [likedIds, setLikedIds] = useState<Set<string>>(new Set());
+  const [status, setStatus] = useState<string | null>(null);
   const localInputRef = useRef<HTMLInputElement>(null);
   const activeInputRef = inputRef ?? localInputRef;
+
+  useEffect(() => {
+    let mounted = true;
+
+    const loadComments = async () => {
+      if (!postId || !useDbComments) {
+        setComments(initialComments);
+        return;
+      }
+
+      const { data, error } = await supabase
+        .from('comments')
+        .select('*, author:users(*)')
+        .eq('post_id', postId)
+        .order('created_at', { ascending: true });
+
+      if (!mounted) return;
+      if (error) {
+        setStatus('댓글을 불러오지 못했어요.');
+        return;
+      }
+
+      setComments((data ?? []).map((row: Parameters<typeof mapDbCommentToComment>[0]) => mapDbCommentToComment(row)));
+      setStatus(null);
+    };
+
+    loadComments();
+
+    return () => {
+      mounted = false;
+    };
+  }, [initialComments, postId, supabase, useDbComments]);
 
   const replyTo = (handle: string) => {
     setInput(`@${handle} `);
     activeInputRef.current?.focus();
   };
 
-  const handleSubmit = () => {
+  const handleSubmit = async () => {
     const text = input.trim();
     if (!text) return;
+
+    if (useDbComments) {
+      if (!user || !profile || !postId) {
+        setStatus('댓글을 남기려면 로그인이 필요해요.');
+        return;
+      }
+
+      const optimisticComment: Comment = {
+        id: `optimistic-${Date.now()}`,
+        author: mapUserRowToAuthor(profile),
+        text,
+        createdAt: '방금',
+        likes: 0,
+      };
+
+      setComments((prev) => [...prev, optimisticComment]);
+      setInput('');
+      setStatus(null);
+
+      const { data, error } = await supabase
+        .from('comments')
+        .insert({ post_id: postId, author_id: user.id, text } as never)
+        .select('*, author:users(*)')
+        .single();
+
+      if (error) {
+        setComments((prev) => prev.filter((comment) => comment.id !== optimisticComment.id));
+        setStatus('댓글 저장에 실패했어요. 다시 시도해 주세요.');
+        return;
+      }
+
+      setComments((prev) => prev.map((comment) =>
+        comment.id === optimisticComment.id ? mapDbCommentToComment(data) : comment
+      ));
+      return;
+    }
+
     const newComment: Comment = {
       id: `c-${Date.now()}`,
       author: { id: 'me', displayName: '나', handle: 'me', avatarEmoji: '😸', avatarBg: '#FFF0EA', followerCount: 0 },
@@ -62,7 +139,8 @@ export default function CommentSection({ initialComments = INITIAL_COMMENTS, inp
     const wasLiked = likedIds.has(id);
     setLikedIds((prev) => {
       const next = new Set(prev);
-      wasLiked ? next.delete(id) : next.add(id);
+      if (wasLiked) next.delete(id);
+      else next.add(id);
       return next;
     });
     setComments((prev) => prev.map((c) =>
@@ -134,6 +212,11 @@ export default function CommentSection({ initialComments = INITIAL_COMMENTS, inp
           </button>
         )}
       </div>
+      {status && (
+        <div className="border-t border-gray-100 bg-white px-4 pb-3 text-[12px] font-bold text-warm">
+          {status}
+        </div>
+      )}
     </>
   );
 }

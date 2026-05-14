@@ -1,11 +1,14 @@
 'use client';
 
-import { useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { Post } from '@/lib/types';
 import { formatViews } from '@/lib/mock-data';
 import { useSaved } from '@/contexts/SavedContext';
+import { useAuth } from '@/contexts/AuthContext';
+import { createClient } from '@/lib/supabase/client';
+import { countReactions, isUuid, ReactionKey } from '@/lib/social';
 import ContentViewer from './ContentViewer';
 import InteractiveDemo from './InteractiveDemo';
 import AudioPlayer from './AudioPlayer';
@@ -31,6 +34,9 @@ export default function PostCard({
 }) {
   const router = useRouter();
   const { author, createdAt, text, stats, tags, tool, remixable, detailDescription, contentType, media, title, remixOf } = post;
+  const supabase = useMemo(() => createClient(), []);
+  const { user } = useAuth();
+  const useDbSocial = isUuid(post.id);
 
   const { isSaved, toggle: toggleSave } = useSaved();
   const saved = isSaved(post.id);
@@ -39,8 +45,33 @@ export default function PostCard({
   const [likeCount, setLikeCount] = useState(stats.likes);
   const [reposted, setReposted]   = useState(false);
   const [repostCount, setRepostCount] = useState(stats.reposts);
-  const [activeReaction, setActiveReaction] = useState<string | null>(null);
+  const [activeReaction, setActiveReaction] = useState<ReactionKey | null>(null);
   const [reactionCounts, setReactionCounts] = useState({ ...post.reactions });
+
+  useEffect(() => {
+    let mounted = true;
+
+    const loadReactions = async () => {
+      if (!expanded || !useDbSocial) return;
+
+      const { data, error } = await supabase
+        .from('post_reactions')
+        .select('user_id, reaction')
+        .eq('post_id', post.id);
+
+      if (!mounted || error) return;
+
+      const rows = (data ?? []) as Array<{ user_id: string; reaction: ReactionKey }>;
+      setReactionCounts(countReactions(rows));
+      setActiveReaction(rows.find((row) => row.user_id === user?.id)?.reaction ?? null);
+    };
+
+    loadReactions();
+
+    return () => {
+      mounted = false;
+    };
+  }, [expanded, post.id, supabase, useDbSocial, user?.id]);
 
   const handleLike = (e: React.MouseEvent) => {
     e.stopPropagation();
@@ -54,17 +85,44 @@ export default function PostCard({
     setRepostCount((c) => reposted ? c - 1 : c + 1);
   };
 
-  const handleReaction = (key: string) => {
+  const handleReaction = async (key: ReactionKey) => {
+    const previousReaction = activeReaction;
+
     if (activeReaction === key) {
       setActiveReaction(null);
-      setReactionCounts((prev) => ({ ...prev, [key]: prev[key as keyof typeof prev] - 1 }));
+      setReactionCounts((prev) => ({ ...prev, [key]: Math.max(0, prev[key] - 1) }));
     } else {
       if (activeReaction) {
-        setReactionCounts((prev) => ({ ...prev, [activeReaction]: prev[activeReaction as keyof typeof prev] - 1 }));
+        setReactionCounts((prev) => ({ ...prev, [activeReaction]: Math.max(0, prev[activeReaction] - 1) }));
       }
       setActiveReaction(key);
-      setReactionCounts((prev) => ({ ...prev, [key]: prev[key as keyof typeof prev] + 1 }));
+      setReactionCounts((prev) => ({ ...prev, [key]: prev[key] + 1 }));
     }
+
+    if (!useDbSocial || !user) return;
+
+    const { error } = previousReaction === key
+      ? await supabase
+          .from('post_reactions')
+          .delete()
+          .match({ post_id: post.id, user_id: user.id })
+      : await supabase
+          .from('post_reactions')
+          .upsert({ post_id: post.id, user_id: user.id, reaction: key } as never);
+
+    if (!error) return;
+
+    setActiveReaction(previousReaction);
+    setReactionCounts((prev) => {
+      const next = { ...prev };
+      if (previousReaction === key) {
+        next[key] += 1;
+      } else {
+        next[key] = Math.max(0, next[key] - 1);
+        if (previousReaction) next[previousReaction] += 1;
+      }
+      return next;
+    });
   };
 
   const handleCardClick = () => {
@@ -278,7 +336,7 @@ export default function PostCard({
           )}
 
           {/* Comments */}
-          <CommentSection />
+          <CommentSection postId={post.id} />
 
           {/* Collapse button */}
           <button
