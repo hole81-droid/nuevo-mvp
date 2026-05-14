@@ -20,20 +20,22 @@
 
 ## 1. 환경 설정
 
-- [ ] Supabase 프로젝트 확인
-- [ ] `supabase/schema.sql` 실제 Supabase SQL Editor에 적용
-- [ ] 테이블 생성 확인
-  - [ ] `users`
-  - [ ] `posts`
-  - [ ] `comments`
-  - [ ] `post_reactions`
-  - [ ] `follows`
-  - [ ] `experience_events`
-  - [ ] `notifications`
-- [ ] View 생성 확인
-  - [ ] `post_monthly_wes`
-  - [ ] `creator_monthly_wes`
-- [ ] Vercel 환경변수 설정
+- [x] Supabase 프로젝트 확인 (`oheesbcpxxabkenpqiry.supabase.co`)
+- [x] `supabase/schema.sql` 실제 Supabase SQL Editor에 적용
+- [x] 테이블 생성 확인
+  - [x] `users`
+  - [x] `posts`
+  - [x] `comments`
+  - [x] `post_reactions`
+  - [x] `follows`
+  - [x] `experience_events`
+  - [x] `notifications`
+  - [x] `payout_requests`
+- [x] View 생성 확인
+  - [x] `post_monthly_wes`
+  - [x] `creator_monthly_wes`
+- [x] `.env.local` 생성 (로컬 개발용 — git 제외)
+- [ ] Vercel 환경변수 설정 ← **다음 단계**
   - [ ] `NEXT_PUBLIC_SUPABASE_URL`
   - [ ] `NEXT_PUBLIC_SUPABASE_ANON_KEY`
 
@@ -169,9 +171,9 @@ npm run lint
 npm run build
 ```
 
-- [ ] TypeScript 통과
-- [ ] ESLint 통과
-- [ ] Production build 통과
+- [x] TypeScript 통과 (2025-05-15 기준 에러 0개)
+- [x] ESLint 통과 (2025-05-15 기준 경고 0개)
+- [x] Production build 통과 (2025-05-15 기준)
 
 ---
 
