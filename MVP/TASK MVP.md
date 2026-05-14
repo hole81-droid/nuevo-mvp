@@ -41,15 +41,21 @@
 
 ## 2. 인증 QA
 
+- [x] OAuth callback route 추가: `/auth/callback`
+- [x] 로그인 후 `next` 목적지 보존
+- [x] 프로필 미완성 유저는 `/setup?next=...`로 이동
+- [x] 프로필 저장 후 원래 목적지로 복귀
+- [x] `/upload` 미로그인 접근 시 `/login?next=/upload` 리다이렉트
+- [x] `/studio` 미로그인 접근 시 `/login?next=/studio` 리다이렉트
 - [ ] Supabase Google OAuth provider 활성화
 - [ ] Redirect URL 등록
-  - [ ] `http://localhost:3000/setup`
-  - [ ] `https://{vercel-domain}/setup`
+  - [ ] `http://localhost:3000/auth/callback`
+  - [ ] `https://{vercel-domain}/auth/callback`
 - [ ] `/login`에서 Google 로그인 테스트
 - [ ] 첫 로그인 후 `/setup` 이동 확인
 - [ ] 프로필 저장 후 `/` 이동 확인
-- [ ] `/upload` 미로그인 접근 시 `/login?next=/upload` 리다이렉트 확인
-- [ ] `/studio` 미로그인 접근 시 로그인 유도 확인
+- [x] `/upload` 미로그인 접근 시 `/login?next=/upload` 리다이렉트 구현
+- [x] `/studio` 미로그인 접근 시 로그인 유도 구현
 
 ---
 
@@ -86,6 +92,9 @@
 - [x] `post_reactions` 테이블 연결
 - [x] `follows` 테이블 연결
 - [x] 서버 조회 시 댓글/반응 집계 표시
+- [x] 댓글 작성 시 원본 창작자 알림 생성
+- [x] 반응 선택 시 원본 창작자 알림 생성
+- [x] 팔로우 시 대상 창작자 알림 생성
 - [ ] 실제 로그인 유저로 댓글 작성 QA
 - [ ] 댓글 새로고침 후 유지 확인
 - [ ] 반응 선택 후 새로고침 유지 확인
@@ -111,6 +120,8 @@
 - [x] `/upload?remix={postId}` 플로우
 - [x] `posts.remix_of` 저장
 - [x] 리믹스 알림 생성
+- [x] 알림 페이지가 실제 notification 타입 전체 조회
+- [x] 알림 읽음 상태를 DB와 동기화
 - [ ] 실제 DB 포스트에서 리믹스 버튼 테스트
 - [ ] 리믹스 게시 후 원본 창작자 알림 확인
 - [ ] 리믹스 카운트가 피드/프로필에 반영되는지 확인
@@ -121,16 +132,18 @@
 
 MVP 테스트용 실제 앱 URL을 최소 3개 준비한다.
 
-- [ ] 앱 1: 짧은 밈/텍스트 생성기
-- [ ] 앱 2: 작은 퀴즈/게임
-- [ ] 앱 3: 챗봇/상호작용 실험
+- [x] `/api/seed-demo-posts`로 로그인 계정에 seed 포스트 생성
+- [x] 설정 화면에 MVP 데모 앱 생성 버튼 추가
+- [x] 앱 1: 짧은 밈/텍스트 생성기
+- [x] 앱 2: 챗봇/상호작용 실험
+- [x] 앱 3: 작은 판정/게임형 실험
 
 각 앱 요구사항:
 
-- [ ] 인증 없이 접근 가능
-- [ ] 모바일 390px 폭에서 사용 가능
-- [ ] iframe에서 로드 가능
-- [ ] 첫 화면 3초 안에 이해 가능
+- [x] 인증 없이 접근 가능
+- [x] 모바일 390px 폭에서 사용 가능
+- [x] iframe에서 로드 가능
+- [x] 첫 화면 3초 안에 이해 가능
 
 ---
 

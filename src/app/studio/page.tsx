@@ -1,4 +1,5 @@
 import Link from 'next/link';
+import { redirect } from 'next/navigation';
 import BottomNav from '@/components/layout/BottomNav';
 import RemixMap from '@/components/studio/RemixMap';
 import PayoutRequestPanel from '@/components/studio/PayoutRequestPanel';
@@ -18,14 +19,6 @@ import {
   WES_WEIGHTS,
   WesStats,
 } from '@/lib/wes';
-
-const MY_STATS = {
-  sessions: 8234,
-  minutes: 3456,
-  reactions: 3126,
-  comments: 124,
-  remixes: 89,
-};
 
 const MOCK_POST_BREAKDOWN: PostWesBreakdown[] = [
   {
@@ -67,23 +60,10 @@ type StudioData = {
   isLive: boolean;
 };
 
-function fallbackStudioData(): StudioData {
-  return {
-    month: monthLabel(),
-    monthKey: monthKey(),
-    stats: MY_STATS,
-    platformWes: 500_000,
-    postBreakdown: MOCK_POST_BREAKDOWN,
-    payoutRequest: null,
-    isLive: false,
-  };
-}
-
 async function getStudioData(): Promise<StudioData> {
-  const fallback = fallbackStudioData();
   const supabase = await createClient();
   const { data: { user } } = await supabase.auth.getUser();
-  if (!user) return fallback;
+  if (!user) redirect('/login?next=/studio');
 
   const month = monthKey();
   const { data: creatorRow }: { data: CreatorMonthlyWesRow | null } = await supabase

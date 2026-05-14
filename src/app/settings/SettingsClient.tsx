@@ -60,6 +60,51 @@ function LinkRow({ label, desc, href, danger }: { label: string; desc?: string; 
   );
 }
 
+function SeedDemoPostsButton() {
+  const [status, setStatus] = useState<'idle' | 'loading' | 'done' | 'error'>('idle');
+  const [message, setMessage] = useState('');
+
+  const seedPosts = async () => {
+    setStatus('loading');
+    setMessage('');
+
+    const response = await fetch('/api/seed-demo-posts', { method: 'POST' });
+    const body = (await response.json()) as { created?: number; skipped?: number; error?: string; message?: string };
+
+    if (!response.ok) {
+      setStatus('error');
+      setMessage(body.error ?? 'Seed 앱 생성에 실패했어요.');
+      return;
+    }
+
+    setStatus('done');
+    setMessage(body.message ?? `${body.created ?? 0}개 생성, ${body.skipped ?? 0}개 건너뜀`);
+  };
+
+  return (
+    <div className="mx-4 rounded-2xl bg-white border border-gray-100 overflow-hidden">
+      <div className="px-4 py-4">
+        <div className="text-[15px] font-black tracking-[-0.04em] text-gray-900">MVP 데모 앱 채우기</div>
+        <p className="mt-1 text-[12px] leading-relaxed text-gray-500">
+          현재 로그인한 계정으로 iframe 실행 가능한 데모 앱 3개를 피드에 생성합니다.
+        </p>
+        <button
+          onClick={seedPosts}
+          disabled={status === 'loading'}
+          className="mt-3 w-full h-12 rounded-full bg-black text-white text-[14px] font-black tracking-[-0.03em] disabled:bg-[#CFCFC7] transition-all active:scale-[0.98]"
+        >
+          {status === 'loading' ? '생성 중...' : '데모 앱 3개 생성'}
+        </button>
+        {message && (
+          <div className={`mt-2 text-[12px] font-bold ${status === 'error' ? 'text-red-500' : 'text-gray-500'}`}>
+            {message}
+          </div>
+        )}
+      </div>
+    </div>
+  );
+}
+
 export default function SettingsClient() {
   const [notif, setNotif] = useState({
     likes: true,
@@ -102,6 +147,10 @@ export default function SettingsClient() {
           프로필 보기
         </Link>
       </div>
+
+      {/* MVP 테스트 */}
+      <SectionHeader title="MVP 테스트" />
+      <SeedDemoPostsButton />
 
       {/* 알림 설정 */}
       <SectionHeader title="알림" />

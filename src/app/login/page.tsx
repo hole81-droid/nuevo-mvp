@@ -5,6 +5,7 @@ import { useRouter, useSearchParams } from 'next/navigation';
 import { Suspense, useEffect, useState } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 import NuevoGlyph from '@/components/ui/NuevoGlyph';
+import { safeNextPath } from '@/lib/safe-next-path';
 
 export default function LoginPage() {
   return (
@@ -17,7 +18,7 @@ export default function LoginPage() {
 function LoginPageInner() {
   const router = useRouter();
   const searchParams = useSearchParams();
-  const next = searchParams.get('next') ?? '/';
+  const next = safeNextPath(searchParams.get('next'), '/');
   const { user, loading, signInWithGoogle } = useAuth();
   const [submitting, setSubmitting] = useState(false);
 
@@ -27,7 +28,7 @@ function LoginPageInner() {
 
   const handleGoogleLogin = async () => {
     setSubmitting(true);
-    await signInWithGoogle();
+    await signInWithGoogle(next);
     setSubmitting(false);
   };
 

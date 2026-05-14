@@ -9,6 +9,7 @@ import { useSaved } from '@/contexts/SavedContext';
 import { useAuth } from '@/contexts/AuthContext';
 import { createClient } from '@/lib/supabase/client';
 import { countReactions, isUuid, ReactionKey } from '@/lib/social';
+import { createNotification } from '@/lib/notification-events';
 import ContentViewer from './ContentViewer';
 import InteractiveDemo from './InteractiveDemo';
 import AudioPlayer from './AudioPlayer';
@@ -110,7 +111,17 @@ export default function PostCard({
           .from('post_reactions')
           .upsert({ post_id: post.id, user_id: user.id, reaction: key } as never);
 
-    if (!error) return;
+    if (!error) {
+      if (previousReaction !== key) {
+        await createNotification(supabase, {
+          recipientId: author.id,
+          actorId: user.id,
+          type: 'reaction',
+          postId: post.id,
+        });
+      }
+      return;
+    }
 
     setActiveReaction(previousReaction);
     setReactionCounts((prev) => {
@@ -336,7 +347,7 @@ export default function PostCard({
           )}
 
           {/* Comments */}
-          <CommentSection postId={post.id} />
+          <CommentSection postId={post.id} postAuthorId={author.id} />
 
           {/* Collapse button */}
           <button

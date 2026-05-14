@@ -4,6 +4,7 @@ import { createContext, useContext, useEffect, useMemo, useState, ReactNode } fr
 import { useAuth } from '@/contexts/AuthContext';
 import { createClient } from '@/lib/supabase/client';
 import { isUuid } from '@/lib/social';
+import { createNotification } from '@/lib/notification-events';
 
 // 초기값: minsu, sujin 팔로우 중
 const INITIAL_FOLLOWING = new Set(['minsu', 'sujin']);
@@ -78,8 +79,15 @@ export function FollowProvider({ children }: { children: ReactNode }) {
       supabase
         .from('follows')
         .insert({ follower_id: user.id, following_id: authorId } as never)
-        .then(({ error }: { error: Error | null }) => {
-          if (!error) return;
+        .then(async ({ error }: { error: Error | null }) => {
+          if (!error) {
+            await createNotification(supabase, {
+              recipientId: authorId,
+              actorId: user.id,
+              type: 'follow',
+            });
+            return;
+          }
           setFollowing((prev) => {
             const next = new Set(prev);
             next.delete(authorId);

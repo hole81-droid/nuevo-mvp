@@ -1,15 +1,26 @@
 'use client';
 
-import { useRouter } from 'next/navigation';
-import { FormEvent, useEffect, useState } from 'react';
+import { useRouter, useSearchParams } from 'next/navigation';
+import { FormEvent, Suspense, useEffect, useState } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 import { createClient } from '@/lib/supabase/client';
+import { safeNextPath } from '@/lib/safe-next-path';
 
 const AVATARS = ['😸', '🎸', '🌸', '🦊', '⚗️', '🦁', '🎨', '🌊'];
 const AVATAR_BGS = ['#FFF0EA', '#EEE9FF', '#FFE8F4', '#EEFAD6', '#F7F0E6', '#E0F0FF'];
 
 export default function SetupPage() {
+  return (
+    <Suspense fallback={null}>
+      <SetupPageInner />
+    </Suspense>
+  );
+}
+
+function SetupPageInner() {
   const router = useRouter();
+  const searchParams = useSearchParams();
+  const next = safeNextPath(searchParams.get('next'), '/');
   const supabase = createClient();
   const { user, profile, loading, refreshProfile } = useAuth();
   const [handle, setHandle] = useState('');
@@ -21,8 +32,11 @@ export default function SetupPage() {
   const [error, setError] = useState('');
 
   useEffect(() => {
-    if (!loading && !user) router.replace('/login?next=/setup');
-  }, [loading, router, user]);
+    if (!loading && !user) {
+      const setupPath = `/setup${next === '/' ? '' : `?next=${encodeURIComponent(next)}`}`;
+      router.replace(`/login?next=${encodeURIComponent(setupPath)}`);
+    }
+  }, [loading, next, router, user]);
 
   useEffect(() => {
     if (!profile) return;
@@ -63,7 +77,7 @@ export default function SetupPage() {
     }
 
     await refreshProfile();
-    router.replace('/');
+    router.replace(next);
   };
 
   return (

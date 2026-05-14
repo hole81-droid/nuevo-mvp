@@ -9,7 +9,7 @@ interface AuthContextValue {
   user: User | null;
   profile: UserRow | null;
   loading: boolean;
-  signInWithGoogle: () => Promise<void>;
+  signInWithGoogle: (next?: string) => Promise<void>;
   signOut: () => Promise<void>;
   refreshProfile: () => Promise<void>;
 }
@@ -67,11 +67,14 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     };
   }, [loadProfile, supabase]);
 
-  const signInWithGoogle = async () => {
+  const signInWithGoogle = async (next = '/') => {
+    const callbackUrl = new URL('/auth/callback', window.location.origin);
+    callbackUrl.searchParams.set('next', next);
+
     await supabase.auth.signInWithOAuth({
       provider: 'google',
       options: {
-        redirectTo: `${window.location.origin}/setup`,
+        redirectTo: callbackUrl.toString(),
       },
     });
   };

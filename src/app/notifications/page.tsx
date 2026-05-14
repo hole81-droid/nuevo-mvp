@@ -7,6 +7,7 @@ import { useNotifications } from '@/contexts/NotificationContext';
 import { useAuth } from '@/contexts/AuthContext';
 import { createClient } from '@/lib/supabase/client';
 import NuevoGlyph from '@/components/ui/NuevoGlyph';
+import { relativeTime } from '@/lib/social';
 import type { NotificationRow, PostRow, UserRow } from '@/lib/supabase/types';
 
 type NotifType = 'like' | 'remix' | 'follow' | 'comment' | 'reaction' | 'revenue' | 'tier_up' | 'remix_revenue';
@@ -83,7 +84,7 @@ function NotifRow({ notif }: { notif: Notif }) {
           {notif.type === 'tier_up' && (
             <>
               <p className="text-[14px] text-gray-900 leading-snug">
-                <span className="font-bold text-black">{notif.tierName} 승급!</span>
+                <span className="font-bold text-black">{notif.tierName ?? '파트너 티어'} 승급!</span>
               </p>
               <p className="text-[13px] text-gray-500 mt-0.5">
                 수익 배분율이 <strong>70%</strong>로 올라갔어요. 스튜디오에서 확인해보세요.
@@ -144,7 +145,7 @@ function NotifRow({ notif }: { notif: Notif }) {
     remix:    { icon: 'REMIX', text: (n) => `"${n.postTitle}"을 리믹스했습니다` },
     follow:   { icon: 'FOLLOW', text: () => '회원님을 팔로우하기 시작했습니다' },
     comment:  { icon: 'REPLY', text: (n) => `"${n.postTitle}"에 댓글을 달았습니다` },
-    reaction: { icon: 'REACT', text: (n) => `"${n.postTitle}"에 ${n.reaction} 반응을 남겼습니다` },
+    reaction: { icon: 'REACT', text: (n) => `"${n.postTitle}"에 ${n.reaction ?? '반응'}을 남겼습니다` },
   };
 
   const meta = NOTIF_META[notif.type];
@@ -183,26 +184,27 @@ export default function NotificationsPage() {
 
   useEffect(() => {
     markAllRead();
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+  }, [markAllRead]);
 
   useEffect(() => {
     if (!user) return;
 
-    const loadRemixNotifications = async () => {
+    const loadNotifications = async () => {
       const { data } = await supabase
         .from('notifications')
         .select('*')
         .eq('recipient_id', user.id)
-        .eq('type', 'remix')
         .order('created_at', { ascending: false })
-        .limit(20);
+        .limit(50);
 
-      if (!data?.length) return;
+      if (!data?.length) {
+        setNotifications(NOTIFICATIONS);
+        return;
+      }
       const rows = data as NotificationRow[];
 
       const actorIds = Array.from(new Set(rows.map((n) => n.actor_id).filter(Boolean))) as string[];
-      const postIds = Array.from(new Set(rows.map((n) => n.post_id).filter(Boolean))) as string[];
+      const postIds = Array.from(new Set(rows.flatMap((n) => [n.post_id, n.remix_post_id]).filter(Boolean))) as string[];
 
       const [{ data: actors }, { data: posts }] = await Promise.all([
         actorIds.length
@@ -220,27 +222,35 @@ export default function NotificationsPage() {
 
       const realNotifications: Notif[] = rows.map((notif) => {
         const actor = notif.actor_id ? actorById.get(notif.actor_id) : null;
-        const post = notif.post_id ? postById.get(notif.post_id) : null;
+        const postId = notif.post_id ?? notif.remix_post_id;
+        const post = postId ? postById.get(postId) : null;
 
         return {
           id: notif.id,
-          type: 'remix',
+          type: notif.type,
           actorEmoji: actor?.avatar_emoji ?? '✨',
           actorName: actor?.display_name ?? '누군가',
           actorHandle: actor?.handle ?? 'creator',
           actorBg: actor?.avatar_bg ?? '#F7F0E6',
           postTitle: post?.title ?? '내 작품',
-          postId: notif.post_id ?? undefined,
-          time: '방금',
+          postId: postId ?? undefined,
+          reaction: notif.type === 'reaction' ? '반응' : undefined,
+          tierName: notif.type === 'tier_up' ? '새 파트너 티어' : undefined,
+          time: relativeTime(notif.created_at),
           read: notif.read,
         };
       });
 
-      setNotifications([...realNotifications, ...NOTIFICATIONS.filter((n) => n.type !== 'remix')]);
+      setNotifications(realNotifications);
     };
 
-    loadRemixNotifications();
+    loadNotifications();
   }, [supabase, user]);
+
+  const handleMarkAllRead = async () => {
+    await markAllRead();
+    setNotifications((prev) => prev.map((notif) => ({ ...notif, read: true })));
+  };
 
   return (
     <div className="flex flex-col h-full max-w-[430px] mx-auto">
@@ -249,7 +259,7 @@ export default function NotificationsPage() {
           알림
           {unreadCount > 0 && <span className="ml-2 text-[13px] font-semibold text-warm">{unreadCount}개 새 알림</span>}
         </span>
-        <button onClick={markAllRead} className="text-[14px] text-gray-500 font-medium hover:text-gray-700">모두 읽음</button>
+        <button onClick={handleMarkAllRead} className="text-[14px] text-gray-500 font-medium hover:text-gray-700">모두 읽음</button>
       </header>
 
       <main className="flex-1 overflow-y-auto pb-[54px] scrollbar-hide">

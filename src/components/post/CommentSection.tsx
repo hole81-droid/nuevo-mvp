@@ -5,6 +5,7 @@ import { Comment } from '@/lib/types';
 import { useAuth } from '@/contexts/AuthContext';
 import { createClient } from '@/lib/supabase/client';
 import { isUuid, mapDbCommentToComment, mapUserRowToAuthor } from '@/lib/social';
+import { createNotification } from '@/lib/notification-events';
 
 const INITIAL_COMMENTS: Comment[] = [
   {
@@ -32,11 +33,12 @@ const INITIAL_COMMENTS: Comment[] = [
 
 interface Props {
   postId?: string;
+  postAuthorId?: string;
   initialComments?: Comment[];
   inputRef?: RefObject<HTMLInputElement | null>;
 }
 
-export default function CommentSection({ postId, initialComments = INITIAL_COMMENTS, inputRef }: Props) {
+export default function CommentSection({ postId, postAuthorId, initialComments = INITIAL_COMMENTS, inputRef }: Props) {
   const supabase = useMemo(() => createClient(), []);
   const { user, profile } = useAuth();
   const useDbComments = Boolean(postId && isUuid(postId));
@@ -121,6 +123,13 @@ export default function CommentSection({ postId, initialComments = INITIAL_COMME
       setComments((prev) => prev.map((comment) =>
         comment.id === optimisticComment.id ? mapDbCommentToComment(data) : comment
       ));
+
+      await createNotification(supabase, {
+        recipientId: postAuthorId,
+        actorId: user.id,
+        type: 'comment',
+        postId,
+      });
       return;
     }
 

@@ -49,7 +49,7 @@ export default function UploadPage() {
 function UploadPageInner() {
   const router = useRouter();
   const supabase = useMemo(() => createClient(), []);
-  const { user } = useAuth();
+  const { user, loading } = useAuth();
   const searchParams = useSearchParams();
   const remixPostId = searchParams.get('remix');
   const mockOriginalPost = remixPostId ? mockPosts.find((p) => p.id === remixPostId) ?? null : null;
@@ -65,6 +65,12 @@ function UploadPageInner() {
   const [showOptional, setShowOptional] = useState(false);
   const [publishing, setPublishing] = useState(false);
   const [publishError, setPublishError] = useState('');
+
+  useEffect(() => {
+    if (loading || user) return;
+    const next = `/upload${remixPostId ? `?remix=${remixPostId}` : ''}`;
+    router.replace(`/login?next=${encodeURIComponent(next)}`);
+  }, [loading, remixPostId, router, user]);
 
   useEffect(() => {
     if (!remixPostId || !isUuid(remixPostId)) return;
