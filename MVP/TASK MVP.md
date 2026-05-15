@@ -152,10 +152,13 @@ MVP 테스트용 실제 앱 URL을 최소 3개 준비한다.
 
 ## 9. 배포 QA
 
-- [x] Vercel 배포 트리거 — 2026-05-15 (production URL: `https://nuevo-instagram-test-ad08xanlk-hole81-2757s-projects.vercel.app`)
-- [ ] Vercel 빌드 성공 확인 (Inspect URL로 상태 확인)
-- [ ] 배포 URL에서 `/` 접속 가능
-- [ ] 배포 URL에서 `/upload` 로그인 보호 확인
+- [x] Vercel 배포 트리거 — 2026-05-15 (Project: `nuevo-instagram-test`)
+- [x] Vercel 빌드 성공 확인 (status: Ready, 30s 빌드)
+- [x] 배포 URL에서 `/` 접속 가능 (BOM 이슈 수정 후 빈 상태 정상 표시)
+- [x] 배포 URL에서 `/upload` 로그인 보호 확인 (307 → /login?next=/upload)
+- [x] 배포 URL에서 보호 라우트 미들웨어 동작 확인 (`/studio`, `/settings`)
+- [x] 배포 URL에서 API 라우트 인증 가드 확인 (401 unauthorized)
+- [x] Vercel Deployment Protection 해제 (외부 접근 가능)
 - [ ] 배포 URL에서 Google 로그인 가능 (Supabase Redirect URL 등록 후)
 - [ ] 배포 URL에서 앱 업로드 가능
 - [ ] 배포 URL에서 iframe 실행 가능
