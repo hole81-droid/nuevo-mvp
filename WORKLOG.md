@@ -80,30 +80,60 @@
 
 ---
 
-## 다음에 할 일 (T12 — Vercel 배포)
+## 세션 4 — 2026-05-15
 
-> 코드 작업은 완료. 이후는 대시보드/인프라 작업.
+### 완료 내역
 
-### 1. Supabase 대시보드 (수동)
-1. `Authentication → Providers → Google` 활성화
-2. Client ID / Secret 입력 (Google Cloud Console에서 발급)
-3. Redirect URL 등록:
-   - `http://localhost:3000/auth/callback` (로컬)
-   - `https://{vercel-domain}.vercel.app/auth/callback` (배포)
+#### 인증 인프라 활성화
+- **Google Cloud Console OAuth 앱 생성 완료**
+  - OAuth consent screen (External, app name: `nuevo`)
+  - OAuth 2.0 Client ID (Web application)
+  - Authorized redirect URI: `https://oheesbcpxxabkenpqiry.supabase.co/auth/v1/callback`
+- **Supabase Authentication → Providers → Google 활성화**
+  - Client ID / Client Secret 입력 + Save 완료
+  - `http://localhost:3000/login`에서 Google 로그인 정상 동작 확인
 
-### 2. Vercel 배포 (수동)
-1. `vercel.com` → New Project → GitHub `hole81-droid/nuevo-instagram` import
-2. Environment Variables 추가:
-   - `NEXT_PUBLIC_SUPABASE_URL` = `https://oheesbcpxxabkenpqiry.supabase.co`
-   - `NEXT_PUBLIC_SUPABASE_ANON_KEY` = (`.env.local`의 값)
-3. Deploy
+#### Vercel 배포
+- 프로젝트 연결 확인: `nuevo-instagram-test` (orgId `team_zILys31bpEmbDACtdVr6p9Du`)
+- production 환경변수 등록:
+  - `NEXT_PUBLIC_SUPABASE_URL` = `https://oheesbcpxxabkenpqiry.supabase.co`
+  - `NEXT_PUBLIC_SUPABASE_ANON_KEY` = (`.env.local`과 동일)
+- `vercel --prod --yes` 실행 → 빌드 진행 중
+- Inspect URL: `https://vercel.com/hole81-2757s-projects/nuevo-instagram-test/DgzxH8h9SaiFuBCR4e9xVwVZ6rkS`
+- Production URL: `https://nuevo-instagram-test-ad08xanlk-hole81-2757s-projects.vercel.app`
 
-### 3. 배포 후 E2E QA
+#### 로컬 환경 복원
+- `.env.local` 재생성 (다른 PC에서 이어받기 위해 — git 제외)
+- `npm run dev` 정상 동작 확인 (`.env.local` 인식, 모든 라우트 200 응답)
+
+### 커밋 (이 세션)
+- 코드 변경 없음. 문서(WORKLOG.md, TASK MVP.md)만 업데이트.
+
+---
+
+## 다음에 할 일 (배포 완료 후 — T13 OAuth 콜백 URL 등록 + E2E QA)
+
+### 1. Vercel 배포 URL 확정 후 OAuth 리다이렉트 등록 (수동)
+
+Vercel 배포가 완료되면 production URL이 확정된다. 그 후:
+
+1. **Google Cloud Console** → APIs & Services → Credentials → OAuth 2.0 Client ID
+   - Authorized redirect URIs에 **추가 등록 불필요** (Supabase가 중계)
+2. **Supabase 대시보드** → Authentication → URL Configuration
+   - **Site URL**: `https://nuevo-instagram-test-ad08xanlk-hole81-2757s-projects.vercel.app` (또는 최종 확정 도메인)
+   - **Redirect URLs**에 추가:
+     - `http://localhost:3000/auth/callback`
+     - `https://{vercel-final-domain}/auth/callback`
+
+### 2. 배포 후 E2E QA
+- [ ] 배포 URL `/`에서 피드 로드 (Supabase 실 데이터)
 - [ ] 배포 URL에서 Google 로그인 → `/setup` 이동 → 프로필 저장 → `/` 이동
+- [ ] Settings → "MVP 데모 앱 생성" → 피드에 seed 포스트 표시
 - [ ] `/upload`에서 앱 URL 입력 → 게시 → 피드에 표시
 - [ ] 피드 카드 탭 → 인라인 확장 → iframe 실행
 - [ ] 댓글 작성 → 새로고침 유지 확인
-- [ ] Settings → "MVP 데모 앱 생성" → 피드에 seed 포스트 표시
+- [ ] 리믹스 → 원본 창작자 알림 확인
+- [ ] 모바일 브라우저(390px)에서 핵심 루프 테스트
 
 ---
 
@@ -112,10 +142,14 @@
 | 항목 | 값 |
 |------|-----|
 | Supabase 프로젝트 URL | `https://oheesbcpxxabkenpqiry.supabase.co` |
+| Supabase OAuth callback | `https://oheesbcpxxabkenpqiry.supabase.co/auth/v1/callback` |
 | GitHub repo | `https://github.com/hole81-droid/nuevo-instagram` |
 | 브랜치 | `main` |
 | Node 버전 | 프로젝트 루트 `.nvmrc` 또는 `package.json` engines 참고 |
 | 패키지 매니저 | npm |
+| Vercel project | `nuevo-instagram-test` (org `hole81-2757s-projects`) |
+| Vercel production URL | `https://nuevo-instagram-test-ad08xanlk-hole81-2757s-projects.vercel.app` |
+| Google OAuth | 활성화 완료 (Supabase Authentication → Providers → Google) |
 
 ### 로컬 개발 시작
 ```bash

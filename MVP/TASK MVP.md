@@ -35,9 +35,9 @@
   - [x] `post_monthly_wes`
   - [x] `creator_monthly_wes`
 - [x] `.env.local` 생성 (로컬 개발용 — git 제외)
-- [ ] Vercel 환경변수 설정 ← **다음 단계**
-  - [ ] `NEXT_PUBLIC_SUPABASE_URL`
-  - [ ] `NEXT_PUBLIC_SUPABASE_ANON_KEY`
+- [x] Vercel 환경변수 설정 (production) — 2026-05-15
+  - [x] `NEXT_PUBLIC_SUPABASE_URL`
+  - [x] `NEXT_PUBLIC_SUPABASE_ANON_KEY`
 
 ---
 
@@ -49,13 +49,14 @@
 - [x] 프로필 저장 후 원래 목적지로 복귀
 - [x] `/upload` 미로그인 접근 시 `/login?next=/upload` 리다이렉트
 - [x] `/studio` 미로그인 접근 시 `/login?next=/studio` 리다이렉트
-- [ ] Supabase Google OAuth provider 활성화
-- [ ] Redirect URL 등록
+- [x] Supabase Google OAuth provider 활성화 — 2026-05-15
+- [x] Google Cloud OAuth Client ID/Secret 발급 → Supabase 입력 — 2026-05-15
+- [ ] Supabase URL Configuration → Redirect URLs 등록 (배포 URL 확정 후)
   - [ ] `http://localhost:3000/auth/callback`
-  - [ ] `https://{vercel-domain}/auth/callback`
-- [ ] `/login`에서 Google 로그인 테스트
-- [ ] 첫 로그인 후 `/setup` 이동 확인
-- [ ] 프로필 저장 후 `/` 이동 확인
+  - [ ] `https://{vercel-final-domain}/auth/callback`
+- [x] `/login`에서 Google 로그인 테스트 (로컬) — 2026-05-15
+- [ ] 첫 로그인 후 `/setup` 이동 확인 (E2E)
+- [ ] 프로필 저장 후 `/` 이동 확인 (E2E)
 - [x] `/upload` 미로그인 접근 시 `/login?next=/upload` 리다이렉트 구현
 - [x] `/studio` 미로그인 접근 시 로그인 유도 구현
 
@@ -151,10 +152,11 @@ MVP 테스트용 실제 앱 URL을 최소 3개 준비한다.
 
 ## 9. 배포 QA
 
-- [ ] Vercel 배포 성공
+- [x] Vercel 배포 트리거 — 2026-05-15 (production URL: `https://nuevo-instagram-test-ad08xanlk-hole81-2757s-projects.vercel.app`)
+- [ ] Vercel 빌드 성공 확인 (Inspect URL로 상태 확인)
 - [ ] 배포 URL에서 `/` 접속 가능
 - [ ] 배포 URL에서 `/upload` 로그인 보호 확인
-- [ ] 배포 URL에서 Google 로그인 가능
+- [ ] 배포 URL에서 Google 로그인 가능 (Supabase Redirect URL 등록 후)
 - [ ] 배포 URL에서 앱 업로드 가능
 - [ ] 배포 URL에서 iframe 실행 가능
 - [ ] 모바일 브라우저에서 핵심 루프 테스트
