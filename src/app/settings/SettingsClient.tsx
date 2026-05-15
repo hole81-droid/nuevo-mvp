@@ -2,6 +2,8 @@
 
 import { useState } from 'react';
 import Link from 'next/link';
+import { useRouter } from 'next/navigation';
+import { useAuth } from '@/contexts/AuthContext';
 
 function Toggle({ value, onChange }: { value: boolean; onChange: (v: boolean) => void }) {
   return (
@@ -61,6 +63,7 @@ function LinkRow({ label, desc, href, danger }: { label: string; desc?: string; 
 }
 
 function SeedDemoPostsButton() {
+  const router = useRouter();
   const [status, setStatus] = useState<'idle' | 'loading' | 'done' | 'error'>('idle');
   const [message, setMessage] = useState('');
 
@@ -79,6 +82,7 @@ function SeedDemoPostsButton() {
 
     setStatus('done');
     setMessage(body.message ?? `${body.created ?? 0}개 생성, ${body.skipped ?? 0}개 건너뜀`);
+    setTimeout(() => router.push('/'), 800);
   };
 
   return (
@@ -90,13 +94,13 @@ function SeedDemoPostsButton() {
         </p>
         <button
           onClick={seedPosts}
-          disabled={status === 'loading'}
+          disabled={status === 'loading' || status === 'done'}
           className="mt-3 w-full h-12 rounded-full bg-black text-white text-[14px] font-black tracking-[-0.03em] disabled:bg-[#CFCFC7] transition-all active:scale-[0.98]"
         >
-          {status === 'loading' ? '생성 중...' : '데모 앱 3개 생성'}
+          {status === 'loading' ? '생성 중...' : status === 'done' ? '피드로 이동 중...' : '데모 앱 3개 생성'}
         </button>
         {message && (
-          <div className={`mt-2 text-[12px] font-bold ${status === 'error' ? 'text-red-500' : 'text-gray-500'}`}>
+          <div className={`mt-2 text-[12px] font-bold ${status === 'error' ? 'text-red-500' : 'text-emerald-600'}`}>
             {message}
           </div>
         )}
@@ -106,6 +110,14 @@ function SeedDemoPostsButton() {
 }
 
 export default function SettingsClient() {
+  const router = useRouter();
+  const { profile, signOut } = useAuth();
+
+  const handleSignOut = async () => {
+    await signOut();
+    router.push('/login');
+  };
+
   const [notif, setNotif] = useState({
     likes: true,
     comments: true,
@@ -133,12 +145,12 @@ export default function SettingsClient() {
     <div className="pb-4">
       {/* Profile summary */}
       <div className="flex items-center gap-3 px-4 py-4 border-b border-gray-100">
-        <div className="w-12 h-12 rounded-full bg-orange-100 flex items-center justify-center text-2xl flex-shrink-0">
-          😸
+        <div className="w-12 h-12 rounded-full flex items-center justify-center text-2xl flex-shrink-0" style={{ backgroundColor: profile?.avatar_bg ?? '#F7F0E6' }}>
+          {profile?.avatar_emoji ?? '✨'}
         </div>
         <div className="flex-1">
-          <div className="text-[15px] font-bold text-gray-900">민수</div>
-          <div className="text-[13px] text-gray-500">@minsu_lab</div>
+          <div className="text-[15px] font-bold text-gray-900">{profile?.display_name ?? '내 계정'}</div>
+          <div className="text-[13px] text-gray-500">@{profile?.handle ?? '...'}</div>
         </div>
         <Link
           href="/profile/me"
@@ -259,7 +271,13 @@ export default function SettingsClient() {
       {/* 위험 구역 */}
       <SectionHeader title="위험 구역" />
       <div className="mx-4 rounded-2xl bg-white border border-gray-100 overflow-hidden">
-        <LinkRow label="로그아웃" href="#" />
+        <button
+          onClick={handleSignOut}
+          className="w-full flex items-center justify-between py-3.5 px-4 border-b border-gray-50 hover:bg-gray-50 transition-colors"
+        >
+          <div className="text-[15px] font-medium text-gray-900">로그아웃</div>
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#9CA3AF" strokeWidth="2" strokeLinecap="round"><path d="M9 18l6-6-6-6" /></svg>
+        </button>
         <LinkRow label="계정 비활성화" href="#" danger />
         <LinkRow label="계정 삭제" href="#" danger />
       </div>
