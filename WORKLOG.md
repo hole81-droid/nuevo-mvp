@@ -107,7 +107,24 @@
 - `npm run dev` 정상 동작 확인 (`.env.local` 인식, 모든 라우트 200 응답)
 
 ### 커밋 (이 세션)
-- 코드 변경 없음. 문서(WORKLOG.md, TASK MVP.md)만 업데이트.
+- `b0cb2cb` docs: 세션 4 — Google OAuth 활성화 + Vercel 배포 트리거
+- `1053006` docs: WORKLOG — Vercel 배포 성공 URL 업데이트
+- `e719c1f` fix: turbopack workspace root 명시 (상위 디렉토리 lockfile 워닝 제거)
+- `75e6c98` fix: setup 페이지 `user_` 핸들 차단 + upload 검증 깊이 방어
+- `1f7d0c3` fix: 존재하지 않는 프로필 핸들에서 mock 유저로 잘못 fallback
+
+### E2E QA로 발견·수정한 버그 (배포 URL 검증 중)
+1. **`/setup` 무한 리다이렉트 루프 가능성**: 유저가 `user_xxx` 핸들을 직접 고르면 콜백이 미완성으로 판정. 클라이언트 검증 추가.
+2. **업로드 시 검증 우회 가능**: `validateEmbedUrl().ok`를 체크 안 하고 `normalizedUrl`만 사용. `handlePublish`에 가드 추가.
+3. **존재하지 않는 프로필 → 민수 표시**: `?? mockAuthors.minsu` 강제 fallback. notFound()로 변경.
+4. **Turbopack 워크스페이스 root 워닝**: 부모 디렉토리 lockfile 오인. `next.config.ts`에 root 명시.
+
+### 검증 통과한 항목 (배포 URL 기준)
+- `/`, `/explore`, `/onboarding`, `/leaderboard`, `/brand` 페이지 렌더링 정상
+- 미들웨어 보호 라우트 (`/upload`, `/studio`, `/settings`) → 307 → `/login?next=...`
+- API 라우트 (`/api/tier-sync`, `/api/payout-requests`, `/api/seed-demo-posts`) 미인증 → 401
+- 잘못된 post ID → 404, 잘못된 demo ID → 404
+- 빌드/lint/tsc 모두 통과
 
 ---
 
