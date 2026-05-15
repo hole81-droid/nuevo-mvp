@@ -106,12 +106,17 @@
 - `.env.local` 재생성 (다른 PC에서 이어받기 위해 — git 제외)
 - `npm run dev` 정상 동작 확인 (`.env.local` 인식, 모든 라우트 200 응답)
 
-### 커밋 (이 세션)
+### 커밋 (이 세션 — 시간순)
 - `b0cb2cb` docs: 세션 4 — Google OAuth 활성화 + Vercel 배포 트리거
 - `1053006` docs: WORKLOG — Vercel 배포 성공 URL 업데이트
 - `e719c1f` fix: turbopack workspace root 명시 (상위 디렉토리 lockfile 워닝 제거)
 - `75e6c98` fix: setup 페이지 `user_` 핸들 차단 + upload 검증 깊이 방어
 - `1f7d0c3` fix: 존재하지 않는 프로필 핸들에서 mock 유저로 잘못 fallback
+- `2edf967` docs: WORKLOG — E2E QA 결과 + 버그 4개 수정 기록
+- `4ad03e8` chore: 홈·explore 피드 fallback 시 supabase 에러 로깅 추가
+- `3cc93ab` chore: 임시 디버그 엔드포인트 (홈 피드 fallback 원인 진단용)
+- `e704fe1` fix: 홈 피드 mock fallback 원인 = Vercel env URL의 BOM 문자
+- `9c98370` docs: 배포 QA 섹션에 검증 완료 항목 체크
 
 ### E2E QA로 발견·수정한 버그 (배포 URL 검증 중)
 1. **`/setup` 무한 리다이렉트 루프 가능성**: 유저가 `user_xxx` 핸들을 직접 고르면 콜백이 미완성으로 판정. 클라이언트 검증 추가.
@@ -141,29 +146,68 @@
 
 ---
 
-## 다음에 할 일 (배포 완료 후 — T13 OAuth 콜백 URL 등록 + E2E QA)
+## 🔁 핸드오버 (다른 PC에서 이어받을 때 가장 먼저 읽기)
 
-### 1. Vercel 배포 URL 확정 후 OAuth 리다이렉트 등록 (수동)
+### 현재 상태 한 줄 요약
+**코드는 100% 완료. production 배포 + Supabase Redirect URL 등록까지 모두 끝났고, Google 로그인 → /setup → 홈 이동까지 직접 검증 완료. 남은 건 seed 데모 앱 생성 + 피드/업로드/댓글/리믹스 등 E2E 인터랙션 QA뿐.**
 
-Vercel 배포가 완료되면 production URL이 확정된다. 그 후:
+### 마지막 세션 종료 시점 (2026-05-15 마지막 단계)
+- ✅ 로컬에서 Google 로그인 OK
+- ✅ 배포 URL에서 Google 로그인 → `/setup` 도달 OK
+- ✅ `/setup`에서 프로필 저장 → `/` 도달 OK
+- 🟡 **`/settings`의 "데모 앱 3개 생성" 버튼 동작 미확인** ← 여기서 멈춤
+  - 사용자가 버튼을 눌렀으나 "피드에 아무것도 안 나타남"이라고 보고
+  - 버튼 하단 상태 메시지를 확인하지 못한 채 세션 종료
 
-1. **Google Cloud Console** → APIs & Services → Credentials → OAuth 2.0 Client ID
-   - Authorized redirect URIs에 **추가 등록 불필요** (Supabase가 중계)
-2. **Supabase 대시보드** → Authentication → URL Configuration
-   - **Site URL**: `https://nuevo-instagram-test-ad08xanlk-hole81-2757s-projects.vercel.app` (또는 최종 확정 도메인)
-   - **Redirect URLs**에 추가:
-     - `http://localhost:3000/auth/callback`
-     - `https://{vercel-final-domain}/auth/callback`
+### 이어받자마자 할 일 (우선순위 순)
 
-### 2. 배포 후 E2E QA
-- [ ] 배포 URL `/`에서 피드 로드 (Supabase 실 데이터)
-- [ ] 배포 URL에서 Google 로그인 → `/setup` 이동 → 프로필 저장 → `/` 이동
-- [ ] Settings → "MVP 데모 앱 생성" → 피드에 seed 포스트 표시
-- [ ] `/upload`에서 앱 URL 입력 → 게시 → 피드에 표시
-- [ ] 피드 카드 탭 → 인라인 확장 → iframe 실행
-- [ ] 댓글 작성 → 새로고침 유지 확인
-- [ ] 리믹스 → 원본 창작자 알림 확인
-- [ ] 모바일 브라우저(390px)에서 핵심 루프 테스트
+#### 1. 로컬 환경 복원 (5분)
+```bash
+git clone https://github.com/hole81-droid/nuevo-instagram.git
+cd nuevo-instagram
+npm install
+# .env.local 생성 (아래 "환경 정보" 섹션의 ANON KEY 사용)
+npm run dev
+```
+
+#### 2. Seed 버튼 디버깅 (10분)
+- 배포 URL `/settings` 접속 → "데모 앱 3개 생성" 버튼 클릭
+- **브라우저 개발자 도구 → Network 탭** 열어두고 클릭
+- `/api/seed-demo-posts` 요청의 응답 코드와 body 확인
+- 또는 버튼 아래에 작은 회색 글씨로 나오는 상태 메시지 확인
+- 가능성:
+  - **201**: 성공 → 홈으로 가서 `Cmd+Shift+R` 강제 새로고침 (캐시 무시)
+  - **401**: 세션 만료. 다시 로그인
+  - **500 + RLS 에러**: posts 테이블 RLS 정책 문제. `supabase/schema.sql` 158라인 확인
+  - **응답은 OK인데 피드 빔**: 홈 페이지 `force-dynamic`이지만 클라이언트 사이드 캐싱일 수 있음
+
+#### 3. 나머지 E2E QA (각 5분씩)
+- [ ] Seed 포스트 생성 후 피드에 표시 → 카드 탭 → 인라인 확장 → iframe 실행
+- [ ] 카드에서 댓글 작성 → 새로고침 후 유지
+- [ ] 반응(❤️🔥) 선택 → 새로고침 후 유지
+- [ ] 다른 유저(seed 포스트는 같은 author지만) 카드에서 리믹스 → 알림 확인
+- [ ] `/upload`에서 외부 앱 URL 직접 입력 → 게시 → 피드 등장
+- [ ] `/studio`에서 체험 수치 표시 확인
+- [ ] 모바일 브라우저(390px) 또는 Chrome DevTools 모바일 모드에서 전체 흐름 테스트
+
+### 알려진 잠재 이슈 (예방적 메모)
+
+#### 1. `/settings` 페이지 상단 프로필 카드가 하드코딩
+- `src/app/settings/SettingsClient.tsx` 134-148라인이 `민수 @minsu_lab`로 고정.
+- 로그인한 실제 유저로 표시되도록 `AuthContext`의 `profile` 사용으로 변경 필요.
+- Priority: Low (디자인 데모용으로 보이지만 production에선 혼동 유발).
+
+#### 2. PowerShell + Vercel CLI BOM 함정
+- `"value" | vercel env add` 절대 금지. 항상 `vercel env add NAME env --value "..." --yes` 사용.
+- WSL/bash에서는 파이프 OK. PowerShell만 문제.
+
+#### 3. `.env.local`은 git 제외
+- 다른 PC에서 시작 시 반드시 직접 만들어야 함. 형식은 하단 "환경 정보" 참조.
+
+#### 4. Vercel 배포 URL 패턴
+- production alias: `https://nuevo-instagram-test.vercel.app` (이게 안정적)
+- 매 deploy마다 unique URL도 추가 생성됨 (`-xxxxx-hole81-...`).
+- Supabase Redirect URL에 wildcard `https://nuevo-instagram-test-*.vercel.app/auth/callback`도 등록 추천.
 
 ---
 
@@ -178,8 +222,10 @@ Vercel 배포가 완료되면 production URL이 확정된다. 그 후:
 | Node 버전 | 프로젝트 루트 `.nvmrc` 또는 `package.json` engines 참고 |
 | 패키지 매니저 | npm |
 | Vercel project | `nuevo-instagram-test` (org `hole81-2757s-projects`) |
-| Vercel production URL (최신 배포) | `https://nuevo-instagram-test-oh6jearjh-hole81-2757s-projects.vercel.app` |
-| Google OAuth | 활성화 완료 (Supabase Authentication → Providers → Google) |
+| Vercel production alias (안정) | `https://nuevo-instagram-test.vercel.app` |
+| Google OAuth | ✅ 활성화 완료 (Supabase Authentication → Providers → Google) |
+| Supabase Redirect URLs | ✅ 등록 완료 (localhost + Vercel 도메인) |
+| Vercel Deployment Protection | ✅ 해제 완료 (외부 접근 가능) |
 
 ### 로컬 개발 시작
 ```bash
