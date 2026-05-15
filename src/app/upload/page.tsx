@@ -119,6 +119,13 @@ function UploadPageInner() {
     const remixOf = form.remixOf && isUuid(form.remixOf) ? form.remixOf : null;
     const embedUrl = validateEmbedUrl(form.iframeUrl, { requirePublicUrl: true });
 
+    // 인터랙티브 포스트는 유효한 URL이 필수. UI에서 차단되지만 깊이 방어로 한 번 더 검증.
+    if (form.contentType === 'interactive' && !embedUrl.ok) {
+      setPublishError(embedUrl.message ?? '앱 URL을 다시 확인해 주세요.');
+      setPublishing(false);
+      return;
+    }
+
     const {
       data: insertedPost,
       error,

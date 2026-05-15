@@ -50,7 +50,11 @@ function SetupPageInner() {
   }, [profile]);
 
   const cleanHandle = handle.toLowerCase().replace(/[^a-z0-9_]/g, '');
-  const canSubmit = cleanHandle.length >= 3 && displayName.trim().length >= 1 && !!user;
+  // `user_`로 시작하는 핸들은 신규 가입 시 자동 부여되는 임시 핸들이라
+  // 콜백 라우트가 "미설정"으로 판정한다. 동일 패턴을 직접 고르면 무한 리다이렉트가 발생하므로 차단.
+  const isReservedHandle = cleanHandle.startsWith('user_');
+  const canSubmit =
+    cleanHandle.length >= 3 && !isReservedHandle && displayName.trim().length >= 1 && !!user;
 
   const handleSubmit = async (event: FormEvent) => {
     event.preventDefault();
@@ -150,7 +154,14 @@ function SetupPageInner() {
               placeholder="minsu_lab"
             />
           </div>
-          <div className="mt-1 text-[12px] text-gray-400">영문 소문자, 숫자, 밑줄만 사용합니다.</div>
+          <div className="mt-1 text-[12px] text-gray-400">
+            영문 소문자, 숫자, 밑줄만 사용합니다. (3자 이상)
+          </div>
+          {isReservedHandle && (
+            <div className="mt-1 text-[12px] text-red-500">
+              `user_`로 시작하는 핸들은 사용할 수 없습니다.
+            </div>
+          )}
         </label>
 
         <label className="block">
