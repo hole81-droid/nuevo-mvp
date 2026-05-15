@@ -49,7 +49,7 @@ export default function UploadPage() {
 function UploadPageInner() {
   const router = useRouter();
   const supabase = useMemo(() => createClient(), []);
-  const { user, loading } = useAuth();
+  const { user, profile, loading } = useAuth();
   const searchParams = useSearchParams();
   const remixPostId = searchParams.get('remix');
   const mockOriginalPost = remixPostId ? mockPosts.find((p) => p.id === remixPostId) ?? null : null;
@@ -63,7 +63,7 @@ function UploadPageInner() {
     remixOf: remixPostId ?? '',
   });
   const [showOptional, setShowOptional] = useState(false);
-  const [publishing, setPublishing] = useState(false);
+  const [publishState, setPublishState] = useState<'idle' | 'uploading' | 'done'>('idle');
   const [publishError, setPublishError] = useState('');
 
   useEffect(() => {
@@ -113,7 +113,7 @@ function UploadPageInner() {
       return;
     }
 
-    setPublishing(true);
+    setPublishState('uploading');
     setPublishError('');
 
     const remixOf = form.remixOf && isUuid(form.remixOf) ? form.remixOf : null;
@@ -122,7 +122,7 @@ function UploadPageInner() {
     // 인터랙티브 포스트는 유효한 URL이 필수. UI에서 차단되지만 깊이 방어로 한 번 더 검증.
     if (form.contentType === 'interactive' && !embedUrl.ok) {
       setPublishError(embedUrl.message ?? '앱 URL을 다시 확인해 주세요.');
-      setPublishing(false);
+      setPublishState('idle');
       return;
     }
 
@@ -150,7 +150,7 @@ function UploadPageInner() {
 
     if (error) {
       setPublishError(error.message);
-      setPublishing(false);
+      setPublishState('idle');
       return;
     }
 
@@ -164,21 +164,34 @@ function UploadPageInner() {
       } as never);
     }
 
+    setPublishState('done');
     setTimeout(() => router.push('/'), 900);
   };
 
   return (
     <div className="flex flex-col h-full max-w-[430px] mx-auto bg-white">
       {/* Publishing overlay */}
-      {publishing && (
+      {publishState !== 'idle' && (
         <div className="fixed inset-0 z-[100] bg-[#F7F7F2] flex flex-col items-center justify-center gap-4">
-          <div className="w-16 h-16 rounded-full bg-black flex items-center justify-center shadow-[0_24px_36px_rgba(0,0,0,0.2)] animate-bounce">
-            <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="3" strokeLinecap="round">
-              <polyline points="20 6 9 17 4 12" />
-            </svg>
-          </div>
-          <div className="text-[22px] font-bold text-gray-900">게시 완료!</div>
-          <div className="text-[14px] text-gray-500">피드에서 확인해보세요</div>
+          {publishState === 'uploading' ? (
+            <>
+              <div className="w-16 h-16 rounded-full bg-black flex items-center justify-center shadow-[0_24px_36px_rgba(0,0,0,0.2)]">
+                <div className="w-7 h-7 border-2 border-white border-t-transparent rounded-full animate-spin" />
+              </div>
+              <div className="text-[22px] font-bold text-gray-900">게시 중...</div>
+              <div className="text-[14px] text-gray-500">잠깐만 기다려주세요</div>
+            </>
+          ) : (
+            <>
+              <div className="w-16 h-16 rounded-full bg-black flex items-center justify-center shadow-[0_24px_36px_rgba(0,0,0,0.2)] animate-bounce">
+                <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="3" strokeLinecap="round">
+                  <polyline points="20 6 9 17 4 12" />
+                </svg>
+              </div>
+              <div className="text-[22px] font-bold text-gray-900">게시 완료!</div>
+              <div className="text-[14px] text-gray-500">피드에서 확인해보세요</div>
+            </>
+          )}
         </div>
       )}
       {/* Header */}
@@ -250,6 +263,7 @@ function UploadPageInner() {
             updateForm={updateForm}
             showOptional={showOptional}
             setShowOptional={setShowOptional}
+            profile={profile}
           />
         )}
       </main>
@@ -272,7 +286,8 @@ function UploadPageInner() {
         ) : (
           <button
             onClick={handlePublish}
-            className="w-full h-[66px] rounded-full bg-black text-[20px] font-black tracking-[-0.04em] text-white shadow-[0_28px_40px_rgba(0,0,0,0.18)] transition-all active:scale-[0.98]"
+            disabled={publishState !== 'idle'}
+            className="w-full h-[66px] rounded-full bg-black text-[20px] font-black tracking-[-0.04em] text-white shadow-[0_28px_40px_rgba(0,0,0,0.18)] transition-all active:scale-[0.98] disabled:bg-[#CFCFC7] disabled:shadow-none"
           >
             게시하기
           </button>
@@ -449,12 +464,13 @@ function Step2({ form, updateForm }: { form: UploadFormData; updateForm: (u: Par
 
 /* ─── Step 3: Optional + publish ─── */
 function Step3({
-  form, updateForm, showOptional, setShowOptional,
+  form, updateForm, showOptional, setShowOptional, profile,
 }: {
   form: UploadFormData;
   updateForm: (u: Partial<UploadFormData>) => void;
   showOptional: boolean;
   setShowOptional: (v: boolean) => void;
+  profile: import('@/lib/supabase/types').UserRow | null;
 }) {
   return (
     <div>
@@ -466,9 +482,11 @@ function Step3({
       {/* Preview summary */}
       <div className="p-4 rounded-2xl border border-gray-200 bg-gray-50 mb-4">
         <div className="flex items-start gap-3">
-          <div className="w-10 h-10 rounded-full bg-orange-100 flex items-center justify-center text-lg flex-shrink-0">😸</div>
+          <div className="w-10 h-10 rounded-full flex items-center justify-center text-lg flex-shrink-0" style={{ backgroundColor: profile?.avatar_bg ?? '#FFF0EA' }}>
+            {profile?.avatar_emoji ?? '✨'}
+          </div>
           <div>
-            <div className="font-bold text-[14px] text-gray-900">나 <span className="text-gray-400 font-normal">@me</span></div>
+            <div className="font-bold text-[14px] text-gray-900">{profile?.display_name ?? '나'} <span className="text-gray-400 font-normal">@{profile?.handle ?? 'me'}</span></div>
             <p className="text-[14px] text-gray-700 mt-0.5">{form.description || '3초 설명이 여기 표시됩니다'}</p>
             <div className="mt-2 px-3 py-2 rounded-xl bg-white border border-gray-200 text-[13px] text-gray-500">
               {form.title || '작품 제목'}
