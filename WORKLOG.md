@@ -4,6 +4,44 @@
 
 ---
 
+## 세션 5 — 2026-05-16
+
+### 완료 내역
+
+#### Settings 실사용 버그 수정 (`src/app/settings/SettingsClient.tsx`)
+- **프로필 카드 하드코딩 제거**: "민수 @minsu_lab" → `useAuth().profile` 사용 (display_name, handle, avatar_emoji, avatar_bg)
+- **로그아웃 연결**: `href="#"` → `signOut()` + `router.push('/login')`
+- **Seed 버튼 피드 이동**: 성공 후 상태 메시지만 보여주던 것 → 800ms 뒤 `router.push('/')` 자동 이동. 버튼 텍스트도 "피드로 이동 중..." 으로 바뀜
+
+#### 소셜 UX 버그 수정
+- **FollowButton** (`src/components/profile/FollowButton.tsx`): 자기 자신 포스트에도 "팔로우" 버튼이 노출되던 문제 수정. `user?.id === authorId`이면 `null` 반환.
+- **CommentSection** (`src/components/post/CommentSection.tsx`): 댓글 입력창 왼쪽 아바타가 😸 하드코딩. `profile?.avatar_emoji` / `profile?.avatar_bg`로 교체.
+
+### 커밋 (이 세션)
+- `a4b9451` fix: Settings 실제 유저 프로필 연결 + 로그아웃 + seed 후 피드 자동 이동
+- `0545afc` fix: 자기 자신 팔로우 버튼 숨김 + 댓글 입력창 실 아바타 표시
+
+### 이어받자마자 할 일 (우선순위 순)
+
+#### 1. Seed 버튼 E2E QA (10분)
+- 배포 URL 접속 → 로그인 → `/settings` → "데모 앱 3개 생성" 클릭
+- 성공 시 피드로 자동 이동, 포스트 3개 확인
+- 포스트 카드 탭 → 인라인 확장 → "탭해서 바로 해보기" → iframe 실행 확인
+
+#### 2. 소셜 E2E QA (20분)
+- 댓글 작성 → 새로고침 후 유지 확인
+- 반응(😂🧠) 선택 → 새로고침 후 유지 확인
+- 다른 유저 포스트에서 "팔로우" 클릭 → 팔로잉 상태 변경 확인
+- 자기 포스트에서 팔로우 버튼 없는지 확인
+
+#### 3. 업로드 E2E QA (10분)
+- `/upload` → 외부 앱 URL 입력 → 미리보기 확인 → 게시 → 피드에 표시 확인
+
+#### 4. /studio 체험 수치 확인
+- 포스트 iframe 실행 후 `/studio` 방문 → 체험 세션/분 증가 확인
+
+---
+
 ## 세션 3 — 2025-05-15
 
 ### 완료 내역
@@ -149,15 +187,16 @@
 ## 🔁 핸드오버 (다른 PC에서 이어받을 때 가장 먼저 읽기)
 
 ### 현재 상태 한 줄 요약
-**코드는 100% 완료. production 배포 + Supabase Redirect URL 등록까지 모두 끝났고, Google 로그인 → /setup → 홈 이동까지 직접 검증 완료. 남은 건 seed 데모 앱 생성 + 피드/업로드/댓글/리믹스 등 E2E 인터랙션 QA뿐.**
+**코드 완료 + 배포 완료. Settings 하드코딩 제거, 로그아웃/seed 버튼 정상화, 팔로우 자기 자신 버그 수정까지 완료. 남은 건 배포 URL에서 E2E QA (seed→피드→iframe→댓글→반응→업로드) 뿐.**
 
-### 마지막 세션 종료 시점 (2026-05-15 마지막 단계)
-- ✅ 로컬에서 Google 로그인 OK
-- ✅ 배포 URL에서 Google 로그인 → `/setup` 도달 OK
-- ✅ `/setup`에서 프로필 저장 → `/` 도달 OK
-- 🟡 **`/settings`의 "데모 앱 3개 생성" 버튼 동작 미확인** ← 여기서 멈춤
-  - 사용자가 버튼을 눌렀으나 "피드에 아무것도 안 나타남"이라고 보고
-  - 버튼 하단 상태 메시지를 확인하지 못한 채 세션 종료
+### 마지막 세션 종료 시점 (2026-05-16)
+- ✅ Google 로그인 → /setup → 홈 이동 (세션 4에서 검증 완료)
+- ✅ Settings 프로필 → 실제 로그인 유저로 표시
+- ✅ 로그아웃 → signOut() 연결
+- ✅ Seed 버튼 → 성공 시 피드 자동 이동
+- ✅ FollowButton → 자기 자신 글에 숨김
+- ✅ 댓글 입력창 아바타 → 실 유저 아바타
+- 🟡 **E2E QA 미완** — 배포 URL에서 직접 인터랙션 테스트 필요
 
 ### 이어받자마자 할 일 (우선순위 순)
 
