@@ -4,6 +4,7 @@ import ProfileTabsClient from '@/components/profile/ProfileTabsClient';
 import BottomNav from '@/components/layout/BottomNav';
 import FollowButton from '@/components/profile/FollowButton';
 import Link from 'next/link';
+import { notFound, redirect } from 'next/navigation';
 import { createClient } from '@/lib/supabase/server';
 import { DbPostWithAuthor, mapDbAuthorToAuthor, mapDbPostToPost } from '@/lib/post-mapper';
 import NuevoGlyph from '@/components/ui/NuevoGlyph';
@@ -52,42 +53,23 @@ async function getProfileData(username: string): Promise<{ author: Author; autho
 
   if (username === 'me') {
     const { data: { user } } = await supabase.auth.getUser();
-    if (user) {
-      const { data: profile } = await supabase
-        .from('users')
-        .select('*')
-        .eq('id', user.id)
-        .maybeSingle();
-
-      if (profile) {
-        const profileRow = profile as UserRow;
-        const { data: posts } = await supabase
-          .from('posts')
-          .select('*, author:users(*)')
-          .eq('author_id', user.id)
-          .order('created_at', { ascending: false });
-
-        return {
-          author: mapDbAuthorToAuthor(profileRow),
-          authorPosts: await mapPostsWithRemixCounts(supabase, posts as DbPostWithAuthor[] | null),
-          handle: profileRow.handle,
-        };
-      }
+    if (!user) {
+      // 미로그인 상태에서 /profile/me는 로그인으로 유도
+      redirect('/login?next=/profile/me');
     }
-  } else {
     const { data: profile } = await supabase
       .from('users')
       .select('*')
-      .eq('handle', username)
+      .eq('id', user.id)
       .maybeSingle();
 
     if (profile) {
       const profileRow = profile as UserRow;
-        const { data: posts } = await supabase
-          .from('posts')
-          .select('*, author:users(*)')
-          .eq('author_id', profileRow.id)
-          .order('created_at', { ascending: false });
+      const { data: posts } = await supabase
+        .from('posts')
+        .select('*, author:users(*)')
+        .eq('author_id', user.id)
+        .order('created_at', { ascending: false });
 
       return {
         author: mapDbAuthorToAuthor(profileRow),
@@ -95,17 +77,43 @@ async function getProfileData(username: string): Promise<{ author: Author; autho
         handle: profileRow.handle,
       };
     }
+    // 로그인은 됐는데 프로필 row가 없는 경우 → setup으로
+    redirect('/setup?next=/profile/me');
   }
 
-  const fallbackHandle = username === 'me' ? 'minsu_lab' : username;
-  const fallbackAuthor = Object.values(mockAuthors).find((a) => a.handle === fallbackHandle)
-    ?? mockAuthors.minsu;
+  const { data: profile } = await supabase
+    .from('users')
+    .select('*')
+    .eq('handle', username)
+    .maybeSingle();
 
-  return {
-    author: fallbackAuthor,
-    authorPosts: mockPosts.filter((p) => p.author.handle === fallbackHandle),
-    handle: fallbackHandle,
-  };
+  if (profile) {
+    const profileRow = profile as UserRow;
+    const { data: posts } = await supabase
+      .from('posts')
+      .select('*, author:users(*)')
+      .eq('author_id', profileRow.id)
+      .order('created_at', { ascending: false });
+
+    return {
+      author: mapDbAuthorToAuthor(profileRow),
+      authorPosts: await mapPostsWithRemixCounts(supabase, posts as DbPostWithAuthor[] | null),
+      handle: profileRow.handle,
+    };
+  }
+
+  // DB에서 못 찾으면 mock 데이터에서 핸들 일치하는 항목만 사용 (디자인 데모용).
+  // 그래도 없으면 진짜 not found.
+  const mockAuthor = Object.values(mockAuthors).find((a) => a.handle === username);
+  if (mockAuthor) {
+    return {
+      author: mockAuthor,
+      authorPosts: mockPosts.filter((p) => p.author.handle === username),
+      handle: username,
+    };
+  }
+
+  notFound();
 }
 
 export default async function ProfilePage({ params }: Props) {
