@@ -126,6 +126,19 @@
 - 잘못된 post ID → 404, 잘못된 demo ID → 404
 - 빌드/lint/tsc 모두 통과
 
+### Vercel 환경변수 BOM 이슈 (중요 — 재발 방지)
+- 증상: 홈/explore 페이지가 항상 mock 데이터로 fallback. DB는 비어있는데 mock이 나옴.
+- 원인: PowerShell에서 `"value" | vercel env add ...` 형태로 파이프 입력하면
+        문자열 앞에 UTF-16 BOM (`﻿`, 0xFEFF, 65279)이 붙는다.
+        Supabase URL이 `﻿https://...`가 되어 `fetch()`가 ByteString 변환에서 실패.
+- 해결: `vercel env add NAME production --value "..." --yes` 형태로 직접 인자 전달.
+- 진단 도구: 임시로 `/api/debug-feed` 엔드포인트를 만들어 `urlPrefix`와 에러 메시지를 노출.
+            이 슬라이스에서 BOM이 보였음. 이후 삭제.
+
+### 마지막 검증 결과 (BOM 수정 후)
+- `/api/debug-feed`: `urlPrefix: "https://..."` (BOM 없음), `query.ok: true`, `dataLength: 0`
+- 홈 페이지: "아직 올라온 앱이 없어요" + "첫 앱 올리기" CTA 정상 표시
+
 ---
 
 ## 다음에 할 일 (배포 완료 후 — T13 OAuth 콜백 URL 등록 + E2E QA)
