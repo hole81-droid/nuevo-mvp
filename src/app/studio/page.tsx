@@ -206,7 +206,7 @@ export default async function StudioPage() {
           {/* Progress to next tier */}
           <div className="mt-2">
             <div className="flex justify-between text-[12px] text-gray-500 mb-1.5">
-              <span>프로 파트너까지</span>
+              <span>{next.id === current.id ? '최상위' : `${next.label} 파트너`}까지</span>
               <span className="font-medium text-gray-700">{fmt(studio.stats.sessions)} / {fmt(next.minSessions)} 체험</span>
             </div>
             <div className="h-2 bg-blue-100 rounded-full overflow-hidden">

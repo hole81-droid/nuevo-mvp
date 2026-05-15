@@ -2,7 +2,6 @@
 
 import { useState } from 'react';
 import { Post } from '@/lib/types';
-import { mockPosts } from '@/lib/mock-data';
 import PostCard from '@/components/post/PostCard';
 import { useSaved } from '@/contexts/SavedContext';
 
@@ -20,9 +19,7 @@ interface Props {
 export default function ProfileTabsClient({ posts, remixedPosts, likedPosts, isMe }: Props) {
   const [activeTab, setActiveTab] = useState<Tab>('작품');
   const [expandedId, setExpandedId] = useState<string | null>(null);
-  const { savedIds } = useSaved();
-
-  const savedPosts = mockPosts.filter((p) => savedIds.has(p.id));
+  const { savedPosts } = useSaved();
 
   const TABS = isMe ? TABS_ME : TABS_BASE;
 

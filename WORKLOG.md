@@ -4,6 +4,27 @@
 
 ---
 
+## 세션 6 — 2026-05-16
+
+### 완료 내역
+
+#### Studio 티어 라벨 버그 수정 (`src/app/studio/page.tsx`)
+- `프로 파트너까지` 하드코딩 → `{next.label} 파트너까지` 동적 렌더링 (새싹 유저에게도 정확한 다음 티어 표시)
+
+#### Profile 편집 버튼 연결 (`src/app/profile/[username]/page.tsx`)
+- "프로필 편집" `<button>` (아무 동작 없음) → `<Link href="/settings">` 으로 교체
+
+#### Post Detail 헤더 데드 버튼 제거 (`src/app/post/[id]/page.tsx`)
+- 헤더의 공유 버튼은 서버 컴포넌트라 동작 불가. PostDetailClient 내에 이미 작동하는 공유 버튼(clipboard + "복사됨" 피드백)이 있으므로 중복 제거.
+
+#### SavedContext 실 DB 포스트 지원 (`src/contexts/SavedContext.tsx`)
+- 기존: `savedIds: Set<string>` → mockPosts 필터링 → 실 UUID 포스트는 저장해도 "저장" 탭에 안 나타남
+- 개선: `savedMap: Map<string, Post>` → 전체 Post 객체 저장 → `savedPosts: Post[]` 반환
+- 연동: `PostCard`, `PostDetailClient` 에서 `toggleSave(post.id)` → `toggleSave(post)` 로 변경
+- `ProfileTabsClient`: `mockPosts.filter(...)` 제거 → `useSaved().savedPosts` 직접 사용
+
+---
+
 ## 세션 5 — 2026-05-16
 
 ### 완료 내역

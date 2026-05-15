@@ -1,31 +1,37 @@
 'use client';
 
 import { createContext, useContext, useState, ReactNode } from 'react';
+import type { Post } from '@/lib/types';
 
 interface SavedContextValue {
   savedIds: Set<string>;
-  toggle: (postId: string) => void;
+  savedPosts: Post[];
+  toggle: (post: Post) => void;
   isSaved: (postId: string) => boolean;
 }
 
 const SavedContext = createContext<SavedContextValue>({
   savedIds: new Set(),
+  savedPosts: [],
   toggle: () => {},
   isSaved: () => false,
 });
 
 export function SavedProvider({ children }: { children: ReactNode }) {
-  const [savedIds, setSavedIds] = useState<Set<string>>(new Set());
+  const [savedMap, setSavedMap] = useState<Map<string, Post>>(new Map());
 
-  const toggle = (postId: string) =>
-    setSavedIds((prev) => {
-      const next = new Set(prev);
-      if (next.has(postId)) next.delete(postId); else next.add(postId);
+  const toggle = (post: Post) =>
+    setSavedMap((prev) => {
+      const next = new Map(prev);
+      if (next.has(post.id)) next.delete(post.id); else next.set(post.id, post);
       return next;
     });
 
+  const savedIds = new Set(savedMap.keys());
+  const savedPosts = [...savedMap.values()];
+
   return (
-    <SavedContext.Provider value={{ savedIds, toggle, isSaved: (id) => savedIds.has(id) }}>
+    <SavedContext.Provider value={{ savedIds, savedPosts, toggle, isSaved: (id) => savedMap.has(id) }}>
       {children}
     </SavedContext.Provider>
   );
