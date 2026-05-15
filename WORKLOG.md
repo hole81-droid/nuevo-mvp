@@ -98,9 +98,9 @@
 - production 환경변수 등록:
   - `NEXT_PUBLIC_SUPABASE_URL` = `https://oheesbcpxxabkenpqiry.supabase.co`
   - `NEXT_PUBLIC_SUPABASE_ANON_KEY` = (`.env.local`과 동일)
-- `vercel --prod --yes` 실행 → 빌드 진행 중
-- Inspect URL: `https://vercel.com/hole81-2757s-projects/nuevo-instagram-test/DgzxH8h9SaiFuBCR4e9xVwVZ6rkS`
-- Production URL: `https://nuevo-instagram-test-ad08xanlk-hole81-2757s-projects.vercel.app`
+- `vercel --prod --yes` 실행 → 이후 git push로 자동 재배포 트리거
+- **최신 배포 (Ready)**: `https://nuevo-instagram-test-oh6jearjh-hole81-2757s-projects.vercel.app` (빌드 32초)
+- 이전 배포 inspect: `https://vercel.com/hole81-2757s-projects/nuevo-instagram-test/DgzxH8h9SaiFuBCR4e9xVwVZ6rkS`
 
 #### 로컬 환경 복원
 - `.env.local` 재생성 (다른 PC에서 이어받기 위해 — git 제외)
@@ -148,7 +148,7 @@ Vercel 배포가 완료되면 production URL이 확정된다. 그 후:
 | Node 버전 | 프로젝트 루트 `.nvmrc` 또는 `package.json` engines 참고 |
 | 패키지 매니저 | npm |
 | Vercel project | `nuevo-instagram-test` (org `hole81-2757s-projects`) |
-| Vercel production URL | `https://nuevo-instagram-test-ad08xanlk-hole81-2757s-projects.vercel.app` |
+| Vercel production URL (최신 배포) | `https://nuevo-instagram-test-oh6jearjh-hole81-2757s-projects.vercel.app` |
 | Google OAuth | 활성화 완료 (Supabase Authentication → Providers → Google) |
 
 ### 로컬 개발 시작
