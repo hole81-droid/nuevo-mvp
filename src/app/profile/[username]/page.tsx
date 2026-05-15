@@ -48,13 +48,22 @@ async function mapPostsWithRemixCounts(supabase: Awaited<ReturnType<typeof creat
   return applySocialMetrics(applyExperienceMetrics(mappedPosts, experienceMetrics), socialMetrics);
 }
 
-async function getProfileData(username: string): Promise<{ author: Author; authorPosts: Post[]; handle: string }> {
+type FollowStats = { followerCount: number; followingCount: number };
+
+async function getFollowStats(supabase: Awaited<ReturnType<typeof createClient>>, userId: string): Promise<FollowStats> {
+  const [{ count: followerCount }, { count: followingCount }] = await Promise.all([
+    supabase.from('follows').select('follower_id', { count: 'exact', head: true }).eq('following_id', userId),
+    supabase.from('follows').select('following_id', { count: 'exact', head: true }).eq('follower_id', userId),
+  ]);
+  return { followerCount: followerCount ?? 0, followingCount: followingCount ?? 0 };
+}
+
+async function getProfileData(username: string): Promise<{ author: Author; authorPosts: Post[]; handle: string; followStats: FollowStats }> {
   const supabase = await createClient();
 
   if (username === 'me') {
     const { data: { user } } = await supabase.auth.getUser();
     if (!user) {
-      // 미로그인 상태에서 /profile/me는 로그인으로 유도
       redirect('/login?next=/profile/me');
     }
     const { data: profile } = await supabase
@@ -65,19 +74,18 @@ async function getProfileData(username: string): Promise<{ author: Author; autho
 
     if (profile) {
       const profileRow = profile as UserRow;
-      const { data: posts } = await supabase
-        .from('posts')
-        .select('*, author:users(*)')
-        .eq('author_id', user.id)
-        .order('created_at', { ascending: false });
+      const [posts, followStats] = await Promise.all([
+        supabase.from('posts').select('*, author:users(*)').eq('author_id', user.id).order('created_at', { ascending: false }),
+        getFollowStats(supabase, user.id),
+      ]);
 
       return {
         author: mapDbAuthorToAuthor(profileRow),
-        authorPosts: await mapPostsWithRemixCounts(supabase, posts as DbPostWithAuthor[] | null),
+        authorPosts: await mapPostsWithRemixCounts(supabase, posts.data as DbPostWithAuthor[] | null),
         handle: profileRow.handle,
+        followStats,
       };
     }
-    // 로그인은 됐는데 프로필 row가 없는 경우 → setup으로
     redirect('/setup?next=/profile/me');
   }
 
@@ -89,27 +97,26 @@ async function getProfileData(username: string): Promise<{ author: Author; autho
 
   if (profile) {
     const profileRow = profile as UserRow;
-    const { data: posts } = await supabase
-      .from('posts')
-      .select('*, author:users(*)')
-      .eq('author_id', profileRow.id)
-      .order('created_at', { ascending: false });
+    const [posts, followStats] = await Promise.all([
+      supabase.from('posts').select('*, author:users(*)').eq('author_id', profileRow.id).order('created_at', { ascending: false }),
+      getFollowStats(supabase, profileRow.id),
+    ]);
 
     return {
       author: mapDbAuthorToAuthor(profileRow),
-      authorPosts: await mapPostsWithRemixCounts(supabase, posts as DbPostWithAuthor[] | null),
+      authorPosts: await mapPostsWithRemixCounts(supabase, posts.data as DbPostWithAuthor[] | null),
       handle: profileRow.handle,
+      followStats,
     };
   }
 
-  // DB에서 못 찾으면 mock 데이터에서 핸들 일치하는 항목만 사용 (디자인 데모용).
-  // 그래도 없으면 진짜 not found.
   const mockAuthor = Object.values(mockAuthors).find((a) => a.handle === username);
   if (mockAuthor) {
     return {
       author: mockAuthor,
       authorPosts: mockPosts.filter((p) => p.author.handle === username),
       handle: username,
+      followStats: { followerCount: mockAuthor.followerCount, followingCount: 0 },
     };
   }
 
@@ -119,7 +126,7 @@ async function getProfileData(username: string): Promise<{ author: Author; autho
 export default async function ProfilePage({ params }: Props) {
   const { username } = await params;
 
-  const { author, authorPosts, handle } = await getProfileData(username);
+  const { author, authorPosts, handle, followStats } = await getProfileData(username);
   const isMe = username === 'me';
   const ownOriginalPosts = isMe ? authorPosts.filter((post) => !post.remixOf) : authorPosts;
   const ownRemixedPosts = isMe ? authorPosts.filter((post) => post.remixOf) : mockPosts.filter((p) => p.author.handle !== handle && p.remixable).slice(0, 3);
@@ -214,39 +221,36 @@ export default async function ProfilePage({ params }: Props) {
               <span className="text-gray-500"> 작품</span>
             </span>
             <span>
-              <strong className="font-bold text-gray-900">{(author.followerCount / 1000).toFixed(1)}k</strong>
+              <strong className="font-bold text-gray-900">{followStats.followerCount.toLocaleString()}</strong>
               <span className="text-gray-500"> 팔로워</span>
             </span>
             <span>
-              <strong className="font-bold text-gray-900">142</strong>
+              <strong className="font-bold text-gray-900">{followStats.followingCount.toLocaleString()}</strong>
               <span className="text-gray-500"> 팔로잉</span>
             </span>
           </div>
 
-          {/* Monthly revenue (my profile only) */}
-          {isMe && author.partnerTier && (
-            <div className="mt-3 p-3 rounded-[24px] bg-[#F7F7F2] border-2 border-[#D8D8D0]">
-              <div className="flex items-center justify-between">
-                <div>
-                  <div className="text-[12px] text-gray-500">이번 달 예상 수익</div>
-                  <div className="text-[22px] font-bold text-gray-900 mt-0.5">₩231,000</div>
-                </div>
-                <div className="text-right">
-                  <div className="text-[12px] text-gray-500">총 체험</div>
-                  <div className="text-[17px] font-bold text-warm">8,234회</div>
-                </div>
+          {/* Monthly revenue shortcut (my profile only) */}
+          {isMe && (
+            <Link href="/studio" className="mt-3 flex items-center justify-between p-3 rounded-[24px] bg-[#F7F7F2] border-2 border-[#D8D8D0] hover:bg-[#EFEFE8] transition-colors">
+              <div>
+                <div className="text-[12px] text-gray-500">수익 & WES 대시보드</div>
+                <div className="text-[15px] font-bold text-gray-900 mt-0.5">크리에이터 스튜디오 →</div>
               </div>
-              <div className="mt-2 text-[12px] text-gray-500">
-                성장 파트너 · 수익 배분율 70% · 5월 정산 예정
-              </div>
-            </div>
+              {author.partnerTier && (() => {
+                const p = PARTNER_CONFIG[author.partnerTier!];
+                return (
+                  <span className={`text-[13px] font-bold ${p.color}`}>{p.badge}</span>
+                );
+              })()}
+            </Link>
           )}
 
           {/* Partner CTA (non-partner, my profile) */}
           {isMe && !author.partnerTier && (
-            <button className="mt-3 w-full py-2.5 rounded-full border-2 border-dashed border-black text-black text-[14px] font-black hover:bg-[#EFEFE8] transition-colors">
+            <Link href="/studio" className="mt-3 block w-full py-2.5 rounded-full border-2 border-dashed border-black text-black text-[14px] font-black hover:bg-[#EFEFE8] transition-colors text-center">
               수익화 신청하기
-            </button>
+            </Link>
           )}
         </div>
 
