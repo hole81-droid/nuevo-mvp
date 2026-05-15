@@ -16,7 +16,10 @@ async function getExplorePosts() {
     .order('created_at', { ascending: false })
     .limit(80);
 
-  if (error) return mockPosts;
+  if (error) {
+    console.error('[explore/getExplorePosts] supabase error → mock fallback:', error);
+    return mockPosts;
+  }
   if (!data?.length) return [];
 
   const rows = data as DbPostWithAuthor[];

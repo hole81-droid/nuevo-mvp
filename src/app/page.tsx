@@ -19,7 +19,12 @@ async function getFeedPosts() {
     .order('created_at', { ascending: false })
     .limit(50);
 
-  if (error) return mockPosts;
+  if (error) {
+    // 실 DB가 에러를 반환했을 때만 디자인 데모용 mock으로 fallback.
+    // 환경변수 누락·연결 실패 같은 진짜 문제를 숨기지 않도록 로깅.
+    console.error('[home/getFeedPosts] supabase error → mock fallback:', error);
+    return mockPosts;
+  }
   if (!data?.length) return [];
 
   const rows = data as DbPostWithAuthor[];
