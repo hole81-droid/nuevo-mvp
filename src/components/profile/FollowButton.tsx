@@ -1,10 +1,14 @@
 'use client';
 
 import { useFollow } from '@/contexts/FollowContext';
+import { useAuth } from '@/contexts/AuthContext';
 
 export default function FollowButton({ authorId }: { authorId: string }) {
+  const { user } = useAuth();
   const { isFollowing, toggle } = useFollow();
   const followed = isFollowing(authorId);
+
+  if (user?.id === authorId) return null;
 
   return (
     <button

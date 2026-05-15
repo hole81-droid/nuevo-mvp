@@ -203,7 +203,9 @@ export default function CommentSection({ postId, postAuthorId, initialComments =
 
       {/* Input bar */}
       <div className="sticky bottom-0 border-t border-gray-100 bg-white px-4 py-2.5 flex items-center gap-3">
-        <div className="w-8 h-8 rounded-full bg-orange-100 flex items-center justify-center text-sm flex-shrink-0">😸</div>
+        <div className="w-8 h-8 rounded-full flex items-center justify-center text-sm flex-shrink-0" style={{ backgroundColor: profile?.avatar_bg ?? '#FFF0EA' }}>
+          {profile?.avatar_emoji ?? '😸'}
+        </div>
         <input
           ref={activeInputRef}
           value={input}
