@@ -5,7 +5,7 @@ import { Post } from '@/lib/types';
 import PostCard from '@/components/post/PostCard';
 import { useSaved } from '@/contexts/SavedContext';
 
-const TABS_BASE = ['작품', '리믹스', '좋아요'] as const;
+const TABS_BASE = ['작품', '리믹스'] as const;
 const TABS_ME   = ['작품', '리믹스', '좋아요', '저장'] as const;
 type Tab = '작품' | '리믹스' | '좋아요' | '저장';
 
