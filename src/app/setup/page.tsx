@@ -5,6 +5,7 @@ import { FormEvent, Suspense, useEffect, useState } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 import { createClient } from '@/lib/supabase/client';
 import { safeNextPath } from '@/lib/safe-next-path';
+import BackButton from '@/components/ui/BackButton';
 
 const AVATARS = ['😸', '🎸', '🌸', '🦊', '⚗️', '🦁', '🎨', '🌊'];
 const AVATAR_BGS = ['#FFF0EA', '#EEE9FF', '#FFE8F4', '#EEFAD6', '#F7F0E6', '#E0F0FF'];
@@ -37,6 +38,8 @@ function SetupPageInner() {
       router.replace(`/login?next=${encodeURIComponent(setupPath)}`);
     }
   }, [loading, next, router, user]);
+
+  const isEditing = Boolean(profile?.handle && !profile.handle.startsWith('user_'));
 
   useEffect(() => {
     if (!profile) return;
@@ -86,13 +89,16 @@ function SetupPageInner() {
 
   return (
     <div className="min-h-full max-w-[430px] mx-auto bg-white flex flex-col">
-      <header className="sticky top-0 z-40 h-[53px] px-4 flex items-center justify-center border-b border-gray-100 bg-white">
-        <span className="text-[17px] font-bold">프로필 설정</span>
+      <header className="sticky top-0 z-40 h-[53px] px-4 flex items-center gap-3 border-b border-gray-100 bg-white">
+        {isEditing && <BackButton fallbackHref="/profile/me" />}
+        <span className="text-[17px] font-bold">{isEditing ? '프로필 편집' : '프로필 설정'}</span>
       </header>
 
       <form onSubmit={handleSubmit} className="flex-1 px-4 py-6 flex flex-col gap-6">
         <div>
-          <h1 className="text-[24px] font-black text-gray-950 leading-tight">창작자 프로필을<br />만들어 주세요</h1>
+          <h1 className="text-[24px] font-black text-gray-950 leading-tight">
+            {isEditing ? '프로필을\n수정해 주세요' : '창작자 프로필을\n만들어 주세요'}
+          </h1>
           <p className="mt-2 text-[14px] text-gray-500">업로드와 수익 정산에 사용할 공개 프로필입니다.</p>
         </div>
 
@@ -182,7 +188,7 @@ function SetupPageInner() {
           disabled={!canSubmit || saving}
           className="mt-auto w-full h-14 rounded-2xl bg-warm text-white text-[16px] font-bold disabled:opacity-40 active:scale-[0.98]"
         >
-          {saving ? '저장 중...' : '시작하기'}
+          {saving ? '저장 중...' : isEditing ? '저장' : '시작하기'}
         </button>
       </form>
     </div>
