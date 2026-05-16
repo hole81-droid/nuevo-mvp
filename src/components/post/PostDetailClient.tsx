@@ -118,7 +118,7 @@ export default function PostDetailClient({ post }: { post: Post }) {
           .upsert({ post_id: post.id, user_id: user.id, reaction: key } as never);
 
     if (!error) {
-      if (previousReaction !== key) {
+      if (previousReaction === null) {
         await createNotification(supabase, {
           recipientId: author.id,
           actorId: user.id,
