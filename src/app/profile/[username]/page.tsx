@@ -202,7 +202,7 @@ export default async function ProfilePage({ params }: Props) {
                 </Link>
               )}
               {isMe ? (
-                <Link href="/settings" className="px-4 py-1.5 rounded-full border-2 border-[#D8D8D0] text-[14px] font-black text-gray-900 hover:bg-[#EFEFE8]">
+                <Link href="/setup?next=/profile/me" className="px-4 py-1.5 rounded-full border-2 border-[#D8D8D0] text-[14px] font-black text-gray-900 hover:bg-[#EFEFE8]">
                   프로필 편집
                 </Link>
               ) : (
