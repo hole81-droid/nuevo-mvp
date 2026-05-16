@@ -189,7 +189,7 @@ export default function PostCard({
                 <ContentViewer post={post} compact />
                 <div className="flex items-center mt-3 -ml-2 text-gray-500">
                   <SmallBtn
-                    onClick={(e) => e.stopPropagation()}
+                    onClick={(e) => { e.stopPropagation(); router.push(`/post/${post.id}`); }}
                     count={stats.replies}
                     active={false}
                     activeColor="blue"
