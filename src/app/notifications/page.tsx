@@ -267,7 +267,7 @@ export default function NotificationsPage() {
         };
       });
 
-      setNotifications(realNotifications);
+      setNotifications(realNotifications.map((n) => ({ ...n, read: true })));
       setLoading(false);
     };
 
