@@ -169,7 +169,7 @@ function NotifRow({ notif }: { notif: Notif }) {
           {' '}
           <span className="text-gray-600">{meta.text(notif)}</span>
         </p>
-        <div className="text-[12px] text-gray-400 mt-0.5">{notif.time} 전</div>
+        <div className="text-[12px] text-gray-400 mt-0.5">{notif.time}</div>
       </div>
       {!notif.read && <div className="w-2.5 h-2.5 rounded-full bg-warm mt-1.5 flex-shrink-0" />}
     </Link>
@@ -239,9 +239,9 @@ export default function NotificationsPage() {
 
       const REACTION_LABELS: Record<string, string> = {
         funny: '😂 웃김',
-        weird: '🤔 이상해',
+        weird: '👽 기괴함',
         genius: '🧠 천재',
-        wtf: '😱 충격',
+        wtf: '❓ 뭐야이건',
       };
 
       const realNotifications: Notif[] = rows.map((notif) => {
