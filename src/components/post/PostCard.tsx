@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { Post } from '@/lib/types';
@@ -49,6 +49,7 @@ export default function PostCard({
   const [activeReaction, setActiveReaction] = useState<ReactionKey | null>(null);
   const [reactionCounts, setReactionCounts] = useState({ ...post.reactions });
   const [copied, setCopied] = useState(false);
+  const commentInputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
     let mounted = true;
@@ -311,6 +312,7 @@ export default function PostCard({
           {/* Action bar */}
           <div className="flex items-center justify-around py-2 px-4 border-b border-gray-100">
             <BigBtn
+              onClick={(e) => { e.stopPropagation(); commentInputRef.current?.focus(); }}
               icon={<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>}
             />
             <BigBtn
@@ -369,7 +371,7 @@ export default function PostCard({
           )}
 
           {/* Comments */}
-          <CommentSection postId={post.id} postAuthorId={author.id} />
+          <CommentSection postId={post.id} postAuthorId={author.id} inputRef={commentInputRef} />
 
           {/* Collapse button */}
           <button
