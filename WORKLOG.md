@@ -4,6 +4,38 @@
 
 ---
 
+## 세션 7 — 2026-05-16
+
+### 완료 내역
+
+#### "저장" DB 퍼시스턴스 (`src/contexts/SavedContext.tsx`)
+- 기존: 세션 메모리만 유지 → 새로고침 시 북마크 사라짐
+- 개선: 로그인 시 `saved_posts` 테이블에서 저장 목록 로드, toggle 시 실시간 DB 반영 (낙관적 업데이트 + 에러 시 롤백)
+- `isUuid(post.id)` 가드: mock 포스트는 여전히 로컬 상태만, 실 UUID 포스트만 DB 기록
+- `supabase/schema.sql`, `src/lib/supabase/types.ts`에 `saved_posts` 테이블 추가
+
+**⚠️ Supabase 마이그레이션 필요** — SQL Editor에서 아래 실행:
+```sql
+create table if not exists public.saved_posts (
+  user_id    uuid references public.users(id) on delete cascade not null,
+  post_id    uuid references public.posts(id) on delete cascade not null,
+  created_at timestamptz not null default now(),
+  primary key (user_id, post_id)
+);
+create index if not exists saved_posts_user_idx on public.saved_posts(user_id, created_at desc);
+alter table public.saved_posts enable row level security;
+create policy "saved_posts_select_own" on public.saved_posts for select using (auth.uid() = user_id);
+create policy "saved_posts_insert_own" on public.saved_posts for insert with check (auth.uid() = user_id);
+create policy "saved_posts_delete_own" on public.saved_posts for delete using (auth.uid() = user_id);
+```
+
+#### "좋아요" 탭 실 DB 데이터 연동 (`src/app/profile/[username]/page.tsx`)
+- 기존: `mockPosts.filter(p.stats.likes > 1000)` 고정 4개
+- 개선: 내 프로필(`isMe`)일 때 `post_reactions` 테이블에서 반응 남긴 포스트 최대 20개 조회
+- `getLikedPosts()` 서버 함수 추가, `getProfileData` 반환 타입에 `likedPosts` 추가
+
+---
+
 ## 세션 6 — 2026-05-16
 
 ### 완료 내역

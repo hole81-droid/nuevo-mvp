@@ -58,7 +58,22 @@ async function getFollowStats(supabase: Awaited<ReturnType<typeof createClient>>
   return { followerCount: followerCount ?? 0, followingCount: followingCount ?? 0 };
 }
 
-async function getProfileData(username: string): Promise<{ author: Author; authorPosts: Post[]; handle: string; followStats: FollowStats }> {
+async function getLikedPosts(supabase: Awaited<ReturnType<typeof createClient>>, userId: string): Promise<Post[]> {
+  const { data } = await supabase
+    .from('post_reactions')
+    .select('post_id, posts:posts(*, author:users(*))')
+    .eq('user_id', userId)
+    .order('created_at', { ascending: false })
+    .limit(20);
+
+  if (!data?.length) return [];
+  const posts = (data as Array<{ post_id: string; posts: DbPostWithAuthor | null }>)
+    .map((row) => row.posts ? mapDbPostToPost(row.posts) : null)
+    .filter((p): p is Post => p !== null);
+  return posts;
+}
+
+async function getProfileData(username: string): Promise<{ author: Author; authorPosts: Post[]; likedPosts: Post[]; handle: string; followStats: FollowStats }> {
   const supabase = await createClient();
 
   if (username === 'me') {
@@ -74,14 +89,16 @@ async function getProfileData(username: string): Promise<{ author: Author; autho
 
     if (profile) {
       const profileRow = profile as UserRow;
-      const [posts, followStats] = await Promise.all([
+      const [posts, followStats, likedPosts] = await Promise.all([
         supabase.from('posts').select('*, author:users(*)').eq('author_id', user.id).order('created_at', { ascending: false }),
         getFollowStats(supabase, user.id),
+        getLikedPosts(supabase, user.id),
       ]);
 
       return {
         author: mapDbAuthorToAuthor(profileRow),
         authorPosts: await mapPostsWithRemixCounts(supabase, posts.data as DbPostWithAuthor[] | null),
+        likedPosts,
         handle: profileRow.handle,
         followStats,
       };
@@ -105,6 +122,7 @@ async function getProfileData(username: string): Promise<{ author: Author; autho
     return {
       author: mapDbAuthorToAuthor(profileRow),
       authorPosts: await mapPostsWithRemixCounts(supabase, posts.data as DbPostWithAuthor[] | null),
+      likedPosts: [],
       handle: profileRow.handle,
       followStats,
     };
@@ -115,6 +133,7 @@ async function getProfileData(username: string): Promise<{ author: Author; autho
     return {
       author: mockAuthor,
       authorPosts: mockPosts.filter((p) => p.author.handle === username),
+      likedPosts: mockPosts.filter((p) => p.stats.likes > 1000).slice(0, 4),
       handle: username,
       followStats: { followerCount: mockAuthor.followerCount, followingCount: 0 },
     };
@@ -126,7 +145,7 @@ async function getProfileData(username: string): Promise<{ author: Author; autho
 export default async function ProfilePage({ params }: Props) {
   const { username } = await params;
 
-  const { author, authorPosts, handle, followStats } = await getProfileData(username);
+  const { author, authorPosts, likedPosts, handle, followStats } = await getProfileData(username);
   const isMe = username === 'me';
   const ownOriginalPosts = isMe ? authorPosts.filter((post) => !post.remixOf) : authorPosts;
   const ownRemixedPosts = isMe ? authorPosts.filter((post) => post.remixOf) : mockPosts.filter((p) => p.author.handle !== handle && p.remixable).slice(0, 3);
@@ -258,7 +277,7 @@ export default async function ProfilePage({ params }: Props) {
         <ProfileTabsClient
           posts={ownOriginalPosts}
           remixedPosts={ownRemixedPosts}
-          likedPosts={mockPosts.filter((p) => p.stats.likes > 1000).slice(0, 4)}
+          likedPosts={likedPosts}
           isMe={isMe}
         />
       </main>

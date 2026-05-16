@@ -257,6 +257,24 @@ export interface Database {
         };
         Relationships: [];
       };
+      saved_posts: {
+        Row: {
+          user_id: string;
+          post_id: string;
+          created_at: string;
+        };
+        Insert: {
+          user_id: string;
+          post_id: string;
+          created_at?: string;
+        };
+        Update: {
+          user_id?: string;
+          post_id?: string;
+          created_at?: string;
+        };
+        Relationships: [];
+      };
     };
     Views: {
       post_monthly_wes: {
@@ -299,6 +317,7 @@ export type PayoutRequestRow = Database['public']['Tables']['payout_requests']['
 export type FollowRow = Database['public']['Tables']['follows']['Row'];
 export type CommentRow = Database['public']['Tables']['comments']['Row'];
 export type PostReactionRow = Database['public']['Tables']['post_reactions']['Row'];
+export type SavedPostRow = Database['public']['Tables']['saved_posts']['Row'];
 export type PostMonthlyWesRow = Database['public']['Views']['post_monthly_wes']['Row'];
 export type CreatorMonthlyWesRow = Database['public']['Views']['creator_monthly_wes']['Row'];
 

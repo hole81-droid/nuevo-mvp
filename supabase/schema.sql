@@ -127,10 +127,18 @@ create table public.post_reactions (
   primary key (post_id, user_id)
 );
 
+create table public.saved_posts (
+  user_id    uuid references public.users(id) on delete cascade not null,
+  post_id    uuid references public.posts(id) on delete cascade not null,
+  created_at timestamptz not null default now(),
+  primary key (user_id, post_id)
+);
+
 create index follows_following_idx on public.follows(following_id, created_at desc);
 create index comments_post_idx on public.comments(post_id, created_at asc);
 create index comments_author_idx on public.comments(author_id, created_at desc);
 create index post_reactions_post_idx on public.post_reactions(post_id, reaction);
+create index saved_posts_user_idx on public.saved_posts(user_id, created_at desc);
 
 -- ============================================================
 -- 7. Row Level Security (RLS)
@@ -143,6 +151,7 @@ alter table public.payout_requests enable row level security;
 alter table public.follows enable row level security;
 alter table public.comments enable row level security;
 alter table public.post_reactions enable row level security;
+alter table public.saved_posts enable row level security;
 
 -- users: 누구나 읽기 / 본인만 쓰기
 create policy "users_select_all"
@@ -220,6 +229,7 @@ create policy "comments_delete_own"
 create policy "post_reactions_select_all"
   on public.post_reactions for select using (true);
 
+
 create policy "post_reactions_insert_own"
   on public.post_reactions for insert with check (auth.uid() = user_id);
 
@@ -228,6 +238,16 @@ create policy "post_reactions_update_own"
 
 create policy "post_reactions_delete_own"
   on public.post_reactions for delete using (auth.uid() = user_id);
+
+-- saved_posts: 본인 저장만 읽기·쓰기·삭제
+create policy "saved_posts_select_own"
+  on public.saved_posts for select using (auth.uid() = user_id);
+
+create policy "saved_posts_insert_own"
+  on public.saved_posts for insert with check (auth.uid() = user_id);
+
+create policy "saved_posts_delete_own"
+  on public.saved_posts for delete using (auth.uid() = user_id);
 
 -- ============================================================
 -- 8. WES 월별 집계 View
