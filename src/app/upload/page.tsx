@@ -167,7 +167,7 @@ function UploadPageInner() {
     }
 
     setPublishState('done');
-    setTimeout(() => router.push('/'), 900);
+    setTimeout(() => router.push(insertedPost?.id ? `/post/${insertedPost.id}` : '/'), 900);
   };
 
   return (
