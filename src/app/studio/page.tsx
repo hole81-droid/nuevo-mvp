@@ -3,6 +3,7 @@ import { redirect } from 'next/navigation';
 import BottomNav from '@/components/layout/BottomNav';
 import RemixMap from '@/components/studio/RemixMap';
 import PayoutRequestPanel from '@/components/studio/PayoutRequestPanel';
+import BackButton from '@/components/ui/BackButton';
 import TierSyncNotice from '@/components/studio/TierSyncNotice';
 import NuevoGlyph from '@/components/ui/NuevoGlyph';
 import { createClient } from '@/lib/supabase/server';
@@ -149,11 +150,7 @@ export default async function StudioPage() {
     <div className="flex flex-col h-full max-w-[430px] mx-auto">
       {/* Header */}
       <header className="sticky top-0 z-40 bg-white/90 backdrop-blur-sm border-b border-gray-100 flex items-center gap-3 px-4 h-[53px]">
-        <Link href="/profile/me" className="w-9 h-9 flex items-center justify-center rounded-full hover:bg-gray-100 text-gray-700">
-          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round">
-            <path d="M19 12H5M12 19l-7-7 7-7" />
-          </svg>
-        </Link>
+        <BackButton fallbackHref="/profile/me" />
         <div className="flex-1">
           <div className="font-bold text-[17px] text-gray-900">크리에이터 스튜디오</div>
           <div className="text-[12px] text-gray-500">
