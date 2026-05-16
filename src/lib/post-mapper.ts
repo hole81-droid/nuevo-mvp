@@ -1,5 +1,6 @@
 import type { Author, Post } from './types';
 import type { PostRow, UserRow } from './supabase/types';
+import { relativeTime } from './social';
 
 export type DbPostWithAuthor = PostRow & {
   author?: UserRow | null;
@@ -28,15 +29,6 @@ export function mapDbAuthorToAuthor(row?: UserRow | null): Author {
     bio: row.bio ?? undefined,
     partnerTier: row.partner_tier ?? undefined,
   };
-}
-
-function relativeTime(iso: string) {
-  const diffMs = Date.now() - new Date(iso).getTime();
-  const diffMinutes = Math.max(1, Math.floor(diffMs / 60000));
-  if (diffMinutes < 60) return `${diffMinutes}분 전`;
-  const diffHours = Math.floor(diffMinutes / 60);
-  if (diffHours < 24) return `${diffHours}시간 전`;
-  return `${Math.floor(diffHours / 24)}일 전`;
 }
 
 export function mapDbPostToPost(row: DbPostWithAuthor, options?: { remixCount?: number }): Post {
