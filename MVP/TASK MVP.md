@@ -2,19 +2,21 @@
 
 작동하는 MVP를 만들기 위한 작업 목록이다. 기존 `TASK.md`는 프로토타입 포함 전체 로드맵이고, 이 문서는 **실제 배포 가능한 MVP 체크리스트**다.
 
+> **상태**: ✅ MVP 완료 — 2026-05-16 기준 전 항목 구현·배포 완료
+
 ---
 
 ## 0. MVP 완료 기준
 
-- [ ] 배포 URL에서 Google 로그인 가능
-- [ ] 신규 유저가 프로필 설정 가능
-- [ ] 창작자가 앱 URL을 업로드 가능
-- [ ] 업로드한 앱이 홈 피드에 표시됨
-- [ ] 피드에서 카드 터치 시 인라인 확장됨
-- [ ] iframe으로 앱이 실행됨
-- [ ] 댓글/반응/팔로우가 DB에 저장됨
-- [ ] 체험 이벤트가 DB에 저장됨
-- [ ] 최소 3개 실제 앱 URL seed content 등록
+- [x] 배포 URL에서 Google 로그인 가능 — 2026-05-15
+- [x] 신규 유저가 프로필 설정 가능 — 2026-05-15
+- [x] 창작자가 앱 URL을 업로드 가능 — 2026-05-15
+- [x] 업로드한 앱이 홈 피드에 표시됨 — 2026-05-15
+- [x] 피드에서 카드 터치 시 인라인 확장됨 — 2026-05-15
+- [x] iframe으로 앱이 실행됨 — 2026-05-15
+- [x] 댓글/반응/팔로우가 DB에 저장됨 — 2026-05-16
+- [x] 체험 이벤트가 DB에 저장됨 — 2026-05-15
+- [x] 최소 3개 실제 앱 URL seed content 등록 — 2026-05-16
 
 ---
 
@@ -31,6 +33,7 @@
   - [x] `experience_events`
   - [x] `notifications`
   - [x] `payout_requests`
+  - [x] `saved_posts` — 2026-05-16
 - [x] View 생성 확인
   - [x] `post_monthly_wes`
   - [x] `creator_monthly_wes`
@@ -51,12 +54,12 @@
 - [x] `/studio` 미로그인 접근 시 `/login?next=/studio` 리다이렉트
 - [x] Supabase Google OAuth provider 활성화 — 2026-05-15
 - [x] Google Cloud OAuth Client ID/Secret 발급 → Supabase 입력 — 2026-05-15
-- [ ] Supabase URL Configuration → Redirect URLs 등록 (배포 URL 확정 후)
-  - [ ] `http://localhost:3000/auth/callback`
-  - [ ] `https://{vercel-final-domain}/auth/callback`
+- [x] Supabase URL Configuration → Redirect URLs 등록 — 2026-05-15
+  - [x] `http://localhost:3000/auth/callback`
+  - [x] `https://nuevo-instagram-test.vercel.app/auth/callback`
 - [x] `/login`에서 Google 로그인 테스트 (로컬) — 2026-05-15
-- [ ] 첫 로그인 후 `/setup` 이동 확인 (E2E)
-- [ ] 프로필 저장 후 `/` 이동 확인 (E2E)
+- [x] 첫 로그인 후 `/setup` 이동 확인 (E2E) — 2026-05-15
+- [x] 프로필 저장 후 `/` 이동 확인 (E2E) — 2026-05-15
 - [x] `/upload` 미로그인 접근 시 `/login?next=/upload` 리다이렉트 구현
 - [x] `/studio` 미로그인 접근 시 로그인 유도 구현
 
@@ -67,11 +70,11 @@
 - [x] URL 검증 helper 추가: `src/lib/embed-url.ts`
 - [x] 업로드 화면에서 잘못된 protocol 차단
 - [x] 업로드 화면에서 iframe 미리보기 지연/실패 안내
-- [ ] 실제 공개 앱 URL로 업로드 테스트
-- [ ] 업로드 후 `posts` 테이블 row 생성 확인
-- [ ] 업로드 성공 후 홈 피드에 새 포스트 표시 확인
-- [ ] iframe 차단 URL을 넣었을 때 실패 안내 확인
-- [ ] `localhost` URL은 로컬 테스트에서만 허용되는지 확인
+- [x] 실제 공개 앱 URL로 업로드 테스트 — 2026-05-16
+- [x] 업로드 후 `posts` 테이블 row 생성 확인 — 2026-05-16
+- [x] 업로드 성공 후 홈 피드에 새 포스트 표시 확인 — 2026-05-16
+- [x] iframe 차단 URL을 넣었을 때 실패 안내 확인 — 2026-05-15
+- [x] `localhost` URL은 로컬 테스트에서만 허용되는지 확인 — 2026-05-15
 
 ---
 
@@ -81,11 +84,11 @@
 - [x] `InteractiveDemo` iframe 실행
 - [x] iframe 실행 실패/지연 상태 UI
 - [x] 실 DB 포스트 직접 URL(`/post/{uuid}`) 조회 지원
-- [ ] 실제 DB 포스트 카드 터치 QA
-- [ ] 인라인 확장 시 기존 피드 위치 유지 확인
-- [ ] 확장 영역 상단에서 iframe 실행 확인
-- [ ] 새 탭 열기 fallback 확인
-- [ ] 여러 카드 중 하나만 확장되는지 확인
+- [x] 실제 DB 포스트 카드 터치 QA — 2026-05-16
+- [x] 인라인 확장 시 기존 피드 위치 유지 확인 — 2026-05-16
+- [x] 확장 영역 상단에서 iframe 실행 확인 — 2026-05-16
+- [x] 새 탭 열기 fallback 확인 — 2026-05-16
+- [x] 여러 카드 중 하나만 확장되는지 확인 — 2026-05-16
 
 ---
 
@@ -94,16 +97,17 @@
 - [x] `comments` 테이블 연결
 - [x] `post_reactions` 테이블 연결
 - [x] `follows` 테이블 연결
+- [x] `saved_posts` 테이블 연결 — 2026-05-16
 - [x] 서버 조회 시 댓글/반응 집계 표시
 - [x] 댓글 작성 시 원본 창작자 알림 생성
 - [x] 반응 선택 시 원본 창작자 알림 생성
 - [x] 팔로우 시 대상 창작자 알림 생성
-- [ ] 실제 로그인 유저로 댓글 작성 QA
-- [ ] 댓글 새로고침 후 유지 확인
-- [ ] 반응 선택 후 새로고침 유지 확인
-- [ ] 반응 변경/해제 확인
-- [ ] 팔로우/언팔로우 후 DB 반영 확인
-- [ ] mock post에서는 DB write를 시도하지 않는지 확인
+- [x] 실제 로그인 유저로 댓글 작성 QA — 2026-05-16
+- [x] 댓글 새로고침 후 유지 확인 — 2026-05-16
+- [x] 반응 선택 후 새로고침 유지 확인 — 2026-05-16
+- [x] 반응 변경/해제 확인 — 2026-05-16
+- [x] 팔로우/언팔로우 후 DB 반영 확인 — 2026-05-16
+- [x] mock post에서는 DB write를 시도하지 않는지 확인 (`isUuid()` 가드)
 
 ---
 
@@ -111,10 +115,10 @@
 
 - [x] iframe `onLoad` 시 `experience_events` insert
 - [x] unmount/visibility hidden 시 duration update
-- [ ] 실제 DB post에서 iframe 실행 후 event row 생성 확인
-- [ ] 피드 카드 접기 후 duration 업데이트 확인
-- [ ] 브라우저 탭 background 전환 시 duration 업데이트 확인
-- [ ] `/studio`에서 체험 수치 표시 확인
+- [x] 실제 DB post에서 iframe 실행 후 event row 생성 확인 — 2026-05-16
+- [x] 피드 카드 접기 후 duration 업데이트 확인 — 2026-05-16
+- [x] 브라우저 탭 background 전환 시 duration 업데이트 확인 — 2026-05-16
+- [x] `/studio`에서 체험 수치 표시 확인 — 2026-05-16
 
 ---
 
@@ -125,9 +129,9 @@
 - [x] 리믹스 알림 생성
 - [x] 알림 페이지가 실제 notification 타입 전체 조회
 - [x] 알림 읽음 상태를 DB와 동기화
-- [ ] 실제 DB 포스트에서 리믹스 버튼 테스트
-- [ ] 리믹스 게시 후 원본 창작자 알림 확인
-- [ ] 리믹스 카운트가 피드/프로필에 반영되는지 확인
+- [x] 실제 DB 포스트에서 리믹스 버튼 테스트 — 2026-05-16
+- [x] 리믹스 게시 후 원본 창작자 알림 확인 — 2026-05-16
+- [x] 리믹스 카운트가 피드/프로필에 반영되는지 확인 — 2026-05-16
 
 ---
 
@@ -159,10 +163,10 @@ MVP 테스트용 실제 앱 URL을 최소 3개 준비한다.
 - [x] 배포 URL에서 보호 라우트 미들웨어 동작 확인 (`/studio`, `/settings`)
 - [x] 배포 URL에서 API 라우트 인증 가드 확인 (401 unauthorized)
 - [x] Vercel Deployment Protection 해제 (외부 접근 가능)
-- [ ] 배포 URL에서 Google 로그인 가능 (Supabase Redirect URL 등록 후)
-- [ ] 배포 URL에서 앱 업로드 가능
-- [ ] 배포 URL에서 iframe 실행 가능
-- [ ] 모바일 브라우저에서 핵심 루프 테스트
+- [x] 배포 URL에서 Google 로그인 가능 — 2026-05-15
+- [x] 배포 URL에서 앱 업로드 가능 — 2026-05-16
+- [x] 배포 URL에서 iframe 실행 가능 — 2026-05-16
+- [x] 모바일 브라우저에서 핵심 루프 테스트 — 2026-05-16
 
 ---
 
@@ -176,9 +180,9 @@ npm run lint
 npm run build
 ```
 
-- [x] TypeScript 통과 (2025-05-15 기준 에러 0개)
-- [x] ESLint 통과 (2025-05-15 기준 경고 0개)
-- [x] Production build 통과 (2025-05-15 기준)
+- [x] TypeScript 통과 (2026-05-16 기준 에러 0개)
+- [x] ESLint 통과 (2026-05-16 기준 경고 0개)
+- [x] Production build 통과 (2026-05-16 기준)
 
 ---
 
@@ -191,3 +195,6 @@ npm run build
 - [ ] 복잡한 추천 알고리즘
 - [ ] 네이티브 앱
 - [ ] PC 최적화
+- [ ] 좋아요 DB 퍼시스턴스 (`post_likes` 테이블)
+- [ ] 피드 무한 스크롤 (cursor-based pagination)
+- [ ] 실시간 알림 (Supabase Realtime)

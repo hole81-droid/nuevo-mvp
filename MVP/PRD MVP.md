@@ -92,7 +92,7 @@ Creator
 | 댓글 | 실 DB 포스트 기준 `comments` 저장/조회 |
 | 반응 | `funny`, `weird`, `genius`, `wtf` 중 1개 저장 |
 | 팔로우 | 로그인 유저의 follow 관계 저장 |
-| 저장 | MVP에서는 로컬 저장 유지 가능 |
+| 저장 | `saved_posts` 테이블에 DB 저장, 새로고침 후 유지 |
 
 ### 5.5 체험 지표
 
