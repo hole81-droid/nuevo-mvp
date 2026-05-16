@@ -180,14 +180,19 @@ export default function NotificationsPage() {
   const supabase = useMemo(() => createClient(), []);
   const { user } = useAuth();
   const { unreadCount, markAllRead } = useNotifications();
-  const [notifications, setNotifications] = useState<Notif[]>(NOTIFICATIONS);
+  const [notifications, setNotifications] = useState<Notif[]>([]);
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     markAllRead();
   }, [markAllRead]);
 
   useEffect(() => {
-    if (!user) return;
+    if (!user) {
+      setNotifications(NOTIFICATIONS);
+      setLoading(false);
+      return;
+    }
 
     const loadNotifications = async () => {
       const { data } = await supabase
@@ -198,7 +203,8 @@ export default function NotificationsPage() {
         .limit(50);
 
       if (!data?.length) {
-        setNotifications(NOTIFICATIONS);
+        setNotifications([]);
+        setLoading(false);
         return;
       }
       const rows = data as NotificationRow[];
@@ -262,6 +268,7 @@ export default function NotificationsPage() {
       });
 
       setNotifications(realNotifications);
+      setLoading(false);
     };
 
     loadNotifications();
@@ -283,9 +290,18 @@ export default function NotificationsPage() {
       </header>
 
       <main className="flex-1 overflow-y-auto pb-[54px] scrollbar-hide">
-        {notifications.map((notif) => (
-          <NotifRow key={notif.id} notif={notif} />
-        ))}
+        {loading ? (
+          <div className="px-4 py-14 text-center text-gray-400 text-[15px]">로딩 중...</div>
+        ) : notifications.length === 0 ? (
+          <div className="px-4 py-14 text-center text-gray-400">
+            <div className="text-4xl mb-3">🔔</div>
+            <div className="text-[15px]">아직 알림이 없어요</div>
+          </div>
+        ) : (
+          notifications.map((notif) => (
+            <NotifRow key={notif.id} notif={notif} />
+          ))
+        )}
       </main>
 
       <BottomNav />
