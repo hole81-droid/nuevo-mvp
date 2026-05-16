@@ -1,5 +1,6 @@
 import Link from 'next/link';
 import BottomNav from '@/components/layout/BottomNav';
+import BackButton from '@/components/ui/BackButton';
 
 const METRICS = [
   { value: '73%', label: '광고 완전 시청률', sub: 'vs. 영상 광고 45%' },
@@ -68,11 +69,7 @@ export default function BrandPage() {
 
         {/* Header */}
         <header className="sticky top-0 z-40 bg-white/90 backdrop-blur-sm border-b border-gray-100 flex items-center gap-3 px-4 h-[53px]">
-          <Link href="/" className="w-9 h-9 flex items-center justify-center rounded-full hover:bg-gray-100 text-gray-700">
-            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round">
-              <path d="M19 12H5M12 19l-7-7 7-7" />
-            </svg>
-          </Link>
+          <BackButton />
           <span className="text-[17px] font-bold text-gray-900">브랜드 파트너십</span>
         </header>
 

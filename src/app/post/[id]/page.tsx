@@ -1,5 +1,5 @@
-import Link from 'next/link';
 import { mockPosts } from '@/lib/mock-data';
+import BackButton from '@/components/ui/BackButton';
 import BottomNav from '@/components/layout/BottomNav';
 import { notFound } from 'next/navigation';
 import PostDetailClient from '@/components/post/PostDetailClient';
@@ -53,11 +53,7 @@ export default async function PostDetailPage({ params }: Props) {
     <div className="flex flex-col h-full max-w-[430px] mx-auto">
       {/* Top bar */}
       <header className="sticky top-0 z-40 bg-white border-b border-gray-100 flex items-center gap-3 px-4 h-[53px]">
-        <Link href="/" className="w-9 h-9 flex items-center justify-center rounded-full hover:bg-gray-100 text-gray-700">
-          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round">
-            <path d="M19 12H5M12 19l-7-7 7-7" />
-          </svg>
-        </Link>
+        <BackButton />
         <span className="text-[17px] font-bold text-gray-900">작품</span>
       </header>
 
