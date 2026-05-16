@@ -33,29 +33,29 @@ const NOTIFICATIONS: Notif[] = [
   {
     id: 'r1', type: 'tier_up',
     tierName: '성장 파트너',
-    time: '오늘', read: false,
+    time: '방금', read: false,
   },
   {
     id: 'r2', type: 'revenue',
     amount: 231000,
-    time: '2일', read: false,
+    time: '2일 전', read: false,
   },
   {
     id: 'r3', type: 'remix_revenue',
     actorEmoji: '🌊', actorName: '예솔', actorHandle: 'yesol_ai', actorBg: '#E0F0FF',
     postTitle: '회의 내용 → 슬픈 밈 생성기', postId: '1',
     amount: 3200,
-    time: '3일', read: false,
+    time: '3일 전', read: false,
   },
   // Regular notifications
-  { id: '1', type: 'reaction', actorEmoji: '🦊', actorName: '예진', actorHandle: 'yejin_ai', actorBg: '#EEFAD6', postTitle: '회의 내용 → 슬픈 밈 생성기', postId: '1', reaction: '😂 웃김', time: '1시간', read: false },
-  { id: '2', type: 'remix', actorEmoji: '🦁', actorName: '재원', actorHandle: 'jaewon_exp', actorBg: '#F7F0E6', postTitle: '회의 내용 → 슬픈 밈 생성기', postId: '1', time: '2시간', read: false },
-  { id: '3', type: 'follow', actorEmoji: '🌸', actorName: '지훈', actorHandle: 'jihun_viz', actorBg: '#FFE8F4', time: '3시간', read: false },
-  { id: '4', type: 'like', actorEmoji: '🎸', actorName: '수진', actorHandle: 'sujin_sound', actorBg: '#EEE9FF', postTitle: '회의 내용 → 슬픈 밈 생성기', postId: '1', time: '5시간', read: true },
-  { id: '5', type: 'comment', actorEmoji: '🐧', actorName: '지수', actorHandle: 'jisu_art', actorBg: '#EEF0FF', postTitle: '회의 내용 → 슬픈 밈 생성기', postId: '1', time: '6시간', read: true },
-  { id: '6', type: 'reaction', actorEmoji: '⚗️', actorName: '재원2', actorHandle: 'jaewon2', actorBg: '#F7F0E6', postTitle: '회의 내용 → 슬픈 밈 생성기', postId: '1', reaction: '🧠 천재', time: '어제', read: true },
-  { id: '7', type: 'like', actorEmoji: '🎨', actorName: '민지', actorHandle: 'minji_draws', actorBg: '#FFEEDD', postTitle: '회의 내용 → 슬픈 밈 생성기', postId: '1', time: '2일', read: true },
-  { id: '8', type: 'remix', actorEmoji: '🌊', actorName: '예솔', actorHandle: 'yesol_ai', actorBg: '#E0F0FF', postTitle: '회의 내용 → 슬픈 밈 생성기', postId: '1', time: '3일', read: true },
+  { id: '1', type: 'reaction', actorEmoji: '🦊', actorName: '예진', actorHandle: 'yejin_ai', actorBg: '#EEFAD6', postTitle: '회의 내용 → 슬픈 밈 생성기', postId: '1', reaction: '😂 웃김', time: '1시간 전', read: false },
+  { id: '2', type: 'remix', actorEmoji: '🦁', actorName: '재원', actorHandle: 'jaewon_exp', actorBg: '#F7F0E6', postTitle: '회의 내용 → 슬픈 밈 생성기', postId: '1', time: '2시간 전', read: false },
+  { id: '3', type: 'follow', actorEmoji: '🌸', actorName: '지훈', actorHandle: 'jihun_viz', actorBg: '#FFE8F4', time: '3시간 전', read: false },
+  { id: '4', type: 'like', actorEmoji: '🎸', actorName: '수진', actorHandle: 'sujin_sound', actorBg: '#EEE9FF', postTitle: '회의 내용 → 슬픈 밈 생성기', postId: '1', time: '5시간 전', read: true },
+  { id: '5', type: 'comment', actorEmoji: '🐧', actorName: '지수', actorHandle: 'jisu_art', actorBg: '#EEF0FF', postTitle: '회의 내용 → 슬픈 밈 생성기', postId: '1', time: '6시간 전', read: true },
+  { id: '6', type: 'reaction', actorEmoji: '⚗️', actorName: '재원2', actorHandle: 'jaewon2', actorBg: '#F7F0E6', postTitle: '회의 내용 → 슬픈 밈 생성기', postId: '1', reaction: '🧠 천재', time: '1일 전', read: true },
+  { id: '7', type: 'like', actorEmoji: '🎨', actorName: '민지', actorHandle: 'minji_draws', actorBg: '#FFEEDD', postTitle: '회의 내용 → 슬픈 밈 생성기', postId: '1', time: '2일 전', read: true },
+  { id: '8', type: 'remix', actorEmoji: '🌊', actorName: '예솔', actorHandle: 'yesol_ai', actorBg: '#E0F0FF', postTitle: '회의 내용 → 슬픈 밈 생성기', postId: '1', time: '3일 전', read: true },
 ];
 
 function fmtKRW(n: number) {
@@ -101,7 +101,7 @@ function NotifRow({ notif }: { notif: Notif }) {
               </p>
             </>
           )}
-          <div className="text-[12px] text-gray-400 mt-0.5">{notif.time} 전</div>
+          <div className="text-[12px] text-gray-400 mt-0.5">{notif.time}</div>
         </div>
         {!notif.read && <div className="w-2.5 h-2.5 rounded-full bg-amber-400 mt-1.5 flex-shrink-0" />}
       </Link>
@@ -132,7 +132,7 @@ function NotifRow({ notif }: { notif: Notif }) {
           <p className="text-[12px] text-emerald-600 font-semibold mt-0.5">
             +{fmtKRW(notif.amount!)} 추가 수익 예상
           </p>
-          <div className="text-[12px] text-gray-400 mt-0.5">{notif.time} 전</div>
+          <div className="text-[12px] text-gray-400 mt-0.5">{notif.time}</div>
         </div>
         {!notif.read && <div className="w-2.5 h-2.5 rounded-full bg-warm mt-1.5 flex-shrink-0" />}
       </Link>

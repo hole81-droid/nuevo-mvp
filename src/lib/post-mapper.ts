@@ -33,10 +33,10 @@ export function mapDbAuthorToAuthor(row?: UserRow | null): Author {
 function relativeTime(iso: string) {
   const diffMs = Date.now() - new Date(iso).getTime();
   const diffMinutes = Math.max(1, Math.floor(diffMs / 60000));
-  if (diffMinutes < 60) return `${diffMinutes}분`;
+  if (diffMinutes < 60) return `${diffMinutes}분 전`;
   const diffHours = Math.floor(diffMinutes / 60);
-  if (diffHours < 24) return `${diffHours}시간`;
-  return `${Math.floor(diffHours / 24)}일`;
+  if (diffHours < 24) return `${diffHours}시간 전`;
+  return `${Math.floor(diffHours / 24)}일 전`;
 }
 
 export function mapDbPostToPost(row: DbPostWithAuthor, options?: { remixCount?: number }): Post {
