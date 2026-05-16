@@ -136,7 +136,7 @@ export default async function StudioPage() {
     ? 100
     : Math.min((studio.stats.sessions / next.minSessions) * 100, 100);
   const estimatedRevenue = Math.round(MONTHLY_POOL * current.revenueShare * myShare);
-  const postBreakdown = studio.postBreakdown.length ? studio.postBreakdown : MOCK_POST_BREAKDOWN;
+  const postBreakdown = studio.postBreakdown;
 
   const wesBreakdown = [
     { label: '체험 세션', value: studio.stats.sessions, weight: WES_WEIGHTS.sessions, score: studio.stats.sessions * WES_WEIGHTS.sessions },
@@ -269,37 +269,45 @@ export default async function StudioPage() {
         {/* Per-post breakdown */}
         <div className="mx-4 mb-4">
           <h2 className="text-[16px] font-bold text-gray-900 mb-3">작품별 WES</h2>
-          <div className="flex flex-col gap-2">
-            {postBreakdown.map((p) => {
-              const wes = calcWes(p);
-              const maxWes = Math.max(1, ...postBreakdown.map(calcWes));
-              const barPct = (wes / maxWes) * 100;
-              const postRevenue = Math.round(MONTHLY_POOL * current.revenueShare * (wes / studio.platformWes));
-              return (
-                <div key={p.id} className="bg-[#F7F7F2] border-2 border-[#D8D8D0] rounded-[28px] p-3">
-                  <div className="flex items-center gap-2 mb-2">
-                    <NuevoGlyph kind={p.kind} size={36} />
-                    <div className="flex-1 min-w-0">
-                      <div className="text-[13px] font-bold text-gray-900 truncate">{p.title}</div>
-                      <div className="text-[11px] text-gray-500">{fmt(p.sessions)}회 체험 · {fmt(p.minutes)}분</div>
+          {postBreakdown.length === 0 ? (
+            <div className="bg-[#F7F7F2] border-2 border-[#D8D8D0] rounded-[28px] p-6 text-center">
+              <div className="text-3xl mb-2">🌱</div>
+              <div className="text-[14px] font-bold text-gray-700">아직 체험 데이터가 없어요</div>
+              <div className="text-[12px] text-gray-500 mt-1">작품을 올리면 이 달 체험 통계가 쌓여요</div>
+            </div>
+          ) : (
+            <div className="flex flex-col gap-2">
+              {postBreakdown.map((p) => {
+                const wes = calcWes(p);
+                const maxWes = Math.max(1, ...postBreakdown.map(calcWes));
+                const barPct = (wes / maxWes) * 100;
+                const postRevenue = Math.round(MONTHLY_POOL * current.revenueShare * (wes / studio.platformWes));
+                return (
+                  <div key={p.id} className="bg-[#F7F7F2] border-2 border-[#D8D8D0] rounded-[28px] p-3">
+                    <div className="flex items-center gap-2 mb-2">
+                      <NuevoGlyph kind={p.kind} size={36} />
+                      <div className="flex-1 min-w-0">
+                        <div className="text-[13px] font-bold text-gray-900 truncate">{p.title}</div>
+                        <div className="text-[11px] text-gray-500">{fmt(p.sessions)}회 체험 · {fmt(p.minutes)}분</div>
+                      </div>
+                      <div className="text-right flex-shrink-0">
+                        <div className="text-[13px] font-bold text-gray-900">{Math.round(wes).toLocaleString()}</div>
+                        <div className="text-[11px] text-emerald-600 font-medium">~{fmtKRW(postRevenue)}</div>
+                      </div>
                     </div>
-                    <div className="text-right flex-shrink-0">
-                      <div className="text-[13px] font-bold text-gray-900">{Math.round(wes).toLocaleString()}</div>
-                      <div className="text-[11px] text-emerald-600 font-medium">~{fmtKRW(postRevenue)}</div>
+                    <div className="h-1.5 bg-gray-100 rounded-full overflow-hidden">
+                      <div className="h-full bg-warm rounded-full" style={{ width: `${barPct}%` }} />
+                    </div>
+                    <div className="flex gap-3 mt-2 text-[11px] text-gray-400">
+                      <span>반응 {fmt(p.reactions)}</span>
+                      <span>댓글 {p.comments}</span>
+                      <span>리믹스 {p.remixes}</span>
                     </div>
                   </div>
-                  <div className="h-1.5 bg-gray-100 rounded-full overflow-hidden">
-                    <div className="h-full bg-warm rounded-full" style={{ width: `${barPct}%` }} />
-                  </div>
-                  <div className="flex gap-3 mt-2 text-[11px] text-gray-400">
-                    <span>반응 {fmt(p.reactions)}</span>
-                    <span>댓글 {p.comments}</span>
-                    <span>리믹스 {p.remixes}</span>
-                  </div>
-                </div>
-              );
-            })}
-          </div>
+                );
+              })}
+            </div>
+          )}
         </div>
 
         {/* Remix Map */}
