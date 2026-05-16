@@ -178,7 +178,16 @@ export default function PostCard({
               <span className="text-[15px] text-gray-500 flex-shrink-0">@{author.handle}</span>
               <span className="text-[15px] text-gray-400 flex-shrink-0">·</span>
               <span className="text-[15px] text-gray-400 flex-shrink-0">{createdAt}</span>
-              <button onClick={(e) => e.stopPropagation()} className="ml-auto flex-shrink-0 text-gray-400 hover:text-gray-600 p-1 -mr-1 rounded-full">
+              <button
+                onClick={async (e) => {
+                  e.stopPropagation();
+                  if (!user || user.id !== author.id || !useDbSocial) return;
+                  if (!window.confirm('이 작품을 삭제할까요?')) return;
+                  const { error } = await supabase.from('posts').delete().eq('id', post.id);
+                  if (!error) router.refresh();
+                }}
+                className="ml-auto flex-shrink-0 text-gray-400 hover:text-gray-600 p-1 -mr-1 rounded-full"
+              >
                 <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor">
                   <circle cx="5" cy="12" r="2" /><circle cx="12" cy="12" r="2" /><circle cx="19" cy="12" r="2" />
                 </svg>
