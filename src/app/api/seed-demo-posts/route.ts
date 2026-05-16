@@ -51,6 +51,8 @@ export async function POST() {
       iframe_url: post.iframeUrl,
       cover_emoji: post.coverEmoji,
       bg_gradient: post.bgGradient,
+      detail_description: post.detailDescription ?? null,
+      tool_used: post.toolUsed ?? null,
       remixable: true,
     }));
 
