@@ -394,7 +394,7 @@ function Step2({ form, updateForm }: { form: UploadFormData; updateForm: (u: Par
       </p>
 
       {/* Thumbnail */}
-      <FormGroup label="썸네일" required>
+      <FormGroup label="썸네일">
         <div className="w-full aspect-video rounded-[28px] border-2 border-dashed border-[#D8D8D0] flex flex-col items-center justify-center gap-3 bg-[#F7F7F2] active:bg-[#EFEFE8] cursor-pointer">
           <UploadTypeIcon icon="thumbnail" selected={false} />
           <span className="text-[13px] text-gray-500 text-center">탭해서 이미지 선택<br /><span className="text-gray-400">JPG, PNG, GIF · 최대 10MB</span></span>
@@ -441,7 +441,7 @@ function Step2({ form, updateForm }: { form: UploadFormData; updateForm: (u: Par
       )}
 
       {form.contentType === 'audio' && (
-        <FormGroup label="오디오 파일" required>
+        <FormGroup label="오디오 파일">
           <div className="w-full p-4 rounded-[24px] border-2 border-dashed border-[#D8D8D0] flex items-center gap-3 bg-[#F7F7F2] cursor-pointer active:bg-[#EFEFE8]">
             <UploadTypeIcon icon="audio" selected={false} small />
             <div>
@@ -453,7 +453,7 @@ function Step2({ form, updateForm }: { form: UploadFormData; updateForm: (u: Par
       )}
 
       {form.contentType === 'image' && (
-        <FormGroup label="이미지" required hint="여러 장 선택 시 시리즈로 표시됩니다">
+        <FormGroup label="이미지" hint="여러 장 선택 시 시리즈로 표시됩니다">
           <div className="w-full p-4 rounded-[28px] border-2 border-dashed border-[#D8D8D0] flex flex-col items-center justify-center gap-3 bg-[#F7F7F2] cursor-pointer active:bg-[#EFEFE8] min-h-[120px]">
             <UploadTypeIcon icon="image" selected={false} />
             <div className="text-[13px] text-gray-500 text-center">이미지 선택 (최대 20장)<br /><span className="text-gray-400">JPG, PNG, WebP</span></div>
