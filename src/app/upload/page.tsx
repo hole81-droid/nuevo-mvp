@@ -141,6 +141,8 @@ function UploadPageInner() {
         : form.contentType === 'audio'
           ? 'from-violet-100 to-violet-200'
           : 'from-pink-100 to-pink-200',
+      detail_description: form.detailedDescription.trim() || null,
+      tool_used: form.tool.trim() || null,
       remixable: form.remixable,
       remix_of: remixOf,
     } as never).select('id').single() as {

@@ -71,5 +71,7 @@ export function mapDbPostToPost(row: DbPostWithAuthor, options?: { remixCount?: 
     },
     remixable: row.remixable,
     remixOf: row.remix_of ?? undefined,
+    detailDescription: row.detail_description ?? undefined,
+    tool: row.tool_used ?? undefined,
   };
 }

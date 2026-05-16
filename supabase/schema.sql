@@ -30,12 +30,14 @@ create table public.posts (
   title         text not null,
   text          text not null default '',
   content_type  text not null check (content_type in ('interactive', 'audio', 'image')),
-  iframe_url    text,
-  cover_emoji   text,
-  bg_gradient   text not null default 'from-gray-100 to-gray-200',
-  remixable     boolean not null default true,
-  remix_of      uuid references public.posts(id) on delete set null,
-  created_at    timestamptz default now()
+  iframe_url          text,
+  cover_emoji         text,
+  bg_gradient         text not null default 'from-gray-100 to-gray-200',
+  detail_description  text,
+  tool_used           text,
+  remixable           boolean not null default true,
+  remix_of            uuid references public.posts(id) on delete set null,
+  created_at          timestamptz default now()
 );
 
 -- 피드 정렬 인덱스

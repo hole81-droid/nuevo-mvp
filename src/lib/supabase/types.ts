@@ -52,6 +52,8 @@ export interface Database {
           iframe_url: string | null;
           cover_emoji: string | null;
           bg_gradient: string;
+          detail_description: string | null;
+          tool_used: string | null;
           remixable: boolean;
           remix_of: string | null;
           created_at: string;
@@ -65,6 +67,8 @@ export interface Database {
           iframe_url?: string | null;
           cover_emoji?: string | null;
           bg_gradient?: string;
+          detail_description?: string | null;
+          tool_used?: string | null;
           remixable?: boolean;
           remix_of?: string | null;
           created_at?: string;
@@ -78,6 +82,8 @@ export interface Database {
           iframe_url?: string | null;
           cover_emoji?: string | null;
           bg_gradient?: string;
+          detail_description?: string | null;
+          tool_used?: string | null;
           remixable?: boolean;
           remix_of?: string | null;
           created_at?: string;
