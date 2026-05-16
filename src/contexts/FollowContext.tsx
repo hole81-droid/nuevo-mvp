@@ -23,13 +23,15 @@ const FollowContext = createContext<FollowContextValue>({
 
 export function FollowProvider({ children }: { children: ReactNode }) {
   const supabase = useMemo(() => createClient(), []);
-  const { user } = useAuth();
-  const [following, setFollowing] = useState<Set<string>>(new Set(INITIAL_FOLLOWING));
+  const { user, loading } = useAuth();
+  const [following, setFollowing] = useState<Set<string>>(new Set());
 
   useEffect(() => {
     let mounted = true;
 
     const loadFollowing = async () => {
+      if (loading) return;
+
       if (!user) {
         setFollowing(new Set(INITIAL_FOLLOWING));
         return;
@@ -49,7 +51,7 @@ export function FollowProvider({ children }: { children: ReactNode }) {
     return () => {
       mounted = false;
     };
-  }, [supabase, user]);
+  }, [supabase, user, loading]);
 
   const toggle = (authorId: string) => {
     const wasFollowing = following.has(authorId);
