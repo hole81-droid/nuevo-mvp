@@ -12,21 +12,21 @@ const INITIAL_COMMENTS: Comment[] = [
     id: 'c1',
     author: { id: 'yejin', displayName: '예진', handle: 'yejin_ai', avatarEmoji: '🦊', avatarBg: '#EEFAD6', followerCount: 0 },
     text: '어제 회의록 넣었더니 저 혼자 울었어요 ㅠ ㅋㅋㅋㅋ 너무 공감',
-    createdAt: '1시간',
+    createdAt: '1시간 전',
     likes: 34,
   },
   {
     id: 'c2',
     author: { id: 'jaewon', displayName: '재원', handle: 'jaewon_exp', avatarEmoji: '⚗️', avatarBg: '#F7F0E6', followerCount: 0 },
     text: '이거 리믹스해서 긍정적인 버전 만들면 어떨까요? 반전 감동 밈',
-    createdAt: '2시간',
+    createdAt: '2시간 전',
     likes: 12,
   },
   {
     id: 'c3',
     author: { id: 'jisu', displayName: '지수', handle: 'jisu_art', avatarEmoji: '🐧', avatarBg: '#EEF0FF', followerCount: 0 },
     text: '팀장님 말씀: "이건 그냥 생각해본 건데요" → 결과물이 너무 정확함',
-    createdAt: '3시간',
+    createdAt: '3시간 전',
     likes: 67,
   },
 ];
@@ -42,7 +42,7 @@ export default function CommentSection({ postId, postAuthorId, initialComments =
   const supabase = useMemo(() => createClient(), []);
   const { user, profile } = useAuth();
   const useDbComments = Boolean(postId && isUuid(postId));
-  const [comments, setComments] = useState<Comment[]>(initialComments);
+  const [comments, setComments] = useState<Comment[]>(useDbComments ? [] : initialComments);
   const [input, setInput] = useState('');
   const [likedIds, setLikedIds] = useState<Set<string>>(new Set());
   const [status, setStatus] = useState<string | null>(null);
