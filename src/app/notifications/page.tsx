@@ -206,12 +206,19 @@ export default function NotificationsPage() {
       const actorIds = Array.from(new Set(rows.map((n) => n.actor_id).filter(Boolean))) as string[];
       const postIds = Array.from(new Set(rows.flatMap((n) => [n.post_id, n.remix_post_id]).filter(Boolean))) as string[];
 
-      const [{ data: actors }, { data: posts }] = await Promise.all([
+      const reactionRows = rows.filter((n) => n.type === 'reaction');
+      const reactionPostIds = Array.from(new Set(reactionRows.map((n) => n.post_id).filter(Boolean))) as string[];
+      const reactionActorIds = Array.from(new Set(reactionRows.map((n) => n.actor_id).filter(Boolean))) as string[];
+
+      const [{ data: actors }, { data: posts }, { data: reactions }] = await Promise.all([
         actorIds.length
           ? supabase.from('users').select('*').in('id', actorIds)
           : Promise.resolve({ data: [] }),
         postIds.length
           ? supabase.from('posts').select('*').in('id', postIds)
+          : Promise.resolve({ data: [] }),
+        reactionPostIds.length && reactionActorIds.length
+          ? supabase.from('post_reactions').select('post_id, user_id, reaction').in('post_id', reactionPostIds).in('user_id', reactionActorIds)
           : Promise.resolve({ data: [] }),
       ]);
 
@@ -219,11 +226,24 @@ export default function NotificationsPage() {
       const postRows = (posts ?? []) as PostRow[];
       const actorById = new Map(actorRows.map((actor) => [actor.id, actor]));
       const postById = new Map(postRows.map((post) => [post.id, post]));
+      const reactionByKey = new Map(
+        ((reactions ?? []) as Array<{ post_id: string; user_id: string; reaction: string }>)
+          .map((r) => [`${r.post_id}:${r.user_id}`, r.reaction])
+      );
+
+      const REACTION_LABELS: Record<string, string> = {
+        funny: '😂 웃김',
+        weird: '🤔 이상해',
+        genius: '🧠 천재',
+        wtf: '😱 충격',
+      };
 
       const realNotifications: Notif[] = rows.map((notif) => {
         const actor = notif.actor_id ? actorById.get(notif.actor_id) : null;
         const postId = notif.post_id ?? notif.remix_post_id;
         const post = postId ? postById.get(postId) : null;
+        const reactionKey = notif.post_id && notif.actor_id ? `${notif.post_id}:${notif.actor_id}` : null;
+        const reactionType = reactionKey ? reactionByKey.get(reactionKey) : null;
 
         return {
           id: notif.id,
@@ -234,7 +254,7 @@ export default function NotificationsPage() {
           actorBg: actor?.avatar_bg ?? '#F7F0E6',
           postTitle: post?.title ?? '내 작품',
           postId: postId ?? undefined,
-          reaction: notif.type === 'reaction' ? '반응' : undefined,
+          reaction: notif.type === 'reaction' ? (reactionType ? REACTION_LABELS[reactionType] ?? reactionType : '반응') : undefined,
           tierName: notif.type === 'tier_up' ? '새 파트너 티어' : undefined,
           time: relativeTime(notif.created_at),
           read: notif.read,
