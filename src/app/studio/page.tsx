@@ -21,24 +21,6 @@ import {
   WesStats,
 } from '@/lib/wes';
 
-const MOCK_POST_BREAKDOWN: PostWesBreakdown[] = [
-  {
-    id: '1', kind: 'interactive', title: '회의 내용 → 슬픈 밈 생성기',
-    sessions: 1234, minutes: 892, reactions: 1137, comments: 124, remixes: 89,
-  },
-  {
-    id: 'A', kind: 'interactive', title: '매운맛 GPT 면접관',
-    sessions: 3560, minutes: 1244, reactions: 1234, comments: 0, remixes: 0,
-  },
-  {
-    id: 'B', kind: 'audio', title: '내 영어 발음 세계지도',
-    sessions: 2340, minutes: 890, reactions: 567, comments: 0, remixes: 0,
-  },
-  {
-    id: 'C', kind: 'interactive', title: '랜덤 직업 MBTI 분석기',
-    sessions: 1100, minutes: 430, reactions: 188, comments: 0, remixes: 0,
-  },
-];
 
 function fmt(n: number) {
   if (n >= 10000) return `${(n / 10000).toFixed(1)}만`;
