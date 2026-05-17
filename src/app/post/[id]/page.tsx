@@ -1,3 +1,4 @@
+import type { Metadata } from 'next';
 import { mockPosts } from '@/lib/mock-data';
 import BackButton from '@/components/ui/BackButton';
 import BottomNav from '@/components/layout/BottomNav';
@@ -18,6 +19,42 @@ interface Props {
 }
 
 export const dynamic = 'force-dynamic';
+
+export async function generateMetadata({ params }: Pick<Props, 'params'>): Promise<Metadata> {
+  const { id } = await params;
+  const post = await getPost(id);
+  if (!post) {
+    return {
+      title: 'nuevo',
+      description: 'AI 앱을 바로 실행하고 리믹스하는 피드',
+    };
+  }
+
+  const title = `${post.title} | nuevo`;
+  const description = post.text || `${post.author.displayName}의 AI 앱을 바로 실행해보세요.`;
+
+  return {
+    title,
+    description,
+    openGraph: {
+      title,
+      description,
+      type: 'article',
+      images: [{
+        url: '/nuevo-og.svg',
+        width: 1200,
+        height: 630,
+        alt: post.title,
+      }],
+    },
+    twitter: {
+      card: 'summary_large_image',
+      title,
+      description,
+      images: ['/nuevo-og.svg'],
+    },
+  };
+}
 
 async function getPost(id: string): Promise<Post | null> {
   const mockPost = mockPosts.find((p) => p.id === id);

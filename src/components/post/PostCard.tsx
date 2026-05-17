@@ -10,9 +10,10 @@ import { useAuth } from '@/contexts/AuthContext';
 import { createClient } from '@/lib/supabase/client';
 import { countReactions, isUuid, ReactionKey } from '@/lib/social';
 import { createNotification } from '@/lib/notification-events';
-import { buildPostDeepLink } from '@/lib/deep-link';
+import { buildCreatorPostPath, buildPostDeepLink } from '@/lib/deep-link';
 import { buildLoginRedirectFromLocation } from '@/lib/protected-action';
 import { getRemixSocialProofLabel, shouldShowRemixSocialProof } from '@/lib/remix-social-proof';
+import { buildTrafficSourcePayload } from '@/lib/traffic-source';
 import ContentViewer from './ContentViewer';
 import InteractiveDemo from './InteractiveDemo';
 import AudioPlayer from './AudioPlayer';
@@ -111,6 +112,7 @@ export default function PostCard({
       origin: window.location.origin,
       autoplay: true,
       source: 'share',
+      path: buildCreatorPostPath({ postId: post.id, handle: author.handle, title }),
     });
     navigator.clipboard?.writeText(url);
     setShareCount((count) => count + 1);
@@ -119,6 +121,10 @@ export default function PostCard({
         post_id: post.id,
         sharer_id: user?.id ?? null,
         source: 'copy_link',
+        ...buildTrafficSourcePayload({
+          search: window.location.search,
+          referrer: document.referrer,
+        }),
       } as never).then(() => {});
     }
     setCopied(true);

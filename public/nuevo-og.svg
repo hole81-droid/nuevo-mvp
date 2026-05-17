@@ -1,0 +1,13 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="630" viewBox="0 0 1200 630">
+  <rect width="1200" height="630" fill="#FFFDF5"/>
+  <rect x="72" y="72" width="1056" height="486" rx="44" fill="#F7F7F2" stroke="#111111" stroke-width="8"/>
+  <circle cx="168" cy="166" r="48" fill="#111111"/>
+  <path d="M153 138v56l45-28-45-28Z" fill="#FFFDF5"/>
+  <text x="250" y="180" font-family="Arial, Helvetica, sans-serif" font-size="62" font-weight="900" fill="#111111">nuevo</text>
+  <text x="250" y="252" font-family="Arial, Helvetica, sans-serif" font-size="34" font-weight="700" fill="#444444">AI apps you can play, share, and remix</text>
+  <rect x="250" y="316" width="236" height="72" rx="36" fill="#111111"/>
+  <text x="296" y="363" font-family="Arial, Helvetica, sans-serif" font-size="28" font-weight="900" fill="#FFFDF5">PLAY NOW</text>
+  <rect x="512" y="316" width="202" height="72" rx="36" fill="#FFFDF5" stroke="#111111" stroke-width="4"/>
+  <text x="557" y="363" font-family="Arial, Helvetica, sans-serif" font-size="28" font-weight="900" fill="#111111">REMIX</text>
+  <text x="250" y="468" font-family="Arial, Helvetica, sans-serif" font-size="28" font-weight="700" fill="#777777">Deep links open directly into the interactive app.</text>
+</svg>

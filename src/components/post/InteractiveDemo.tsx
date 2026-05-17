@@ -4,6 +4,7 @@ import { useEffect, useMemo, useRef, useState } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 import { createClient } from '@/lib/supabase/client';
 import { validateEmbedUrl } from '@/lib/embed-url';
+import { buildTrafficSourcePayload } from '@/lib/traffic-source';
 
 interface Props {
   postId?: string;
@@ -63,6 +64,10 @@ export default function InteractiveDemo({ postId, postTitle, iframeUrl, autoplay
         post_id: postId,
         viewer_id: user?.id ?? null,
         client_session_id: getClientSessionId(),
+        ...buildTrafficSourcePayload({
+          search: window.location.search,
+          referrer: document.referrer,
+        }),
       } as never)
       .select('id')
       .single() as { data: { id: string } | null };

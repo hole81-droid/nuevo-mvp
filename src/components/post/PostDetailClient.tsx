@@ -10,10 +10,11 @@ import { useAuth } from '@/contexts/AuthContext';
 import { createClient } from '@/lib/supabase/client';
 import { countReactions, isUuid, ReactionKey } from '@/lib/social';
 import { createNotification } from '@/lib/notification-events';
-import { buildPostDeepLink } from '@/lib/deep-link';
+import { buildCreatorPostPath, buildPostDeepLink } from '@/lib/deep-link';
 import { buildLoginRedirectFromLocation } from '@/lib/protected-action';
 import { getRemixSocialProofLabel, shouldShowRemixSocialProof } from '@/lib/remix-social-proof';
 import { getRemixCtaCopy, shouldShowRemixCta } from '@/lib/remix-cta';
+import { buildTrafficSourcePayload } from '@/lib/traffic-source';
 import InteractiveDemo from './InteractiveDemo';
 import AudioPlayer from './AudioPlayer';
 import ImageGallery, { SUBWAY_SLIDES } from './ImageGallery';
@@ -104,6 +105,7 @@ export default function PostDetailClient({
       origin: window.location.origin,
       autoplay: true,
       source: 'share',
+      path: buildCreatorPostPath({ postId: post.id, handle: author.handle, title }),
     });
 
     if (navigator.clipboard) {
@@ -115,6 +117,10 @@ export default function PostDetailClient({
         post_id: post.id,
         sharer_id: user?.id ?? null,
         source: 'copy_link',
+        ...buildTrafficSourcePayload({
+          search: window.location.search,
+          referrer: document.referrer,
+        }),
       } as never).then(() => {});
     }
     setCopied(true);

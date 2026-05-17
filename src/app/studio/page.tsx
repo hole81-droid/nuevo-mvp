@@ -20,6 +20,8 @@ import {
   WES_WEIGHTS,
   WesStats,
 } from '@/lib/wes';
+import { buildFameMetrics } from '@/lib/fame-dashboard';
+import { summarizeTrafficSources } from '@/lib/traffic-source';
 
 
 function fmt(n: number) {
@@ -39,6 +41,7 @@ type StudioData = {
   stats: WesStats;
   saves: number;
   shares: number;
+  trafficSources: ReturnType<typeof summarizeTrafficSources>;
   platformWes: number;
   postBreakdown: Array<PostWesBreakdown & { saves: number; shares: number }>;
   payoutRequest: PayoutRequestRow | null;
@@ -84,12 +87,13 @@ async function getStudioData(): Promise<StudioData> {
     .eq('author_id', user.id);
 
   const creatorPostIds = (creatorPosts ?? []).map((post) => post.id);
-  const [{ data: saveRows }, { data: shareRows }] = creatorPostIds.length
+  const [{ data: saveRows }, { data: shareRows }, { data: experienceSourceRows }] = creatorPostIds.length
     ? await Promise.all([
         supabase.from('saved_posts').select('post_id').in('post_id', creatorPostIds),
-        supabase.from('post_share_events').select('post_id').in('post_id', creatorPostIds),
+        supabase.from('post_share_events').select('post_id, traffic_source').in('post_id', creatorPostIds),
+        supabase.from('experience_events').select('post_id, traffic_source').in('post_id', creatorPostIds),
       ])
-    : [{ data: [] }, { data: [] }];
+    : [{ data: [] }, { data: [] }, { data: [] }];
 
   const saveCounts = new Map<string, number>();
   const shareCounts = new Map<string, number>();
@@ -119,6 +123,10 @@ async function getStudioData(): Promise<StudioData> {
     stats,
     saves: Array.from(saveCounts.values()).reduce((sum, count) => sum + count, 0),
     shares: Array.from(shareCounts.values()).reduce((sum, count) => sum + count, 0),
+    trafficSources: summarizeTrafficSources([
+      ...((experienceSourceRows ?? []) as Array<{ traffic_source: string | null }>),
+      ...((shareRows ?? []) as Array<{ traffic_source: string | null }>),
+    ]),
     platformWes,
     postBreakdown: (postRows ?? []).map((row) => ({
       id: row.post_id,
@@ -147,6 +155,11 @@ export default async function StudioPage() {
     : Math.min((studio.stats.sessions / next.minSessions) * 100, 100);
   const estimatedRevenue = Math.round(MONTHLY_POOL * current.revenueShare * myShare);
   const postBreakdown = studio.postBreakdown;
+  const fameMetrics = buildFameMetrics({
+    ...studio.stats,
+    saves: studio.saves,
+    shares: studio.shares,
+  });
 
   const wesBreakdown = [
     { label: '체험 세션', value: studio.stats.sessions, weight: WES_WEIGHTS.sessions, score: studio.stats.sessions * WES_WEIGHTS.sessions },
@@ -175,36 +188,83 @@ export default async function StudioPage() {
       <main className="flex-1 overflow-y-auto pb-[54px] scrollbar-hide">
         <TierSyncNotice enabled={studio.isLive} />
 
-        {/* Revenue summary cards */}
-        <div className="p-4 grid grid-cols-3 gap-3">
-          <div className="bg-[#F7F7F2] border-2 border-[#D8D8D0] rounded-[28px] p-3">
-            <div className="text-[11px] text-gray-500 leading-tight">총 체험</div>
-            <div className="text-[22px] font-bold text-gray-900 mt-1">{fmt(studio.stats.sessions)}</div>
-            <div className="text-[11px] text-warm font-medium mt-0.5">회</div>
+        {/* Fame dashboard */}
+        <div className="p-4">
+          <div className="mb-3">
+            <h1 className="text-[24px] font-black tracking-[-0.06em] text-gray-900">Fame dashboard</h1>
+            <p className="mt-1 text-[13px] leading-snug text-gray-500">사람들이 얼마나 오래 놀고, 저장하고, 퍼뜨렸는지를 먼저 봅니다.</p>
           </div>
-          <div className="bg-[#F7F7F2] border-2 border-[#D8D8D0] rounded-[28px] p-3">
-            <div className="text-[11px] text-gray-500 leading-tight">총 체험 시간</div>
-            <div className="text-[22px] font-bold text-gray-900 mt-1">{fmt(studio.stats.minutes)}</div>
-            <div className="text-[11px] text-blue-500 font-medium mt-0.5">분</div>
-          </div>
-          <div className="bg-[#F7F7F2] border-2 border-[#D8D8D0] rounded-[28px] p-3">
-            <div className="text-[11px] text-gray-500 leading-tight">예상 수익</div>
-            <div className="text-[19px] font-bold text-gray-900 mt-1">{fmtKRW(estimatedRevenue)}</div>
-            <div className="text-[11px] text-emerald-600 font-medium mt-0.5">이번 달</div>
+          <div className="grid grid-cols-2 gap-3">
+            {fameMetrics.map((metric, index) => (
+              <div
+                key={metric.key}
+                className={`rounded-[26px] border-2 border-[#D8D8D0] p-3 ${
+                  index === 0 ? 'col-span-2 bg-black text-white' : 'bg-[#F7F7F2] text-gray-900'
+                }`}
+              >
+                <div className={index === 0 ? 'text-[12px] text-white/65' : 'text-[11px] text-gray-500'}>{metric.label}</div>
+                <div className="mt-1 flex items-end gap-1">
+                  <span className={index === 0 ? 'text-[34px] font-black tracking-[-0.08em]' : 'text-[24px] font-black tracking-[-0.05em]'}>
+                    {fmt(metric.value)}
+                  </span>
+                  <span className={index === 0 ? 'pb-1 text-[12px] font-bold text-white/70' : 'pb-1 text-[11px] font-bold text-warm'}>
+                    {metric.suffix}
+                  </span>
+                </div>
+              </div>
+            ))}
           </div>
         </div>
 
-        <div className="mx-4 mb-4 grid grid-cols-2 gap-3">
-          <div className="rounded-[26px] border-2 border-[#D8D8D0] bg-[#FFFDF5] p-3">
-            <div className="text-[11px] text-gray-500 leading-tight">저장</div>
-            <div className="mt-1 text-[24px] font-black tracking-[-0.05em] text-gray-900">{fmt(studio.saves)}</div>
-            <div className="mt-0.5 text-[11px] font-bold text-warm">다시 볼 의도</div>
+        <div className="mx-4 mb-4 rounded-[28px] border-2 border-[#D8D8D0] bg-[#FFFDF5] p-4">
+          <div className="flex items-center justify-between">
+            <div>
+              <h2 className="text-[16px] font-black tracking-[-0.04em] text-gray-900">유입 채널</h2>
+              <p className="mt-1 text-[12px] text-gray-500">체험과 공유 이벤트 기준으로 집계합니다.</p>
+            </div>
+            <div className="rounded-full bg-black px-3 py-1 text-[11px] font-black text-white">
+              {studio.trafficSources[0]?.label ?? 'Direct'}
+            </div>
           </div>
-          <div className="rounded-[26px] border-2 border-[#D8D8D0] bg-[#FFFDF5] p-3">
-            <div className="text-[11px] text-gray-500 leading-tight">공유</div>
-            <div className="mt-1 text-[24px] font-black tracking-[-0.05em] text-gray-900">{fmt(studio.shares)}</div>
-            <div className="mt-0.5 text-[11px] font-bold text-blue-500">외부 확산</div>
+          {studio.trafficSources.length > 0 ? (
+            <div className="mt-3 flex flex-col gap-2">
+              {studio.trafficSources.map((source) => (
+                <div key={source.source}>
+                  <div className="mb-1 flex items-center justify-between text-[12px]">
+                    <span className="font-bold text-gray-700">{source.label}</span>
+                    <span className="text-gray-400">{source.count} · {source.percent}%</span>
+                  </div>
+                  <div className="h-2 overflow-hidden rounded-full bg-gray-100">
+                    <div className="h-full rounded-full bg-warm" style={{ width: `${source.percent}%` }} />
+                  </div>
+                </div>
+              ))}
+            </div>
+          ) : (
+            <div className="mt-3 rounded-2xl bg-white px-3 py-2 text-[12px] text-gray-400">
+              아직 유입 이벤트가 없어요.
+            </div>
+          )}
+        </div>
+
+        <div className="mx-4 mb-4 rounded-[28px] border-2 border-[#D8D8D0] bg-[#F7F7F2] p-4">
+          <div className="flex items-center justify-between">
+            <div>
+              <div className="text-[12px] text-gray-500">보조 정보 · 예상 수익</div>
+              <div className="mt-1 text-[24px] font-black tracking-[-0.06em] text-gray-900">{fmtKRW(estimatedRevenue)}</div>
+              <div className="mt-1 text-[11px] text-gray-500">확정 수익은 월말 검수 후 정산 요청에서 표시됩니다.</div>
+            </div>
+            <div className="text-right">
+              <div className="text-[12px] text-gray-500">이번 달 WES</div>
+              <div className="mt-1 text-[18px] font-black text-warm">{Math.round(totalWes).toLocaleString()}</div>
+            </div>
           </div>
+          <Link
+            href={`/api/studio/wes-export?month=${studio.monthKey}`}
+            className="mt-3 inline-flex h-10 items-center rounded-full bg-black px-4 text-[12px] font-black text-white"
+          >
+            Raw WES 이벤트 CSV
+          </Link>
         </div>
 
         {/* Partner tier card */}
@@ -255,7 +315,7 @@ export default async function StudioPage() {
         {/* WES breakdown */}
         <div className="mx-4 mb-4">
           <div className="flex items-center justify-between mb-3">
-            <h2 className="text-[16px] font-bold text-gray-900">WES 점수 분해</h2>
+            <h2 className="text-[16px] font-bold text-gray-900">WES breakdown</h2>
             <span className="text-[13px] font-bold text-warm">{Math.round(totalWes).toLocaleString()} WES</span>
           </div>
           <div className="rounded-[28px] border-2 border-[#D8D8D0] overflow-hidden bg-[#F7F7F2]">

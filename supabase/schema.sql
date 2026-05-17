@@ -78,6 +78,8 @@ create table public.experience_events (
   post_id           uuid references public.posts(id) on delete cascade not null,
   viewer_id         uuid references public.users(id) on delete set null,
   client_session_id text not null,
+  traffic_source    text not null default 'direct' check (traffic_source in ('instagram', 'tiktok', 'youtube', 'reddit', 'direct')),
+  referrer          text,
   started_at        timestamptz not null default now(),
   ended_at          timestamptz,
   duration_seconds  integer not null default 0 check (duration_seconds >= 0),
@@ -87,6 +89,7 @@ create table public.experience_events (
 create index experience_events_post_idx on public.experience_events(post_id, started_at desc);
 create index experience_events_viewer_idx on public.experience_events(viewer_id, started_at desc);
 create index experience_events_session_idx on public.experience_events(client_session_id);
+create index experience_events_source_idx on public.experience_events(traffic_source, started_at desc);
 
 -- ============================================================
 -- 5. 정산 요청
@@ -145,6 +148,8 @@ create table public.post_share_events (
   post_id    uuid references public.posts(id) on delete cascade not null,
   sharer_id  uuid references public.users(id) on delete set null,
   source     text not null default 'copy_link',
+  traffic_source text not null default 'direct' check (traffic_source in ('instagram', 'tiktok', 'youtube', 'reddit', 'direct')),
+  referrer   text,
   created_at timestamptz not null default now()
 );
 
@@ -155,6 +160,7 @@ create index post_reactions_post_idx on public.post_reactions(post_id, reaction)
 create index saved_posts_user_idx on public.saved_posts(user_id, created_at desc);
 create index saved_posts_post_idx on public.saved_posts(post_id, created_at desc);
 create index post_share_events_post_idx on public.post_share_events(post_id, created_at desc);
+create index post_share_events_source_idx on public.post_share_events(traffic_source, created_at desc);
 
 -- ============================================================
 -- 7. Row Level Security (RLS)

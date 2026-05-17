@@ -133,6 +133,8 @@ export interface Database {
           post_id: string;
           viewer_id: string | null;
           client_session_id: string;
+          traffic_source: 'instagram' | 'tiktok' | 'youtube' | 'reddit' | 'direct';
+          referrer: string | null;
           started_at: string;
           ended_at: string | null;
           duration_seconds: number;
@@ -143,6 +145,8 @@ export interface Database {
           post_id: string;
           viewer_id?: string | null;
           client_session_id: string;
+          traffic_source?: 'instagram' | 'tiktok' | 'youtube' | 'reddit' | 'direct';
+          referrer?: string | null;
           started_at?: string;
           ended_at?: string | null;
           duration_seconds?: number;
@@ -153,6 +157,8 @@ export interface Database {
           post_id?: string;
           viewer_id?: string | null;
           client_session_id?: string;
+          traffic_source?: 'instagram' | 'tiktok' | 'youtube' | 'reddit' | 'direct';
+          referrer?: string | null;
           started_at?: string;
           ended_at?: string | null;
           duration_seconds?: number;
@@ -293,6 +299,8 @@ export interface Database {
           post_id: string;
           sharer_id: string | null;
           source: string;
+          traffic_source: 'instagram' | 'tiktok' | 'youtube' | 'reddit' | 'direct';
+          referrer: string | null;
           created_at: string;
         };
         Insert: {
@@ -300,6 +308,8 @@ export interface Database {
           post_id: string;
           sharer_id?: string | null;
           source?: string;
+          traffic_source?: 'instagram' | 'tiktok' | 'youtube' | 'reddit' | 'direct';
+          referrer?: string | null;
           created_at?: string;
         };
         Update: {
@@ -307,6 +317,8 @@ export interface Database {
           post_id?: string;
           sharer_id?: string | null;
           source?: string;
+          traffic_source?: 'instagram' | 'tiktok' | 'youtube' | 'reddit' | 'direct';
+          referrer?: string | null;
           created_at?: string;
         };
         Relationships: [];
