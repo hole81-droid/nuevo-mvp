@@ -1,10 +1,9 @@
-import Link from 'next/link';
 import { mockAuthors, mockPosts } from '@/lib/mock-data';
 import BottomNav from '@/components/layout/BottomNav';
 import BackButton from '@/components/ui/BackButton';
 import LeaderboardClient from './LeaderboardClient';
 import { createClient } from '@/lib/supabase/server';
-import { monthKey, monthLabel, MONTHLY_POOL, calcWes } from '@/lib/wes';
+import { monthKey, monthLabel, MONTHLY_POOL } from '@/lib/wes';
 import type { CreatorMonthlyWesRow, PostMonthlyWesRow, UserRow, PostRow } from '@/lib/supabase/types';
 
 export const dynamic = 'force-dynamic';

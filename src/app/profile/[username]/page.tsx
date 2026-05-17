@@ -150,7 +150,7 @@ async function getProfileData(username: string): Promise<{ author: Author; autho
 export default async function ProfilePage({ params }: Props) {
   const { username } = await params;
 
-  const { author, authorPosts, likedPosts, handle, followStats, isOwner } = await getProfileData(username);
+  const { author, authorPosts, likedPosts, followStats, isOwner } = await getProfileData(username);
   const isMe = isOwner;
   const ownOriginalPosts = authorPosts.filter((post) => !post.remixOf);
   const ownRemixedPosts = authorPosts.filter((post) => post.remixOf);

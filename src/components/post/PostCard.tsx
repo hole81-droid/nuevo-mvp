@@ -377,14 +377,22 @@ export default function PostCard({
           {/* Action bar */}
           <div className="flex items-center justify-around py-2 px-4 border-b border-gray-100">
             <BigBtn
-              onClick={(e) => { e.stopPropagation(); user ? commentInputRef.current?.focus() : requireLogin(); }}
+              onClick={(e) => {
+                e.stopPropagation();
+                if (user) commentInputRef.current?.focus();
+                else requireLogin();
+              }}
               icon={<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>}
             />
             <BigBtn
               active={reposted}
               activeColor="text-green-500"
               onClick={remixable
-                ? (e) => { e.stopPropagation(); user ? router.push(`/upload?remix=${post.id}`) : requireLogin(); }
+                ? (e) => {
+                  e.stopPropagation();
+                  if (user) router.push(`/upload?remix=${post.id}`);
+                  else requireLogin();
+                }
                 : handleRepost
               }
               label={remixable ? '리믹스' : undefined}
@@ -409,7 +417,11 @@ export default function PostCard({
             <BigBtn
               active={saved}
               activeColor="text-warm"
-              onClick={(e) => { e.stopPropagation(); user ? toggleSave(post) : requireLogin(); }}
+              onClick={(e) => {
+                e.stopPropagation();
+                if (user) toggleSave(post);
+                else requireLogin();
+              }}
               icon={<svg width="22" height="22" viewBox="0 0 24 24" fill={saved ? 'currentColor' : 'none'} stroke="currentColor" strokeWidth="2" strokeLinecap="round"><path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z"/></svg>}
             />
           </div>
