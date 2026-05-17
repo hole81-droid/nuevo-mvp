@@ -178,23 +178,24 @@ function NotifRow({ notif }: { notif: Notif }) {
 
 export default function NotificationsPage() {
   const supabase = useMemo(() => createClient(), []);
-  const { user } = useAuth();
+  const { user, loading: authLoading } = useAuth();
   const { unreadCount, markAllRead } = useNotifications();
   const [notifications, setNotifications] = useState<Notif[]>([]);
   const [loading, setLoading] = useState(true);
+  const displayedNotifications = user ? notifications : NOTIFICATIONS;
+  const isLoading = authLoading || (user ? loading : false);
 
   useEffect(() => {
     markAllRead();
   }, [markAllRead]);
 
   useEffect(() => {
-    if (!user) {
-      setNotifications(NOTIFICATIONS);
-      setLoading(false);
+    if (authLoading || !user) {
       return;
     }
 
     const loadNotifications = async () => {
+      setLoading(true);
       const { data } = await supabase
         .from('notifications')
         .select('*')
@@ -272,7 +273,7 @@ export default function NotificationsPage() {
     };
 
     loadNotifications();
-  }, [supabase, user]);
+  }, [authLoading, supabase, user]);
 
   const handleMarkAllRead = async () => {
     await markAllRead();
@@ -290,15 +291,15 @@ export default function NotificationsPage() {
       </header>
 
       <main className="flex-1 overflow-y-auto pb-[54px] scrollbar-hide">
-        {loading ? (
+        {isLoading ? (
           <div className="px-4 py-14 text-center text-gray-400 text-[15px]">로딩 중...</div>
-        ) : notifications.length === 0 ? (
+        ) : displayedNotifications.length === 0 ? (
           <div className="px-4 py-14 text-center text-gray-400">
             <div className="text-4xl mb-3">🔔</div>
             <div className="text-[15px]">아직 알림이 없어요</div>
           </div>
         ) : (
-          notifications.map((notif) => (
+          displayedNotifications.map((notif) => (
             <NotifRow key={notif.id} notif={notif} />
           ))
         )}

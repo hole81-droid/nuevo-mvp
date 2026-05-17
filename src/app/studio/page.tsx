@@ -16,7 +16,6 @@ import {
   monthLabel,
   MONTHLY_POOL,
   PostWesBreakdown,
-  TIERS,
   WES_WEIGHTS,
   WesStats,
 } from '@/lib/wes';
@@ -149,7 +148,7 @@ export default async function StudioPage() {
   const studio = await getStudioData();
   const totalWes = calcWes(studio.stats);
   const myShare = studio.platformWes > 0 ? totalWes / studio.platformWes : 0;
-  const { current, currentIdx, next } = getTierBySessions(studio.stats.sessions);
+  const { current, next } = getTierBySessions(studio.stats.sessions);
   const tierProgress = next.id === current.id
     ? 100
     : Math.min((studio.stats.sessions / next.minSessions) * 100, 100);
@@ -267,24 +266,16 @@ export default async function StudioPage() {
           </Link>
         </div>
 
-        {/* Partner tier card */}
-        <div className="mx-4 mb-4 p-4 rounded-[30px] border-2 border-[#D8D8D0] bg-[#F7F7F2]">
-          <div className="flex items-center justify-between mb-3">
+        <details className="mx-4 mb-4 rounded-[28px] border-2 border-[#D8D8D0] bg-[#F7F7F2]">
+          <summary className="flex cursor-pointer list-none items-center justify-between gap-3 p-4">
             <div>
-              <div className="text-[13px] text-gray-500">현재 등급</div>
-              <div className="flex items-center gap-1.5 mt-0.5">
-                <span className="text-[20px] font-bold text-blue-600">{current.badge}</span>
-                <span className="text-[18px] font-bold text-gray-900">{current.label} 파트너</span>
-              </div>
+              <div className="text-[14px] font-black text-gray-900">WES 신뢰 정보</div>
+              <div className="mt-0.5 text-[12px] text-gray-500">{current.badge} {current.label} · 예상 배분율 {Math.round(current.revenueShare * 100)}%</div>
             </div>
-            <div className="text-right">
-              <div className="text-[13px] text-gray-500">수익 배분율</div>
-              <div className="text-[24px] font-bold text-blue-600">{Math.round(current.revenueShare * 100)}%</div>
-            </div>
-          </div>
+            <span className="rounded-full bg-white px-3 py-1 text-[11px] font-black text-gray-600">자세히</span>
+          </summary>
 
-          {/* Progress to next tier */}
-          <div className="mt-2">
+          <div className="px-4 pb-4">
             <div className="flex justify-between text-[12px] text-gray-500 mb-1.5">
               <span>{next.id === current.id ? '최상위' : `${next.label} 파트너`}까지</span>
               <span className="font-medium text-gray-700">{fmt(studio.stats.sessions)} / {fmt(next.minSessions)} 체험</span>
@@ -298,19 +289,10 @@ export default async function StudioPage() {
             <div className="text-[11px] text-blue-500 mt-1.5 font-medium">
               {next.id === current.id
                 ? '최상위 파트너 등급입니다'
-                : `${fmt(Math.max(0, next.minSessions - studio.stats.sessions))}회 더 → 수익 배분 ${Math.round(next.revenueShare * 100)}%로 상승`}
+                : `${fmt(Math.max(0, next.minSessions - studio.stats.sessions))}회 더 체험되면 다음 신뢰 등급으로 올라갑니다`}
             </div>
           </div>
-
-          {/* All tiers */}
-          <div className="flex gap-1 mt-3">
-            {TIERS.map((tier, i) => (
-              <div key={tier.id} className={`flex-1 text-center py-1.5 rounded-lg text-[11px] font-bold ${i === currentIdx ? 'bg-blue-500 text-white' : i < currentIdx ? 'bg-blue-200 text-blue-700' : 'bg-white/60 text-gray-400'}`}>
-                {tier.badge}<br/>{tier.label}
-              </div>
-            ))}
-          </div>
-        </div>
+        </details>
 
         {/* WES breakdown */}
         <div className="mx-4 mb-4">

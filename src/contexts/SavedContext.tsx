@@ -21,14 +21,16 @@ const SavedContext = createContext<SavedContextValue>({
   isSaved: () => false,
 });
 
+const EMPTY_SAVED_MAP = new Map<string, Post>();
+
 export function SavedProvider({ children }: { children: ReactNode }) {
   const supabase = useMemo(() => createClient(), []);
   const { user } = useAuth();
   const [savedMap, setSavedMap] = useState<Map<string, Post>>(new Map());
+  const visibleSavedMap = user ? savedMap : EMPTY_SAVED_MAP;
 
   useEffect(() => {
     if (!user) {
-      setSavedMap(new Map());
       return;
     }
 
@@ -54,7 +56,7 @@ export function SavedProvider({ children }: { children: ReactNode }) {
   }, [supabase, user]);
 
   const toggle = (post: Post) => {
-    const isSaving = !savedMap.has(post.id);
+    const isSaving = !visibleSavedMap.has(post.id);
     setSavedMap((prev) => {
       const next = new Map(prev);
       if (isSaving) next.set(post.id, post); else next.delete(post.id);
@@ -82,11 +84,11 @@ export function SavedProvider({ children }: { children: ReactNode }) {
     }
   };
 
-  const savedIds = new Set(savedMap.keys());
-  const savedPosts = [...savedMap.values()];
+  const savedIds = new Set(visibleSavedMap.keys());
+  const savedPosts = [...visibleSavedMap.values()];
 
   return (
-    <SavedContext.Provider value={{ savedIds, savedPosts, toggle, isSaved: (id) => savedMap.has(id) }}>
+    <SavedContext.Provider value={{ savedIds, savedPosts, toggle, isSaved: (id) => visibleSavedMap.has(id) }}>
       {children}
     </SavedContext.Provider>
   );

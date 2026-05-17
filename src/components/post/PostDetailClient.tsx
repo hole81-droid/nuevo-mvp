@@ -229,7 +229,13 @@ export default function PostDetailClient({
 
         {/* Content by type */}
         {contentType === 'interactive' && (
-          <InteractiveDemo postId={post.id} postTitle={title} iframeUrl={media.iframeUrl} autoplay={autoplay} />
+          <InteractiveDemo
+            postId={post.id}
+            postTitle={title}
+            iframeUrl={media.iframeUrl}
+            autoplay={autoplay}
+            deferUntilStart={!autoplay}
+          />
         )}
         {contentType === 'audio' && (
           <AudioPlayer coverEmoji={media.coverEmoji ?? '🎵'} title={title} />

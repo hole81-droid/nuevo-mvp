@@ -5,23 +5,28 @@ import { useAuth } from '@/contexts/AuthContext';
 import { createClient } from '@/lib/supabase/client';
 import { validateEmbedUrl } from '@/lib/embed-url';
 import { buildTrafficSourcePayload } from '@/lib/traffic-source';
+import { getInteractiveLoadState, shouldMountInteractiveFrame } from '@/lib/interactive-load';
 
 interface Props {
   postId?: string;
   postTitle: string;
   iframeUrl?: string;
   autoplay?: boolean;
+  deferUntilStart?: boolean;
 }
 
-export default function InteractiveDemo({ postId, postTitle, iframeUrl, autoplay = false }: Props) {
+export default function InteractiveDemo({ postId, postTitle, iframeUrl, autoplay = false, deferUntilStart = false }: Props) {
+  const [started, setStarted] = useState(false);
   const [loadedUrl, setLoadedUrl] = useState('');
   const [issueUrl, setIssueUrl] = useState('');
   const { user } = useAuth();
   const supabase = useMemo(() => createClient(), []);
   const validation = validateEmbedUrl(iframeUrl ?? '', { allowRelative: true });
   const playableUrl = validation.ok ? validation.normalizedUrl : '';
-  const loaded = Boolean(playableUrl && loadedUrl === playableUrl);
+  const shouldMountFrame = shouldMountInteractiveFrame({ autoplay, deferUntilStart, started });
+  const loaded = Boolean(shouldMountFrame && playableUrl && loadedUrl === playableUrl);
   const loadIssue = Boolean(playableUrl && issueUrl === playableUrl);
+  const loadState = getInteractiveLoadState({ mounted: shouldMountFrame, loaded });
   const eventIdRef = useRef<string | null>(null);
   const startedAtRef = useRef<number | null>(null);
   const finalizedRef = useRef(false);
@@ -95,14 +100,14 @@ export default function InteractiveDemo({ postId, postTitle, iframeUrl, autoplay
   }, [playableUrl]);
 
   useEffect(() => {
-    if (!playableUrl || loaded) return;
+    if (!shouldMountFrame || !playableUrl || loaded) return;
 
     const timer = window.setTimeout(() => {
       setIssueUrl(playableUrl);
     }, 12000);
 
     return () => window.clearTimeout(timer);
-  }, [loaded, playableUrl]);
+  }, [loaded, playableUrl, shouldMountFrame]);
 
   return (
     <div className="mt-3 rounded-[28px] border-2 border-[#D8D8D0] overflow-hidden bg-[#F7F7F2]">
@@ -112,7 +117,7 @@ export default function InteractiveDemo({ postId, postTitle, iframeUrl, autoplay
           <svg width="9" height="9" viewBox="0 0 24 24" fill="currentColor">
             <path d="M5 3l14 9-14 9V3z" />
           </svg>
-          {autoplay ? '인터랙티브 · 딥링크 실행 중' : '인터랙티브 · 지금 실행 중'}
+          {autoplay ? '인터랙티브 · 딥링크 실행 중' : `인터랙티브 · ${loadState.label}`}
         </div>
         <span className="text-[11px] text-gray-400 truncate ml-auto max-w-[130px]">{postTitle}</span>
         {playableUrl && (
@@ -143,10 +148,27 @@ export default function InteractiveDemo({ postId, postTitle, iframeUrl, autoplay
             </span>
           </div>
         )}
-        {playableUrl && !loaded && !loadIssue && (
+        {playableUrl && !shouldMountFrame && (
+          <button
+            type="button"
+            onClick={() => setStarted(true)}
+            className="absolute inset-0 flex flex-col items-center justify-center gap-3 px-8 text-center"
+          >
+            <span className="flex h-14 w-14 items-center justify-center rounded-full bg-black text-white shadow-sm">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+                <path d="M5 3l14 9-14 9V3z" />
+              </svg>
+            </span>
+            <span className="text-[15px] font-black tracking-[-0.04em] text-black">탭해서 바로 해보기</span>
+            <span className="max-w-[250px] text-[12px] leading-snug text-gray-500">
+              모바일 첫 화면은 가볍게 보여주고, 탭하면 앱을 실행합니다.
+            </span>
+          </button>
+        )}
+        {playableUrl && shouldMountFrame && !loaded && !loadIssue && (
           <div className="absolute inset-0 flex flex-col items-center justify-center gap-3">
             <div className="w-8 h-8 border-2 border-black border-t-transparent rounded-full animate-spin" />
-            <span className="text-[12px] text-gray-400">앱 불러오는 중...</span>
+            <span className="text-[12px] text-gray-400">{loadState.label}</span>
           </div>
         )}
         {playableUrl && loadIssue && !loaded && (
@@ -175,7 +197,7 @@ export default function InteractiveDemo({ postId, postTitle, iframeUrl, autoplay
             </a>
           </div>
         )}
-        {playableUrl && (
+        {playableUrl && shouldMountFrame && (
           <iframe
             src={playableUrl}
             className="w-full h-full border-0"
