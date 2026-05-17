@@ -4,6 +4,88 @@
 
 ---
 
+## 세션 9 — 2026-05-18
+
+### 완료 내역
+
+#### PRD 재정의 기반 MVP 개발
+- MVP 방향을 **Fame loop + Play loop** 중심으로 재정렬.
+- 수익배분은 MVP의 전면 약속이 아니라 **WES breakdown/raw export 기반 신뢰 장치**로 후퇴.
+- `PRD.md`, `CLAUDE.md`, `TASK.md`를 이 방향에 맞춰 업데이트.
+
+#### P0/P1 기능 구현
+- **SNS 딥링크/공유**
+  - `@handle/app-slug--postId` 형태 공유 경로 추가 (`src/app/[handle]/[slug]/page.tsx`).
+  - `?autoplay=true` 딥링크 진입 시 상세 페이지 iframe 즉시 실행 유지.
+  - 포스트별 OG/Twitter metadata fallback 추가 (`src/app/post/[id]/page.tsx`, `public/nuevo-og.svg`).
+  - Instagram/TikTok/YouTube/Reddit용 공유 문구 템플릿 추가 (`src/lib/deep-link.js`).
+- **업로드/발견성**
+  - iframe 호환성 진단 API와 업로드 UI 연결.
+  - `posts.tags`, `posts.external_links` 기반 메타데이터 확장.
+  - 탐색 검색/카테고리/관련 포스트 로직 고도화.
+- **리믹스 Fame loop**
+  - 리믹스 소셜 증명, 원본 상세의 리믹스 섹션, 리믹스 CTA 추가.
+- **Play retention**
+  - Daily playable, 많이 리믹스된 앱, 오래 체험된 앱, 비슷한 앱 더 보기 섹션 추가.
+- **저장/공유 실 지표**
+  - 저장 수/공유 이벤트 집계 및 creator dashboard 반영.
+- **Creator Fame dashboard**
+  - `/studio`를 수익보다 체험/시간/반응/댓글/저장/공유/리믹스/유입 채널 중심으로 재정렬.
+  - 예상 수익은 보조 카드로 이동.
+- **유입 채널 분석**
+  - `utm_source`/referrer 기반 `traffic_source` 기록.
+  - Instagram/TikTok/YouTube/Reddit/Direct breakdown 표시.
+- **WES 신뢰 장치**
+  - WES breakdown 표시.
+  - 월별 raw WES event CSV export API 추가 (`/api/studio/wes-export`).
+  - "예상 수익"과 "확정 수익" 문구 분리.
+
+#### Studio 수익 UX 후퇴
+- 정산 요청 패널을 기본 접힘 상태로 변경 (`src/components/studio/PayoutRequestPanel.tsx`).
+- 복잡한 파트너 등급 ladder를 `WES 신뢰 정보` 접이식 섹션으로 축소 (`src/app/studio/page.tsx`).
+- `TASK.md`의 "실제 출금 UX 전면 노출 축소", "복잡한 파트너 등급 카피 축소" 완료 처리.
+
+#### 모바일 상세 성능 가드
+- 일반 상세 진입은 iframe을 즉시 mount하지 않고 "탭해서 바로 해보기"로 대기.
+- `?autoplay=true` 딥링크는 기존처럼 즉시 mount/실행.
+- 로딩 정책을 `src/lib/interactive-load.js`로 분리하고 테스트 추가.
+- `TASK.md`에 "일반 상세 진입 시 iframe 지연 실행으로 모바일 첫 렌더 비용 축소" 완료 처리.
+- 남은 항목: 실제 모바일 LCP 3초 이하 측정 QA.
+
+#### 품질 게이트 정리
+- React lint blocking error 2건 수정:
+  - `notifications/page.tsx`: guest fallback을 state 복사 대신 파생 렌더 값으로 변경.
+  - `SavedContext.tsx`: 로그아웃 상태 empty saved map을 파생값으로 처리.
+- ESLint warning 6개 제거:
+  - leaderboard unused import 제거.
+  - profile unused destructuring 제거.
+  - PostCard side-effect ternary 핸들러를 명시적 `if/else`로 정리.
+
+### 검증
+- `node --test ...` → 37 passed.
+- `npx tsc --noEmit --pretty false` → 통과.
+- `npm run lint` → warning 없이 통과.
+- `npm run build` → 통과.
+  - 참고: 샌드박스 내부에서는 Next/Turbopack이 CSS 처리 중 포트 바인딩 제한으로 실패할 수 있음.
+  - 승인된 환경에서 실행하면 정상 통과.
+
+### 커밋 (이 세션 — 최신순)
+- `06b491d` Clear lint warnings
+- `b426898` Improve studio trust and interactive loading
+- `e5596a3` Add share routing and studio analytics
+- `15123d2` Build MVP fame and play loops
+
+### 현재 git 상태
+- 브랜치: `main`
+- 원격: `origin/main`과 동기화 완료
+- untracked로 남겨둔 로컬 자료:
+  - `meeting/`
+  - `meeting2/`
+  - `prd_v2.md`
+- 위 3개는 회의/초안 원본 자료라 커밋하지 않았음.
+
+---
+
 ## 세션 8 — 2026-05-16
 
 ### 완료 내역
@@ -284,9 +366,9 @@ create policy "saved_posts_delete_own" on public.saved_posts for delete using (a
 ## 🔁 핸드오버 (다른 PC에서 이어받을 때 가장 먼저 읽기)
 
 ### 현재 상태 한 줄 요약
-**MVP 코어 플로우 완전 동작 + 배포 완료. 로그인 유저에게 mock 데이터 깜빡이는 버그 계열 모두 수정. 알림/시간 표기 통일 완료. 다음 작업: Phase 2 (AI 창작 기능) 또는 추가 UX 개선.**
+**MVP 코어 플로우 + Fame/Play loop + Studio Fame dashboard + 공유 딥링크/OG + WES raw export까지 구현 및 `origin/main`에 push 완료. 다음 작업은 N1 모바일 LCP 실측 QA 또는 Phase 2로 미룬 항목 정리.**
 
-### 마지막 세션 종료 시점 (2026-05-16, 세션 8)
+### 마지막 세션 종료 시점 (2026-05-18, 세션 9)
 - ✅ Google 로그인 → /setup → 홈 이동
 - ✅ 피드/탐색/프로필: 실 DB 포스트 로드
 - ✅ 댓글: DB 저장, 낙관적 업데이트, 롤백
@@ -300,6 +382,13 @@ create policy "saved_posts_delete_own" on public.saved_posts for delete using (a
 - ✅ FollowContext: 로그인 유저에게 mock 팔로잉 깜빡임 제거
 - ✅ 리믹스 버튼 (compact card): `/upload?remix=` 실 연결
 - ✅ relativeTime: `social.ts` 단일 소스로 통일 ("방금" 지원)
+- ✅ 공유 딥링크: `@handle/app-slug--postId` → `/post/{id}` redirect
+- ✅ 포스트 상세 OG/Twitter metadata fallback
+- ✅ 일반 상세 iframe 지연 실행 + `?autoplay=true` 즉시 실행
+- ✅ Studio Fame dashboard: 체험/시간/반응/댓글/저장/공유/리믹스/유입 채널
+- ✅ WES breakdown + raw CSV export
+- ✅ 정산/티어 UX 전면 노출 축소
+- ✅ lint/tsc/test/build 품질 게이트 통과
 
 ### 알려진 MVP 한계 (의도적 미구현)
 - **좋아요 버튼**: `post_likes` 테이블 없음, 로컬 토글만 (세션 내 유지)
@@ -312,18 +401,25 @@ create policy "saved_posts_delete_own" on public.saved_posts for delete using (a
 
 #### 1. 로컬 환경 복원 (5분)
 ```bash
-git clone https://github.com/hole81-droid/nuevo-instagram.git
-cd nuevo-instagram
+git clone https://github.com/hole81-droid/nuevo-mvp.git
+cd nuevo-mvp
 npm install
-# .env.local 생성 (아래 "환경 정보" 섹션의 ANON KEY 사용)
+# .env.local 생성 (Supabase URL/ANON KEY는 기존 로컬 또는 Vercel 환경변수 참고)
 npm run dev
 ```
 
 #### 2. 다음 개선 후보 (우선순위 순)
-- **좋아요 DB 퍼시스턴스**: `post_likes(post_id, user_id)` 테이블 추가 + RLS + API
-- **피드 무한 스크롤**: 50개 제한 → cursor-based pagination
-- **실시간 알림**: Supabase Realtime subscription
-- **Phase 2 진입점**: `/create` 페이지 활성화 (AI 창작 플로우)
+- **N1 모바일 LCP QA**: 실제 모바일/프로덕션에서 상세 페이지 LCP 3초 이하 측정. 일반 진입은 iframe 지연 실행, autoplay 딥링크는 즉시 실행이므로 두 케이스를 나눠 측정.
+- **Phase 2 제외 항목 정리**: 브랜드 셀프서브 마켓플레이스, AI 앱 생성기 항목을 문서/태스크에서 명시적으로 Phase 2 유지 처리.
+- **좋아요 DB 퍼시스턴스**: `post_likes(post_id, user_id)` 테이블 추가 + RLS + API.
+- **피드 무한 스크롤**: 50개 제한 → cursor-based pagination.
+- **실시간 알림**: Supabase Realtime subscription.
+- **Phase 2 진입점**: `/create` 페이지 활성화 (AI 창작 플로우).
+
+#### 3. 현재 남은 TASK 핵심
+- `N1. 앱 상세 딥링크 라우트 정리` 중 **모바일 LCP 3초 이하 목표 QA**만 미완료.
+- Supabase Auth Google OAuth 설정/커스텀 도메인 연결은 대시보드/운영 작업.
+- Phase 2 "만들기" 관련 항목은 의도적으로 MVP 이후로 남김.
 
 ### 알려진 잠재 이슈 (예방적 메모)
 
@@ -338,6 +434,11 @@ npm run dev
 - production alias: `https://nuevo-instagram-test.vercel.app` (이게 안정적)
 - 매 deploy마다 unique URL도 추가 생성됨 (`-xxxxx-hole81-...`).
 - Supabase Redirect URL에 wildcard `https://nuevo-instagram-test-*.vercel.app/auth/callback`도 등록 추천.
+
+#### 4. 로컬 untracked 자료
+- 현재 작업 PC에는 `meeting/`, `meeting2/`, `prd_v2.md`가 untracked로 남아 있음.
+- 다른 PC에서 새로 clone하면 이 자료는 내려오지 않음.
+- 이 자료가 필요하면 별도로 복사하거나, 원본 transcript/customer insights 위치에서 다시 가져올 것.
 
 ---
 
