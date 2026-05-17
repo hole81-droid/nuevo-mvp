@@ -32,6 +32,8 @@ export interface Post {
     reposts: number;
     likes: number;
     views: number;
+    saves?: number;
+    shares?: number;
     experienceSessions: number;
     experienceMinutes: number;
   };
@@ -42,10 +44,16 @@ export interface Post {
     wtf: number;
   };
   tags?: string[];
+  externalLinks?: ExternalLink[];
   tool?: string;
   remixable?: boolean;
   detailDescription?: string;
   remixOf?: string;
+}
+
+export interface ExternalLink {
+  label: string;
+  url: string;
 }
 
 export interface Comment {
@@ -68,6 +76,8 @@ export interface UploadFormData {
   images: File[];
   detailedDescription: string;
   tool: string;
+  tags: string;
+  externalLinks: ExternalLink[];
   remixable: boolean;
   promptPublic: boolean;
   remixOf: string;

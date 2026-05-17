@@ -7,6 +7,8 @@ import { Post } from '@/lib/types';
 import PostCard from '@/components/post/PostCard';
 import { useFollow } from '@/contexts/FollowContext';
 import NuevoGlyph from '@/components/ui/NuevoGlyph';
+import { DEFAULT_EXPLORE_CATEGORIES, filterPostsByCategory, searchPosts } from '@/lib/explore-filters';
+import { getDailyPlayablePosts, getLongestPlayedPosts, getMostRemixedPosts } from '@/lib/play-retention';
 
 const TRENDING_TAGS = [
   '직장인', '고양이', '철학', '밈생성', '전생', '시',
@@ -240,38 +242,40 @@ function CreatorSection({ posts }: { posts: Post[] }) {
 export default function ExploreClient({ posts = mockPosts }: { posts?: Post[] }) {
   const [query, setQuery] = useState('');
   const [selectedTag, setSelectedTag] = useState<string | null>(null);
+  const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
   const [expandedId, setExpandedId] = useState<string | null>(null);
 
   const toggle = (id: string) =>
     setExpandedId((prev) => (prev === id ? null : id));
 
   const isSearching = query.trim().length > 0;
-  const isTagFiltering = !isSearching && selectedTag !== null;
+  const isCategoryFiltering = !isSearching && selectedCategory !== null;
+  const isTagFiltering = !isSearching && !isCategoryFiltering && selectedTag !== null;
 
   const searchResults = useMemo(() => {
-    if (!query.trim()) return [];
-    const q = query.toLowerCase();
-    return posts.filter(
-      (p) =>
-        p.title.toLowerCase().includes(q) ||
-        p.author.handle.toLowerCase().includes(q) ||
-        p.author.displayName.toLowerCase().includes(q) ||
-        (p.tags ?? []).some((t) => t.toLowerCase().includes(q))
-    );
+    return searchPosts(posts, query);
   }, [posts, query]);
+
+  const selectedCategoryLabel = DEFAULT_EXPLORE_CATEGORIES.find((category) => category.slug === selectedCategory)?.label ?? '';
+  const categoryResults = useMemo(
+    () => (!selectedCategory ? [] : filterPostsByCategory(posts, selectedCategory)),
+    [posts, selectedCategory],
+  );
 
   const tagResults = useMemo(
     () => (!selectedTag ? [] : posts.filter((p) => (p.tags ?? []).includes(selectedTag))),
     [posts, selectedTag]
   );
 
-  const hotPosts = useMemo(
-    () => [...posts]
-      .filter((p) => p.contentType === 'interactive' || p.contentType === 'audio')
-      .sort((a, b) => b.stats.experienceSessions - a.stats.experienceSessions)
-      .slice(0, 5),
-    [posts],
-  );
+  const dailyPlayablePosts = useMemo(() => getDailyPlayablePosts(posts), [posts]);
+  const mostRemixedPosts = useMemo(() => getMostRemixedPosts(posts), [posts]);
+  const longestPlayedPosts = useMemo(() => getLongestPlayedPosts(posts), [posts]);
+
+  const firstCreatorPosts = useMemo(() => {
+    const counts = new Map<string, number>();
+    posts.forEach((post) => counts.set(post.author.id, (counts.get(post.author.id) ?? 0) + 1));
+    return posts.filter((post) => counts.get(post.author.id) === 1).slice(0, 5);
+  }, [posts]);
 
   const interactivePosts = posts.filter((p) => p.contentType === 'interactive');
   const audioPosts = posts.filter((p) => p.contentType === 'audio');
@@ -289,7 +293,7 @@ export default function ExploreClient({ posts = mockPosts }: { posts?: Post[] })
             className="flex-1 bg-transparent text-[15px] text-gray-700 placeholder-gray-400 outline-none"
             placeholder="작품, 창작자, 태그 검색"
             value={query}
-            onChange={(e) => { setQuery(e.target.value); setSelectedTag(null); setExpandedId(null); }}
+            onChange={(e) => { setQuery(e.target.value); setSelectedTag(null); setSelectedCategory(null); setExpandedId(null); }}
           />
           {query && (
             <button onClick={() => { setQuery(''); setExpandedId(null); }} className="text-gray-400 hover:text-gray-600">
@@ -319,6 +323,38 @@ export default function ExploreClient({ posts = mockPosts }: { posts?: Post[] })
               </div>
             )
             : <EmptyState query={query} />
+          }
+        </div>
+      )}
+
+      {/* ── Category filter results ── */}
+      {isCategoryFiltering && (
+        <div className="flex-1 overflow-y-auto pb-[54px] scrollbar-hide">
+          <div className="flex items-center gap-2 px-4 py-3">
+            <span className="text-[14px] font-bold text-gray-900">{selectedCategoryLabel}</span>
+            <span className="text-[13px] text-gray-400">{categoryResults.length}개 작품</span>
+            <button
+              onClick={() => { setSelectedCategory(null); setExpandedId(null); }}
+              className="ml-auto flex items-center gap-1 text-[13px] text-gray-500 hover:text-gray-700"
+            >
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><path d="M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/></svg>
+              초기화
+            </button>
+          </div>
+          {categoryResults.length > 0
+            ? (
+              <div className="divide-y divide-gray-50">
+                {categoryResults.map((p) => (
+                  <PostListRow
+                    key={p.id}
+                    post={p}
+                    expanded={expandedId === p.id}
+                    onToggle={() => toggle(p.id)}
+                  />
+                ))}
+              </div>
+            )
+            : <EmptyState />
           }
         </div>
       )}
@@ -359,6 +395,22 @@ export default function ExploreClient({ posts = mockPosts }: { posts?: Post[] })
       {!isSearching && !isTagFiltering && (
         <div className="flex-1 overflow-y-auto pb-[54px] scrollbar-hide">
 
+          {/* MVP categories */}
+          <div className="px-4 pt-4 pb-1">
+            <h2 className="text-[12px] font-black text-gray-400 uppercase tracking-wider mb-2.5">카테고리</h2>
+            <div className="grid grid-cols-3 gap-2">
+              {DEFAULT_EXPLORE_CATEGORIES.map((category) => (
+                <button
+                  key={category.slug}
+                  onClick={() => { setSelectedCategory(category.slug); setSelectedTag(null); setExpandedId(null); }}
+                  className="min-h-[44px] rounded-2xl border border-[#D8D8D0] bg-[#FFFDF5] px-2 text-[13px] font-black text-gray-800 active:scale-95 transition-all"
+                >
+                  {category.label}
+                </button>
+              ))}
+            </div>
+          </div>
+
           {/* Trending tags */}
           <div className="px-4 pt-4 pb-1">
             <h2 className="text-[12px] font-black text-gray-400 uppercase tracking-wider mb-2.5">트렌딩 태그</h2>
@@ -366,7 +418,7 @@ export default function ExploreClient({ posts = mockPosts }: { posts?: Post[] })
               {TRENDING_TAGS.map((tag) => (
                 <button
                   key={tag}
-                  onClick={() => { setSelectedTag(tag); setExpandedId(null); }}
+                  onClick={() => { setSelectedTag(tag); setSelectedCategory(null); setExpandedId(null); }}
                   className="px-3 py-1.5 rounded-full border border-[#D8D8D0] text-[13px] text-gray-700 font-black hover:border-black hover:text-black hover:bg-[#EFEFE8] active:scale-95 transition-all"
                 >
                   #{tag}
@@ -378,10 +430,33 @@ export default function ExploreClient({ posts = mockPosts }: { posts?: Post[] })
           {/* Creators */}
           <CreatorSection posts={posts} />
 
-          {/* 🔥 Hot experience section */}
           <Section
-            title="지금 핫한 체험"
-            posts={hotPosts}
+            title="첫 작품 올라왔어요"
+            posts={firstCreatorPosts}
+            expandedId={expandedId}
+            onToggle={toggle}
+          />
+
+          {/* Play retention sections */}
+          <Section
+            title="오늘 바로 해볼 앱"
+            posts={dailyPlayablePosts}
+            expandedId={expandedId}
+            onToggle={toggle}
+            showRank
+          />
+
+          <Section
+            title="가장 많이 리믹스된 앱"
+            posts={mostRemixedPosts}
+            expandedId={expandedId}
+            onToggle={toggle}
+            showRank
+          />
+
+          <Section
+            title="오늘 가장 오래 체험된 앱"
+            posts={longestPlayedPosts}
             expandedId={expandedId}
             onToggle={toggle}
             showRank

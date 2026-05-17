@@ -1,6 +1,7 @@
 'use client';
 
 import { useState } from 'react';
+import Link from 'next/link';
 import { Post } from '@/lib/types';
 import PostCard from '@/components/post/PostCard';
 import { useFollow } from '@/contexts/FollowContext';
@@ -17,6 +18,7 @@ export default function FeedClient({ posts }: { posts: Post[] }) {
   const displayed = tab === 'following'
     ? posts.filter((p) => following.has(p.author.id))
     : posts;
+  const remixAlerts = displayed.filter((p) => p.remixOf).slice(0, 3);
 
   return (
     <>
@@ -49,14 +51,39 @@ export default function FeedClient({ posts }: { posts: Post[] }) {
           <div className="text-[13px] text-gray-400">탐색에서 마음에 드는 창작자를 팔로우해보세요</div>
         </div>
       ) : (
-        displayed.map((post) => (
-          <PostCard
-            key={post.id}
-            post={post}
-            expanded={expandedId === post.id}
-            onToggle={() => toggle(post.id)}
-          />
-        ))
+        <>
+          {remixAlerts.length > 0 && (
+            <section className="border-b border-[#D8D8D0] bg-[#FFFDF5] px-4 py-3">
+              <div className="text-[12px] font-black uppercase tracking-wider text-gray-400">리믹스 소식</div>
+              <div className="mt-2 flex flex-col gap-2">
+                {remixAlerts.map((post) => (
+                  <Link
+                    key={`remix-alert-${post.id}`}
+                    href={`/post/${post.id}`}
+                    className="flex items-center gap-3 rounded-2xl border border-[#D8D8D0] bg-white px-3 py-2 active:scale-[0.99]"
+                  >
+                    <NuevoGlyph kind="remix" size={34} />
+                    <div className="min-w-0 flex-1">
+                      <div className="truncate text-[13px] font-black text-gray-900">@{post.author.handle}이 새 리믹스를 올렸어요</div>
+                      <div className="truncate text-[12px] text-gray-500">{post.title}</div>
+                    </div>
+                    <span className="rounded-full bg-black px-2.5 py-1 text-[11px] font-black text-white">
+                      보기
+                    </span>
+                  </Link>
+                ))}
+              </div>
+            </section>
+          )}
+          {displayed.map((post) => (
+            <PostCard
+              key={post.id}
+              post={post}
+              expanded={expandedId === post.id}
+              onToggle={() => toggle(post.id)}
+            />
+          ))}
+        </>
       )}
     </>
   );

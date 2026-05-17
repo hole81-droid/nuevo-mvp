@@ -3,9 +3,12 @@ import type { Database } from './supabase/types';
 import type { Post } from './types';
 import type { ReactionKey } from './social';
 import { EMPTY_REACTION_COUNTS } from './social';
+import { mergeSocialCounts } from './social-counts';
 
 export type SocialMetric = {
   replies: number;
+  saves: number;
+  shares: number;
   reactions: Record<ReactionKey, number>;
 };
 
@@ -16,6 +19,10 @@ type CommentLike = {
 type ReactionLike = {
   post_id: string;
   reaction: ReactionKey;
+};
+
+type PostIdLike = {
+  post_id: string;
 };
 
 export async function getSocialMetrics(
@@ -32,13 +39,15 @@ export async function getSocialMetrics(
 
     const next: SocialMetric = {
       replies: 0,
+      saves: 0,
+      shares: 0,
       reactions: { ...EMPTY_REACTION_COUNTS },
     };
     metrics.set(postId, next);
     return next;
   };
 
-  const [{ data: comments }, { data: reactions }] = await Promise.all([
+  const [{ data: comments }, { data: reactions }, { data: saves }, { data: shares }] = await Promise.all([
     supabase
       .from('comments')
       .select('post_id')
@@ -46,6 +55,14 @@ export async function getSocialMetrics(
     supabase
       .from('post_reactions')
       .select('post_id,reaction')
+      .in('post_id', ids),
+    supabase
+      .from('saved_posts')
+      .select('post_id')
+      .in('post_id', ids),
+    supabase
+      .from('post_share_events')
+      .select('post_id')
       .in('post_id', ids),
   ]);
 
@@ -55,6 +72,14 @@ export async function getSocialMetrics(
 
   ((reactions ?? []) as ReactionLike[]).forEach((row) => {
     ensureMetric(row.post_id).reactions[row.reaction] += 1;
+  });
+
+  ((saves ?? []) as PostIdLike[]).forEach((row) => {
+    ensureMetric(row.post_id).saves += 1;
+  });
+
+  ((shares ?? []) as PostIdLike[]).forEach((row) => {
+    ensureMetric(row.post_id).shares += 1;
   });
 
   return metrics;
@@ -70,10 +95,7 @@ export function applySocialMetrics<T extends Post>(
 
     return {
       ...post,
-      stats: {
-        ...post.stats,
-        replies: Math.max(post.stats.replies, metric.replies),
-      },
+      stats: mergeSocialCounts(post.stats, metric),
       reactions: {
         ...post.reactions,
         ...metric.reactions,

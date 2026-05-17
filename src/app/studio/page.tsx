@@ -37,8 +37,10 @@ type StudioData = {
   month: string;
   monthKey: string;
   stats: WesStats;
+  saves: number;
+  shares: number;
   platformWes: number;
-  postBreakdown: PostWesBreakdown[];
+  postBreakdown: Array<PostWesBreakdown & { saves: number; shares: number }>;
   payoutRequest: PayoutRequestRow | null;
   isLive: boolean;
 };
@@ -76,6 +78,28 @@ async function getStudioData(): Promise<StudioData> {
     .eq('month', month)
     .maybeSingle();
 
+  const { data: creatorPosts }: { data: Array<{ id: string }> | null } = await supabase
+    .from('posts')
+    .select('id')
+    .eq('author_id', user.id);
+
+  const creatorPostIds = (creatorPosts ?? []).map((post) => post.id);
+  const [{ data: saveRows }, { data: shareRows }] = creatorPostIds.length
+    ? await Promise.all([
+        supabase.from('saved_posts').select('post_id').in('post_id', creatorPostIds),
+        supabase.from('post_share_events').select('post_id').in('post_id', creatorPostIds),
+      ])
+    : [{ data: [] }, { data: [] }];
+
+  const saveCounts = new Map<string, number>();
+  const shareCounts = new Map<string, number>();
+  ((saveRows ?? []) as Array<{ post_id: string }>).forEach((row) => {
+    saveCounts.set(row.post_id, (saveCounts.get(row.post_id) ?? 0) + 1);
+  });
+  ((shareRows ?? []) as Array<{ post_id: string }>).forEach((row) => {
+    shareCounts.set(row.post_id, (shareCounts.get(row.post_id) ?? 0) + 1);
+  });
+
   const platformWes = Math.max(
     1,
     (platformRows ?? []).reduce((sum, row) => sum + Number(row.wes ?? 0), 0),
@@ -93,6 +117,8 @@ async function getStudioData(): Promise<StudioData> {
     month: monthLabel(),
     monthKey: month,
     stats,
+    saves: Array.from(saveCounts.values()).reduce((sum, count) => sum + count, 0),
+    shares: Array.from(shareCounts.values()).reduce((sum, count) => sum + count, 0),
     platformWes,
     postBreakdown: (postRows ?? []).map((row) => ({
       id: row.post_id,
@@ -103,6 +129,8 @@ async function getStudioData(): Promise<StudioData> {
       reactions: row.reactions,
       comments: row.comments,
       remixes: row.remixes,
+      saves: saveCounts.get(row.post_id) ?? 0,
+      shares: shareCounts.get(row.post_id) ?? 0,
     })),
     payoutRequest,
     isLive: true,
@@ -163,6 +191,19 @@ export default async function StudioPage() {
             <div className="text-[11px] text-gray-500 leading-tight">예상 수익</div>
             <div className="text-[19px] font-bold text-gray-900 mt-1">{fmtKRW(estimatedRevenue)}</div>
             <div className="text-[11px] text-emerald-600 font-medium mt-0.5">이번 달</div>
+          </div>
+        </div>
+
+        <div className="mx-4 mb-4 grid grid-cols-2 gap-3">
+          <div className="rounded-[26px] border-2 border-[#D8D8D0] bg-[#FFFDF5] p-3">
+            <div className="text-[11px] text-gray-500 leading-tight">저장</div>
+            <div className="mt-1 text-[24px] font-black tracking-[-0.05em] text-gray-900">{fmt(studio.saves)}</div>
+            <div className="mt-0.5 text-[11px] font-bold text-warm">다시 볼 의도</div>
+          </div>
+          <div className="rounded-[26px] border-2 border-[#D8D8D0] bg-[#FFFDF5] p-3">
+            <div className="text-[11px] text-gray-500 leading-tight">공유</div>
+            <div className="mt-1 text-[24px] font-black tracking-[-0.05em] text-gray-900">{fmt(studio.shares)}</div>
+            <div className="mt-0.5 text-[11px] font-bold text-blue-500">외부 확산</div>
           </div>
         </div>
 
@@ -284,6 +325,8 @@ export default async function StudioPage() {
                       <span>반응 {fmt(p.reactions)}</span>
                       <span>댓글 {p.comments}</span>
                       <span>리믹스 {p.remixes}</span>
+                      <span>저장 {p.saves}</span>
+                      <span>공유 {p.shares}</span>
                     </div>
                   </div>
                 );

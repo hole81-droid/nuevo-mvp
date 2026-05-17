@@ -9,9 +9,10 @@ interface Props {
   postId?: string;
   postTitle: string;
   iframeUrl?: string;
+  autoplay?: boolean;
 }
 
-export default function InteractiveDemo({ postId, postTitle, iframeUrl }: Props) {
+export default function InteractiveDemo({ postId, postTitle, iframeUrl, autoplay = false }: Props) {
   const [loadedUrl, setLoadedUrl] = useState('');
   const [issueUrl, setIssueUrl] = useState('');
   const { user } = useAuth();
@@ -106,7 +107,7 @@ export default function InteractiveDemo({ postId, postTitle, iframeUrl }: Props)
           <svg width="9" height="9" viewBox="0 0 24 24" fill="currentColor">
             <path d="M5 3l14 9-14 9V3z" />
           </svg>
-          인터랙티브 · 지금 실행 중
+          {autoplay ? '인터랙티브 · 딥링크 실행 중' : '인터랙티브 · 지금 실행 중'}
         </div>
         <span className="text-[11px] text-gray-400 truncate ml-auto max-w-[130px]">{postTitle}</span>
         {playableUrl && (
@@ -173,7 +174,7 @@ export default function InteractiveDemo({ postId, postTitle, iframeUrl }: Props)
           <iframe
             src={playableUrl}
             className="w-full h-full border-0"
-            sandbox="allow-scripts allow-same-origin allow-forms allow-popups"
+            sandbox="allow-scripts allow-forms allow-popups"
             allow="camera; microphone"
             onLoad={() => {
               setLoadedUrl(playableUrl);

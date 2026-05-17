@@ -54,6 +54,8 @@ export interface Database {
           bg_gradient: string;
           detail_description: string | null;
           tool_used: string | null;
+          tags: string[] | null;
+          external_links: Array<{ label: string; url: string }> | null;
           remixable: boolean;
           remix_of: string | null;
           created_at: string;
@@ -69,6 +71,8 @@ export interface Database {
           bg_gradient?: string;
           detail_description?: string | null;
           tool_used?: string | null;
+          tags?: string[] | null;
+          external_links?: Array<{ label: string; url: string }> | null;
           remixable?: boolean;
           remix_of?: string | null;
           created_at?: string;
@@ -84,6 +88,8 @@ export interface Database {
           bg_gradient?: string;
           detail_description?: string | null;
           tool_used?: string | null;
+          tags?: string[] | null;
+          external_links?: Array<{ label: string; url: string }> | null;
           remixable?: boolean;
           remix_of?: string | null;
           created_at?: string;
@@ -281,6 +287,30 @@ export interface Database {
         };
         Relationships: [];
       };
+      post_share_events: {
+        Row: {
+          id: string;
+          post_id: string;
+          sharer_id: string | null;
+          source: string;
+          created_at: string;
+        };
+        Insert: {
+          id?: string;
+          post_id: string;
+          sharer_id?: string | null;
+          source?: string;
+          created_at?: string;
+        };
+        Update: {
+          id?: string;
+          post_id?: string;
+          sharer_id?: string | null;
+          source?: string;
+          created_at?: string;
+        };
+        Relationships: [];
+      };
     };
     Views: {
       post_monthly_wes: {
@@ -324,6 +354,7 @@ export type FollowRow = Database['public']['Tables']['follows']['Row'];
 export type CommentRow = Database['public']['Tables']['comments']['Row'];
 export type PostReactionRow = Database['public']['Tables']['post_reactions']['Row'];
 export type SavedPostRow = Database['public']['Tables']['saved_posts']['Row'];
+export type PostShareEventRow = Database['public']['Tables']['post_share_events']['Row'];
 export type PostMonthlyWesRow = Database['public']['Views']['post_monthly_wes']['Row'];
 export type CreatorMonthlyWesRow = Database['public']['Views']['creator_monthly_wes']['Row'];
 

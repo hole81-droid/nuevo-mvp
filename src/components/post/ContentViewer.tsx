@@ -48,7 +48,7 @@ export default function ContentViewer({ post, compact = true }: Props) {
               src={media.iframeUrl}
               title={title}
               className="w-full h-full border-0"
-              sandbox="allow-scripts allow-same-origin allow-forms"
+              sandbox="allow-scripts allow-forms"
             />
           </div>
         )}

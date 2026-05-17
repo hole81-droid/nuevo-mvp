@@ -9,6 +9,7 @@ import { useAuth } from '@/contexts/AuthContext';
 import { createClient } from '@/lib/supabase/client';
 import { DbPostWithAuthor, mapDbPostToPost } from '@/lib/post-mapper';
 import { validateEmbedUrl } from '@/lib/embed-url';
+import { normalizeExternalLinks, normalizeTags } from '@/lib/upload-metadata';
 import type { Post } from '@/lib/types';
 
 const INITIAL_FORM: UploadFormData = {
@@ -21,6 +22,12 @@ const INITIAL_FORM: UploadFormData = {
   images: [],
   detailedDescription: '',
   tool: '',
+  tags: '',
+  externalLinks: [
+    { label: '', url: '' },
+    { label: '', url: '' },
+    { label: '', url: '' },
+  ],
   remixable: true,
   promptPublic: false,
   remixOf: '',
@@ -118,6 +125,8 @@ function UploadPageInner() {
 
     const remixOf = form.remixOf && isUuid(form.remixOf) ? form.remixOf : null;
     const embedUrl = validateEmbedUrl(form.iframeUrl, { requirePublicUrl: true });
+    const tags = normalizeTags(form.tags);
+    const externalLinks = normalizeExternalLinks(form.externalLinks);
 
     // 인터랙티브 포스트는 유효한 URL이 필수. UI에서 차단되지만 깊이 방어로 한 번 더 검증.
     if (form.contentType === 'interactive' && !embedUrl.ok) {
@@ -143,6 +152,8 @@ function UploadPageInner() {
           : 'from-pink-100 to-pink-200',
       detail_description: form.detailedDescription.trim() || null,
       tool_used: form.tool.trim() || null,
+      tags,
+      external_links: externalLinks,
       remixable: form.remixable,
       remix_of: remixOf,
     } as never).select('id').single() as {
@@ -191,7 +202,7 @@ function UploadPageInner() {
                 </svg>
               </div>
               <div className="text-[22px] font-bold text-gray-900">게시 완료!</div>
-              <div className="text-[14px] text-gray-500">피드에서 확인해보세요</div>
+              <div className="text-[14px] text-gray-500">탐색 탭에도 노출됐어요</div>
             </>
           )}
         </div>
@@ -499,6 +510,15 @@ function Step3({
                 {form.contentType === 'interactive' ? '▶ 인터랙티브' : form.contentType === 'audio' ? '♪ 오디오' : '◻ 이미지'}
               </span>
             </div>
+            {normalizeTags(form.tags).length > 0 && (
+              <div className="mt-2 flex flex-wrap gap-1.5">
+                {normalizeTags(form.tags).map((tag) => (
+                  <span key={tag} className="rounded-full bg-white px-2 py-1 text-[11px] font-bold text-[#777772]">
+                    #{tag}
+                  </span>
+                ))}
+              </div>
+            )}
           </div>
         </div>
       </div>
@@ -538,6 +558,16 @@ function Step3({
             />
           </FormGroup>
 
+          <TagInput
+            value={form.tags}
+            onChange={(tags) => updateForm({ tags })}
+          />
+
+          <ExternalLinksInput
+            links={form.externalLinks}
+            onChange={(externalLinks) => updateForm({ externalLinks })}
+          />
+
           {/* Toggles */}
           <div className="flex flex-col gap-3">
             <ToggleRow
@@ -559,14 +589,100 @@ function Step3({
   );
 }
 
+function TagInput({ value, onChange }: { value: string; onChange: (value: string) => void }) {
+  const tags = normalizeTags(value);
+
+  return (
+    <FormGroup label="태그" hint="쉼표로 구분, 최대 5개">
+      <input
+        type="text"
+        value={value}
+        onChange={(e) => onChange(e.target.value)}
+        placeholder="게임, 퀴즈, 이상한 앱"
+        className="w-full px-4 py-3 rounded-xl border border-gray-200 text-[15px] text-gray-900 placeholder-gray-400 outline-none focus:border-warm focus:ring-2 focus:ring-orange-100"
+      />
+      <div className="mt-2 flex flex-wrap items-center gap-1.5">
+        {tags.length > 0 ? tags.map((tag) => (
+          <span key={tag} className="rounded-full bg-[#FFFDF5] border border-[#E9E2D3] px-2.5 py-1 text-[11px] font-black text-black">
+            #{tag}
+          </span>
+        )) : (
+          <span className="text-[12px] text-gray-400">태그가 있으면 탐색 탭에서 더 잘 발견돼요.</span>
+        )}
+      </div>
+    </FormGroup>
+  );
+}
+
+function ExternalLinksInput({
+  links,
+  onChange,
+}: {
+  links: UploadFormData['externalLinks'];
+  onChange: (links: UploadFormData['externalLinks']) => void;
+}) {
+  const updateLink = (index: number, updates: Partial<UploadFormData['externalLinks'][number]>) => {
+    onChange(links.map((link, i) => (i === index ? { ...link, ...updates } : link)));
+  };
+
+  return (
+    <FormGroup label="외부 링크" hint="YouTube, GitHub, 원본 영상 등 최대 3개">
+      <div className="flex flex-col gap-2">
+        {links.map((link, index) => (
+          <div key={index} className="grid grid-cols-[96px_1fr] gap-2">
+            <input
+              type="text"
+              value={link.label}
+              onChange={(e) => updateLink(index, { label: e.target.value })}
+              placeholder={index === 0 ? 'YouTube' : `Link ${index + 1}`}
+              maxLength={24}
+              className="min-w-0 px-3 py-3 rounded-xl border border-gray-200 text-[14px] text-gray-900 placeholder-gray-400 outline-none focus:border-warm focus:ring-2 focus:ring-orange-100"
+            />
+            <input
+              type="url"
+              value={link.url}
+              onChange={(e) => updateLink(index, { url: e.target.value })}
+              placeholder="https://..."
+              className="min-w-0 px-3 py-3 rounded-xl border border-gray-200 text-[14px] text-gray-900 placeholder-gray-400 outline-none focus:border-warm focus:ring-2 focus:ring-orange-100 font-mono"
+            />
+          </div>
+        ))}
+      </div>
+    </FormGroup>
+  );
+}
+
 /* ─── Iframe URL field with live preview ─── */
 function IframeUrlField({ url, onChange }: { url: string; onChange: (url: string) => void }) {
   const [previewUrl, setPreviewUrl] = useState('');
   const [loaded, setLoaded] = useState(false);
   const [loadIssue, setLoadIssue] = useState(false);
   const [showPreview, setShowPreview] = useState(false);
+  const [checkState, setCheckState] = useState<'idle' | 'checking' | 'done'>('idle');
+  const [checkResult, setCheckResult] = useState<{
+    ok: boolean;
+    error?: string;
+    checks: Array<{ key: string; label: string; level: 'pass' | 'warn' | 'fail'; message: string }>;
+  } | null>(null);
   const inputRef = useRef<HTMLInputElement>(null);
   const validation = validateEmbedUrl(url, { requirePublicUrl: true });
+
+  const runCompatibilityCheck = async () => {
+    if (!validation.ok) return;
+
+    setCheckState('checking');
+    setCheckResult(null);
+
+    const response = await fetch('/api/check-url', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ url: validation.normalizedUrl }),
+    });
+    const data = await response.json();
+
+    setCheckResult(data);
+    setCheckState('done');
+  };
 
   const triggerPreview = () => {
     if (!validation.ok) return;
@@ -598,6 +714,8 @@ function IframeUrlField({ url, onChange }: { url: string; onChange: (url: string
             setLoaded(false);
             setLoadIssue(false);
             setShowPreview(false);
+            setCheckState('idle');
+            setCheckResult(null);
           }}
           placeholder="https://your-app.vercel.app"
           className={`flex-1 px-4 py-3 rounded-xl border text-[14px] text-gray-900 placeholder-gray-400 outline-none focus:border-warm focus:ring-2 focus:ring-orange-100 font-mono min-w-0 ${
@@ -627,6 +745,41 @@ function IframeUrlField({ url, onChange }: { url: string; onChange: (url: string
           임베딩 설정 가이드 →
         </Link>
       </div>
+
+      <button
+        type="button"
+        onClick={runCompatibilityCheck}
+        disabled={!validation.ok || checkState === 'checking'}
+        className="mt-3 w-full rounded-xl border-2 border-[#D8D8D0] bg-[#FFFDF5] px-4 py-3 text-[13px] font-black text-black transition active:scale-[0.99] disabled:opacity-40"
+      >
+        {checkState === 'checking' ? '호환성 확인 중...' : 'iframe 호환성 확인'}
+      </button>
+
+      {checkResult && (
+        <div className={`mt-3 rounded-2xl border-2 p-3 ${
+          checkResult.ok ? 'border-green-200 bg-green-50' : 'border-red-200 bg-red-50'
+        }`}>
+          <div className={`text-[13px] font-black ${checkResult.ok ? 'text-green-800' : 'text-red-800'}`}>
+            {checkResult.ok ? 'nuevo에서 열 수 있어 보여요' : '임베딩 설정을 확인해 주세요'}
+          </div>
+          {checkResult.error && (
+            <p className="mt-1 text-[12px] text-red-700">{checkResult.error}</p>
+          )}
+          {checkResult.checks.length > 0 && (
+            <div className="mt-2 flex flex-col gap-1.5">
+              {checkResult.checks.map((check) => (
+                <div key={check.key} className="flex gap-2 text-[12px] leading-snug">
+                  <span>
+                    {check.level === 'pass' ? '●' : check.level === 'warn' ? '▲' : '×'}
+                  </span>
+                  <span className="font-bold text-gray-800">{check.label}</span>
+                  <span className="text-gray-600">{check.message}</span>
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+      )}
 
       {showPreview && previewUrl && (
         <div className="mt-4">
@@ -676,7 +829,7 @@ function IframeUrlField({ url, onChange }: { url: string; onChange: (url: string
               key={previewUrl}
               src={previewUrl}
               className="w-full h-full border-0"
-              sandbox="allow-scripts allow-same-origin allow-forms allow-popups"
+              sandbox="allow-scripts allow-forms allow-popups"
               allow="camera; microphone"
               onLoad={() => {
                 setLoaded(true);

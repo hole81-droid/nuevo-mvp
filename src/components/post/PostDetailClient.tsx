@@ -10,6 +10,10 @@ import { useAuth } from '@/contexts/AuthContext';
 import { createClient } from '@/lib/supabase/client';
 import { countReactions, isUuid, ReactionKey } from '@/lib/social';
 import { createNotification } from '@/lib/notification-events';
+import { buildPostDeepLink } from '@/lib/deep-link';
+import { buildLoginRedirectFromLocation } from '@/lib/protected-action';
+import { getRemixSocialProofLabel, shouldShowRemixSocialProof } from '@/lib/remix-social-proof';
+import { getRemixCtaCopy, shouldShowRemixCta } from '@/lib/remix-cta';
 import InteractiveDemo from './InteractiveDemo';
 import AudioPlayer from './AudioPlayer';
 import ImageGallery, { SUBWAY_SLIDES } from './ImageGallery';
@@ -23,8 +27,18 @@ const REACTIONS = [
   { key: 'wtf',    emoji: '❓', label: '뭐야이건' },
 ] as const;
 
-export default function PostDetailClient({ post }: { post: Post }) {
-  const { author, createdAt, text, stats, reactions, tags, tool, remixable, detailDescription, contentType, media, title } = post;
+export default function PostDetailClient({
+  post,
+  autoplay = false,
+  relatedPosts = [],
+  remixPosts = [],
+}: {
+  post: Post;
+  autoplay?: boolean;
+  relatedPosts?: Post[];
+  remixPosts?: Post[];
+}) {
+  const { author, createdAt, text, stats, reactions, tags, externalLinks, tool, remixable, detailDescription, contentType, media, title } = post;
   const router = useRouter();
   const supabase = useMemo(() => createClient(), []);
   const { user } = useAuth();
@@ -37,6 +51,10 @@ export default function PostDetailClient({ post }: { post: Post }) {
   const commentInputRef = useRef<HTMLInputElement>(null);
 
   const handleCommentClick = () => {
+    if (!user) {
+      requireLogin();
+      return;
+    }
     commentRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
     setTimeout(() => commentInputRef.current?.focus(), 350);
   };
@@ -45,9 +63,16 @@ export default function PostDetailClient({ post }: { post: Post }) {
   const [likeCount, setLikeCount] = useState(stats.likes);
   const [reposted, setReposted] = useState(false);
   const [repostCount, setRepostCount] = useState(stats.reposts);
+  const [shareCount, setShareCount] = useState(stats.shares ?? 0);
   const [activeReaction, setActiveReaction] = useState<ReactionKey | null>(null);
   const [reactionCounts, setReactionCounts] = useState({ ...reactions });
   const [copied, setCopied] = useState(false);
+  const remixSocialProof = getRemixSocialProofLabel(repostCount);
+  const remixCtaCopy = getRemixCtaCopy();
+
+  const requireLogin = () => {
+    router.push(buildLoginRedirectFromLocation(window.location));
+  };
 
   useEffect(() => {
     let mounted = true;
@@ -75,24 +100,51 @@ export default function PostDetailClient({ post }: { post: Post }) {
   }, [post.id, supabase, useDbSocial, user?.id]);
 
   const handleShare = () => {
+    const url = buildPostDeepLink(post.id, {
+      origin: window.location.origin,
+      autoplay: true,
+      source: 'share',
+    });
+
     if (navigator.clipboard) {
-      navigator.clipboard.writeText(window.location.href);
+      navigator.clipboard.writeText(url);
+    }
+    setShareCount((count) => count + 1);
+    if (useDbSocial) {
+      supabase.from('post_share_events').insert({
+        post_id: post.id,
+        sharer_id: user?.id ?? null,
+        source: 'copy_link',
+      } as never).then(() => {});
     }
     setCopied(true);
     setTimeout(() => setCopied(false), 2000);
   };
 
   const handleLike = () => {
+    if (!user) {
+      requireLogin();
+      return;
+    }
     setLiked((v) => !v);
     setLikeCount((c) => liked ? c - 1 : c + 1);
   };
 
   const handleRepost = () => {
+    if (!user) {
+      requireLogin();
+      return;
+    }
     setReposted((v) => !v);
     setRepostCount((c) => reposted ? c - 1 : c + 1);
   };
 
   const handleReaction = async (key: ReactionKey) => {
+    if (!user) {
+      requireLogin();
+      return;
+    }
+
     const previousReaction = activeReaction;
 
     if (activeReaction === key) {
@@ -163,10 +215,15 @@ export default function PostDetailClient({ post }: { post: Post }) {
         <p className="mt-3 text-[17px] text-gray-900 leading-normal whitespace-pre-wrap break-words">
           {text}
         </p>
+        {shouldShowRemixSocialProof(repostCount) && (
+          <div className="mt-3 inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-black text-white text-[13px] font-black">
+            {remixSocialProof}
+          </div>
+        )}
 
         {/* Content by type */}
         {contentType === 'interactive' && (
-          <InteractiveDemo postId={post.id} postTitle={title} iframeUrl={media.iframeUrl} />
+          <InteractiveDemo postId={post.id} postTitle={title} iframeUrl={media.iframeUrl} autoplay={autoplay} />
         )}
         {contentType === 'audio' && (
           <AudioPlayer coverEmoji={media.coverEmoji ?? '🎵'} title={title} />
@@ -201,6 +258,8 @@ export default function PostDetailClient({ post }: { post: Post }) {
           <span><strong className="text-gray-900 font-bold">{repostCount}</strong> <span className="text-gray-500">리믹스</span></span>
           <span><strong className="text-gray-900 font-bold">{likeCount}</strong> <span className="text-gray-500">좋아요</span></span>
           <span><strong className="text-gray-900 font-bold">{stats.replies}</strong> <span className="text-gray-500">댓글</span></span>
+          <span><strong className="text-gray-900 font-bold">{formatViews(stats.saves ?? 0)}</strong> <span className="text-gray-500">저장</span></span>
+          <span><strong className="text-gray-900 font-bold">{formatViews(shareCount)}</strong> <span className="text-gray-500">공유</span></span>
         </div>
 
         {/* Reactions */}
@@ -235,7 +294,10 @@ export default function PostDetailClient({ post }: { post: Post }) {
           <ActionBtn
             active={reposted}
             activeColor="text-green-500"
-            onClick={remixable ? () => router.push(`/upload?remix=${post.id}`) : handleRepost}
+            onClick={remixable
+              ? () => user ? router.push(`/upload?remix=${post.id}`) : requireLogin()
+              : handleRepost
+            }
             icon={<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={reposted ? 2.5 : 2} strokeLinecap="round"><path d="M17 1l4 4-4 4"/><path d="M3 11V9a4 4 0 0 1 4-4h14"/><path d="M7 23l-4-4 4-4"/><path d="M21 13v2a4 4 0 0 1-4 4H3"/></svg>}
             label={remixable ? '리믹스' : undefined}
           />
@@ -248,7 +310,7 @@ export default function PostDetailClient({ post }: { post: Post }) {
           <ActionBtn
             active={saved}
             activeColor="text-warm"
-            onClick={() => toggleSave(post)}
+            onClick={() => user ? toggleSave(post) : requireLogin()}
             icon={<svg width="22" height="22" viewBox="0 0 24 24" fill={saved ? 'currentColor' : 'none'} stroke="currentColor" strokeWidth="2" strokeLinecap="round"><path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z"/></svg>}
           />
           <ActionBtn
@@ -264,28 +326,113 @@ export default function PostDetailClient({ post }: { post: Post }) {
         </div>
 
         {/* Detail / tools */}
-        {detailDescription && (
+        {(detailDescription || tool || tags?.length || externalLinks?.length) && (
           <details className="mt-3 mb-1">
             <summary className="text-[14px] text-gray-500 cursor-pointer select-none list-none flex items-center gap-1">
               <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M6 9l6 6 6-6" strokeLinecap="round"/></svg>
               만든 방식 보기
             </summary>
-            <div className="mt-2 text-[14px] text-gray-700 leading-relaxed">{detailDescription}</div>
+            {detailDescription && <div className="mt-2 text-[14px] text-gray-700 leading-relaxed">{detailDescription}</div>}
             {tool && <div className="mt-1 text-[13px] text-gray-500">사용 도구: {tool}</div>}
-            {tags && (
+            {tags?.length ? (
               <div className="flex flex-wrap gap-1.5 mt-2">
                 {tags.map((tag) => (
                   <span key={tag} className="px-2 py-0.5 rounded-full bg-gray-100 text-[12px] text-gray-600">#{tag}</span>
                 ))}
               </div>
-            )}
+            ) : null}
+            {externalLinks?.length ? (
+              <div className="mt-2 flex flex-wrap gap-1.5">
+                {externalLinks.map((link) => (
+                  <a
+                    key={`${link.label}-${link.url}`}
+                    href={link.url}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="rounded-full border border-gray-200 px-2.5 py-1 text-[12px] font-bold text-gray-700"
+                  >
+                    {link.label}
+                  </a>
+                ))}
+              </div>
+            ) : null}
           </details>
         )}
       </div>
 
+      {shouldShowRemixCta(post) && (
+        <section className="mx-4 mt-4 rounded-3xl border-2 border-black bg-[#FFFDF5] p-4 shadow-[0_18px_30px_rgba(0,0,0,0.08)]">
+          <div className="text-[16px] font-black tracking-[-0.04em] text-black">{remixCtaCopy.title}</div>
+          <p className="mt-1 text-[13px] leading-snug text-[#666660]">{remixCtaCopy.body}</p>
+          <button
+            onClick={() => user ? router.push(`/upload?remix=${post.id}`) : requireLogin()}
+            className="mt-3 inline-flex h-10 items-center rounded-full bg-black px-5 text-[13px] font-black text-white active:scale-[0.98]"
+          >
+            {remixCtaCopy.action}
+          </button>
+        </section>
+      )}
+
+      {relatedPosts.length > 0 && (
+        <section className="px-4 pt-4 pb-2 border-t border-gray-100">
+          <h2 className="text-[15px] font-black tracking-[-0.04em] text-gray-900">비슷한 앱 더 보기</h2>
+          <div className="mt-2 flex flex-col gap-2">
+            {relatedPosts.map((related) => (
+              <Link
+                key={related.id}
+                href={`/post/${related.id}`}
+                className="flex items-center gap-3 rounded-2xl border border-gray-100 bg-[#FFFDF5] px-3 py-2 active:scale-[0.99]"
+              >
+                <div className="w-10 h-10 rounded-2xl bg-[#F7F7F2] flex items-center justify-center text-[18px]">
+                  {related.media.coverEmoji ?? related.media.emoji ?? '▶'}
+                </div>
+                <div className="min-w-0 flex-1">
+                  <div className="truncate text-[13px] font-black text-gray-900">{related.title}</div>
+                  <div className="truncate text-[12px] text-gray-500">@{related.author.handle}</div>
+                </div>
+                {related.tags?.[0] && (
+                  <span className="rounded-full bg-white px-2 py-1 text-[11px] font-bold text-gray-500">
+                    #{related.tags[0]}
+                  </span>
+                )}
+              </Link>
+            ))}
+          </div>
+        </section>
+      )}
+
+      {remixPosts.length > 0 && (
+        <section className="px-4 pt-4 pb-2 border-t border-gray-100">
+          <div className="flex items-center justify-between">
+            <h2 className="text-[15px] font-black tracking-[-0.04em] text-gray-900">이 앱의 리믹스들</h2>
+            <span className="text-[12px] font-bold text-gray-400">{remixPosts.length}개</span>
+          </div>
+          <div className="mt-2 flex flex-col gap-2">
+            {remixPosts.map((remix) => (
+              <Link
+                key={remix.id}
+                href={`/post/${remix.id}`}
+                className="flex items-center gap-3 rounded-2xl border border-[#D8D8D0] bg-[#FFFDF5] px-3 py-2 active:scale-[0.99]"
+              >
+                <div className="w-10 h-10 rounded-2xl bg-white flex items-center justify-center text-[18px]">
+                  {remix.media.coverEmoji ?? remix.media.emoji ?? '↻'}
+                </div>
+                <div className="min-w-0 flex-1">
+                  <div className="truncate text-[13px] font-black text-gray-900">{remix.title}</div>
+                  <div className="truncate text-[12px] text-gray-500">@{remix.author.handle}의 리믹스</div>
+                </div>
+                <span className="rounded-full bg-black px-2 py-1 text-[11px] font-black text-white">
+                  리믹스
+                </span>
+              </Link>
+            ))}
+          </div>
+        </section>
+      )}
+
       {/* Comments */}
       <div ref={commentRef}>
-        <CommentSection postId={post.id} postAuthorId={author.id} inputRef={commentInputRef} />
+        <CommentSection postId={post.id} postAuthorId={author.id} inputRef={commentInputRef} requireLoginPath />
       </div>
     </main>
   );

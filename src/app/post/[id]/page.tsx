@@ -8,10 +8,13 @@ import { DbPostWithAuthor, mapDbPostToPost } from '@/lib/post-mapper';
 import { applyExperienceMetrics, getExperienceMetrics } from '@/lib/experience-metrics';
 import { applySocialMetrics, getSocialMetrics } from '@/lib/social-metrics';
 import { isUuid } from '@/lib/social';
+import { isAutoplayRequested } from '@/lib/deep-link';
+import { getSimilarPosts } from '@/lib/play-retention';
 import type { Post } from '@/lib/types';
 
 interface Props {
   params: Promise<{ id: string }>;
+  searchParams: Promise<Record<string, string | string[] | undefined>>;
 }
 
 export const dynamic = 'force-dynamic';
@@ -44,10 +47,58 @@ async function getPost(id: string): Promise<Post | null> {
   return applySocialMetrics(applyExperienceMetrics([post], experienceMetrics), socialMetrics)[0] ?? post;
 }
 
-export default async function PostDetailPage({ params }: Props) {
+async function getRelatedPosts(post: Post): Promise<Post[]> {
+  const tags = post.tags ?? [];
+  if (!tags.length) return [];
+
+  const mockRelated = mockPosts
+    .filter((candidate) => candidate.id !== post.id);
+
+  if (!isUuid(post.id)) return getSimilarPosts(post, mockRelated);
+
+  const supabase = await createClient();
+  const { data, error } = await supabase
+    .from('posts')
+    .select('*, author:users(*)')
+    .overlaps('tags', tags)
+    .neq('id', post.id)
+    .order('created_at', { ascending: false })
+    .limit(4);
+
+  if (error || !data?.length) return getSimilarPosts(post, mockRelated);
+
+  return getSimilarPosts(post, (data as DbPostWithAuthor[]).map((row) => mapDbPostToPost(row)));
+}
+
+async function getRemixPosts(post: Post): Promise<Post[]> {
+  const mockRemixes = mockPosts
+    .filter((candidate) => candidate.remixOf === post.id)
+    .slice(0, 6);
+
+  if (!isUuid(post.id)) return mockRemixes;
+
+  const supabase = await createClient();
+  const { data, error } = await supabase
+    .from('posts')
+    .select('*, author:users(*)')
+    .eq('remix_of', post.id)
+    .order('created_at', { ascending: false })
+    .limit(6);
+
+  if (error || !data?.length) return mockRemixes;
+
+  return (data as DbPostWithAuthor[]).map((row) => mapDbPostToPost(row));
+}
+
+export default async function PostDetailPage({ params, searchParams }: Props) {
   const { id } = await params;
+  const resolvedSearchParams = await searchParams;
   const post = await getPost(id);
   if (!post) notFound();
+  const [relatedPosts, remixPosts] = await Promise.all([
+    getRelatedPosts(post),
+    getRemixPosts(post),
+  ]);
 
   return (
     <div className="flex flex-col h-full max-w-[430px] mx-auto">
@@ -57,7 +108,12 @@ export default async function PostDetailPage({ params }: Props) {
         <span className="text-[17px] font-bold text-gray-900">작품</span>
       </header>
 
-      <PostDetailClient post={post} />
+      <PostDetailClient
+        post={post}
+        autoplay={isAutoplayRequested(resolvedSearchParams)}
+        relatedPosts={relatedPosts}
+        remixPosts={remixPosts}
+      />
 
       <BottomNav />
     </div>

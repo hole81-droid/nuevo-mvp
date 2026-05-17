@@ -10,6 +10,9 @@ import { useAuth } from '@/contexts/AuthContext';
 import { createClient } from '@/lib/supabase/client';
 import { countReactions, isUuid, ReactionKey } from '@/lib/social';
 import { createNotification } from '@/lib/notification-events';
+import { buildPostDeepLink } from '@/lib/deep-link';
+import { buildLoginRedirectFromLocation } from '@/lib/protected-action';
+import { getRemixSocialProofLabel, shouldShowRemixSocialProof } from '@/lib/remix-social-proof';
 import ContentViewer from './ContentViewer';
 import InteractiveDemo from './InteractiveDemo';
 import AudioPlayer from './AudioPlayer';
@@ -34,7 +37,7 @@ export default function PostCard({
   onToggle?: () => void;
 }) {
   const router = useRouter();
-  const { author, createdAt, text, stats, tags, tool, remixable, detailDescription, contentType, media, title, remixOf } = post;
+  const { author, createdAt, text, stats, tags, externalLinks, tool, remixable, detailDescription, contentType, media, title, remixOf } = post;
   const supabase = useMemo(() => createClient(), []);
   const { user } = useAuth();
   const useDbSocial = isUuid(post.id);
@@ -46,10 +49,16 @@ export default function PostCard({
   const [likeCount, setLikeCount] = useState(stats.likes);
   const [reposted, setReposted]   = useState(false);
   const [repostCount, setRepostCount] = useState(stats.reposts);
+  const [shareCount, setShareCount] = useState(stats.shares ?? 0);
   const [activeReaction, setActiveReaction] = useState<ReactionKey | null>(null);
   const [reactionCounts, setReactionCounts] = useState({ ...post.reactions });
   const [copied, setCopied] = useState(false);
   const commentInputRef = useRef<HTMLInputElement>(null);
+  const remixSocialProof = getRemixSocialProofLabel(repostCount);
+
+  const requireLogin = () => {
+    router.push(buildLoginRedirectFromLocation(window.location));
+  };
 
   useEffect(() => {
     let mounted = true;
@@ -78,25 +87,50 @@ export default function PostCard({
 
   const handleLike = (e: React.MouseEvent) => {
     e.stopPropagation();
+    if (!user) {
+      requireLogin();
+      return;
+    }
     setLiked((v) => !v);
     setLikeCount((c) => liked ? c - 1 : c + 1);
   };
 
   const handleRepost = (e: React.MouseEvent) => {
     e.stopPropagation();
+    if (!user) {
+      requireLogin();
+      return;
+    }
     setReposted((v) => !v);
     setRepostCount((c) => reposted ? c - 1 : c + 1);
   };
 
   const handleShare = (e: React.MouseEvent) => {
     e.stopPropagation();
-    const url = `${window.location.origin}/post/${post.id}`;
+    const url = buildPostDeepLink(post.id, {
+      origin: window.location.origin,
+      autoplay: true,
+      source: 'share',
+    });
     navigator.clipboard?.writeText(url);
+    setShareCount((count) => count + 1);
+    if (useDbSocial) {
+      supabase.from('post_share_events').insert({
+        post_id: post.id,
+        sharer_id: user?.id ?? null,
+        source: 'copy_link',
+      } as never).then(() => {});
+    }
     setCopied(true);
     setTimeout(() => setCopied(false), 2000);
   };
 
   const handleReaction = async (key: ReactionKey) => {
+    if (!user) {
+      requireLogin();
+      return;
+    }
+
     const previousReaction = activeReaction;
 
     if (activeReaction === key) {
@@ -202,6 +236,11 @@ export default function PostCard({
                 <NuevoGlyph kind="remix" size={18} /> 원본 작품 리믹스
               </div>
             )}
+            {shouldShowRemixSocialProof(repostCount) && (
+              <div className="mt-2 inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-black text-white text-[12px] font-black">
+                <NuevoGlyph kind="remix" size={18} /> {remixSocialProof}
+              </div>
+            )}
 
             {/* Compact content + action bar (collapsed only) */}
             {!expanded && (
@@ -218,7 +257,8 @@ export default function PostCard({
                   <SmallBtn
                     onClick={(e) => {
                       e.stopPropagation();
-                      if (useDbSocial && remixable) router.push(`/upload?remix=${post.id}`);
+                      if (!user) requireLogin();
+                      else if (useDbSocial && remixable) router.push(`/upload?remix=${post.id}`);
                       else if (useDbSocial) router.push(`/post/${post.id}`);
                       else handleRepost(e);
                     }}
@@ -245,6 +285,7 @@ export default function PostCard({
                   <button
                     onClick={handleShare}
                     className={`ml-auto flex items-center p-2 rounded-full transition-colors ${copied ? 'text-warm' : 'text-gray-500 hover:text-blue-500 hover:bg-blue-50'}`}
+                    title={shareCount > 0 ? `${formatViews(shareCount)}회 공유` : '공유'}
                   >
                     {copied
                       ? <svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round"><polyline points="20 6 9 17 4 12"/></svg>
@@ -302,6 +343,8 @@ export default function PostCard({
             <span><strong className="text-gray-900 font-bold">{repostCount}</strong> <span className="text-gray-500">리믹스</span></span>
             <span><strong className="text-gray-900 font-bold">{likeCount}</strong> <span className="text-gray-500">좋아요</span></span>
             <span><strong className="text-gray-900 font-bold">{stats.replies}</strong> <span className="text-gray-500">댓글</span></span>
+            <span><strong className="text-gray-900 font-bold">{formatViews(stats.saves ?? 0)}</strong> <span className="text-gray-500">저장</span></span>
+            <span><strong className="text-gray-900 font-bold">{formatViews(shareCount)}</strong> <span className="text-gray-500">공유</span></span>
           </div>
 
           {/* Reactions */}
@@ -328,14 +371,14 @@ export default function PostCard({
           {/* Action bar */}
           <div className="flex items-center justify-around py-2 px-4 border-b border-gray-100">
             <BigBtn
-              onClick={(e) => { e.stopPropagation(); commentInputRef.current?.focus(); }}
+              onClick={(e) => { e.stopPropagation(); user ? commentInputRef.current?.focus() : requireLogin(); }}
               icon={<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>}
             />
             <BigBtn
               active={reposted}
               activeColor="text-green-500"
               onClick={remixable
-                ? (e) => { e.stopPropagation(); router.push(`/upload?remix=${post.id}`); }
+                ? (e) => { e.stopPropagation(); user ? router.push(`/upload?remix=${post.id}`) : requireLogin(); }
                 : handleRepost
               }
               label={remixable ? '리믹스' : undefined}
@@ -360,34 +403,50 @@ export default function PostCard({
             <BigBtn
               active={saved}
               activeColor="text-warm"
-              onClick={(e) => { e.stopPropagation(); toggleSave(post); }}
+              onClick={(e) => { e.stopPropagation(); user ? toggleSave(post) : requireLogin(); }}
               icon={<svg width="22" height="22" viewBox="0 0 24 24" fill={saved ? 'currentColor' : 'none'} stroke="currentColor" strokeWidth="2" strokeLinecap="round"><path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z"/></svg>}
             />
           </div>
 
           {/* Detail / tools */}
-          {detailDescription && (
+          {(detailDescription || tool || tags?.length || externalLinks?.length) && (
             <div className="px-4 mt-3 mb-1">
               <details>
                 <summary className="text-[14px] text-gray-500 cursor-pointer select-none list-none flex items-center gap-1">
                   <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M6 9l6 6 6-6" strokeLinecap="round"/></svg>
                   만든 방식 보기
                 </summary>
-                <div className="mt-2 text-[14px] text-gray-700 leading-relaxed">{detailDescription}</div>
+                {detailDescription && <div className="mt-2 text-[14px] text-gray-700 leading-relaxed">{detailDescription}</div>}
                 {tool && <div className="mt-1 text-[13px] text-gray-500">사용 도구: {tool}</div>}
-                {tags && (
+                {tags?.length ? (
                   <div className="flex flex-wrap gap-1.5 mt-2">
                     {tags.map((tag) => (
                       <span key={tag} className="px-2 py-0.5 rounded-full bg-gray-100 text-[12px] text-gray-600">#{tag}</span>
                     ))}
                   </div>
-                )}
+                ) : null}
+                {externalLinks?.length ? (
+                  <div className="mt-2 flex flex-wrap gap-1.5">
+                    {externalLinks.map((link) => (
+                      <a
+                        key={`${link.label}-${link.url}`}
+                        href={link.url}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="rounded-full border border-gray-200 px-2.5 py-1 text-[12px] font-bold text-gray-700"
+                        onClick={(e) => e.stopPropagation()}
+                      >
+                        {link.label}
+                      </a>
+                    ))}
+                  </div>
+                ) : null}
               </details>
             </div>
           )}
 
           {/* Comments */}
-          <CommentSection postId={post.id} postAuthorId={author.id} inputRef={commentInputRef} />
+          <CommentSection postId={post.id} postAuthorId={author.id} inputRef={commentInputRef} requireLoginPath />
 
           {/* Collapse button */}
           <button

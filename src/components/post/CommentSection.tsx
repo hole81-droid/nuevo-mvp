@@ -1,11 +1,13 @@
 'use client';
 
 import { useEffect, useMemo, useState, useRef, RefObject } from 'react';
+import { useRouter } from 'next/navigation';
 import { Comment } from '@/lib/types';
 import { useAuth } from '@/contexts/AuthContext';
 import { createClient } from '@/lib/supabase/client';
 import { isUuid, mapDbCommentToComment, mapUserRowToAuthor } from '@/lib/social';
 import { createNotification } from '@/lib/notification-events';
+import { buildLoginRedirectFromLocation } from '@/lib/protected-action';
 
 const INITIAL_COMMENTS: Comment[] = [
   {
@@ -36,9 +38,11 @@ interface Props {
   postAuthorId?: string;
   initialComments?: Comment[];
   inputRef?: RefObject<HTMLInputElement | null>;
+  requireLoginPath?: boolean;
 }
 
-export default function CommentSection({ postId, postAuthorId, initialComments = INITIAL_COMMENTS, inputRef }: Props) {
+export default function CommentSection({ postId, postAuthorId, initialComments = INITIAL_COMMENTS, inputRef, requireLoginPath = false }: Props) {
+  const router = useRouter();
   const supabase = useMemo(() => createClient(), []);
   const { user, profile } = useAuth();
   const useDbComments = Boolean(postId && isUuid(postId));
@@ -48,6 +52,11 @@ export default function CommentSection({ postId, postAuthorId, initialComments =
   const [status, setStatus] = useState<string | null>(null);
   const localInputRef = useRef<HTMLInputElement>(null);
   const activeInputRef = inputRef ?? localInputRef;
+
+  const requireLogin = () => {
+    if (requireLoginPath) router.push(buildLoginRedirectFromLocation(window.location));
+    else setStatus('댓글을 남기려면 로그인이 필요해요.');
+  };
 
   useEffect(() => {
     let mounted = true;
@@ -82,6 +91,10 @@ export default function CommentSection({ postId, postAuthorId, initialComments =
   }, [initialComments, postId, supabase, useDbComments]);
 
   const replyTo = (handle: string) => {
+    if (!user) {
+      requireLogin();
+      return;
+    }
     setInput(`@${handle} `);
     activeInputRef.current?.focus();
   };
@@ -90,9 +103,14 @@ export default function CommentSection({ postId, postAuthorId, initialComments =
     const text = input.trim();
     if (!text) return;
 
+    if (!user) {
+      requireLogin();
+      return;
+    }
+
     if (useDbComments) {
       if (!user || !profile || !postId) {
-        setStatus('댓글을 남기려면 로그인이 필요해요.');
+        requireLogin();
         return;
       }
 
@@ -145,6 +163,11 @@ export default function CommentSection({ postId, postAuthorId, initialComments =
   };
 
   const toggleLike = (id: string) => {
+    if (!user) {
+      requireLogin();
+      return;
+    }
+
     const wasLiked = likedIds.has(id);
     setLikedIds((prev) => {
       const next = new Set(prev);

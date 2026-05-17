@@ -35,6 +35,8 @@ create table public.posts (
   bg_gradient         text not null default 'from-gray-100 to-gray-200',
   detail_description  text,
   tool_used           text,
+  tags                text[] default '{}',
+  external_links      jsonb default '[]'::jsonb,
   remixable           boolean not null default true,
   remix_of            uuid references public.posts(id) on delete set null,
   created_at          timestamptz default now()
@@ -46,6 +48,8 @@ create index posts_created_at_idx on public.posts(created_at desc);
 create index posts_remix_of_idx on public.posts(remix_of);
 -- 프로필 조회 인덱스
 create index posts_author_id_idx on public.posts(author_id);
+-- 태그 탐색 인덱스
+create index posts_tags_idx on public.posts using gin(tags);
 
 -- ============================================================
 -- 3. notifications 테이블
@@ -136,11 +140,21 @@ create table public.saved_posts (
   primary key (user_id, post_id)
 );
 
+create table public.post_share_events (
+  id         uuid primary key default uuid_generate_v4(),
+  post_id    uuid references public.posts(id) on delete cascade not null,
+  sharer_id  uuid references public.users(id) on delete set null,
+  source     text not null default 'copy_link',
+  created_at timestamptz not null default now()
+);
+
 create index follows_following_idx on public.follows(following_id, created_at desc);
 create index comments_post_idx on public.comments(post_id, created_at asc);
 create index comments_author_idx on public.comments(author_id, created_at desc);
 create index post_reactions_post_idx on public.post_reactions(post_id, reaction);
 create index saved_posts_user_idx on public.saved_posts(user_id, created_at desc);
+create index saved_posts_post_idx on public.saved_posts(post_id, created_at desc);
+create index post_share_events_post_idx on public.post_share_events(post_id, created_at desc);
 
 -- ============================================================
 -- 7. Row Level Security (RLS)
@@ -154,6 +168,7 @@ alter table public.follows enable row level security;
 alter table public.comments enable row level security;
 alter table public.post_reactions enable row level security;
 alter table public.saved_posts enable row level security;
+alter table public.post_share_events enable row level security;
 
 -- users: 누구나 읽기 / 본인만 쓰기
 create policy "users_select_all"
@@ -241,15 +256,29 @@ create policy "post_reactions_update_own"
 create policy "post_reactions_delete_own"
   on public.post_reactions for delete using (auth.uid() = user_id);
 
--- saved_posts: 본인 저장만 읽기·쓰기·삭제
+-- saved_posts: 본인 저장 목록과 내 작품의 저장 지표만 읽기 / 본인만 쓰기·삭제
 create policy "saved_posts_select_own"
-  on public.saved_posts for select using (auth.uid() = user_id);
+  on public.saved_posts for select using (
+    auth.uid() = user_id
+    or exists (
+      select 1 from public.posts
+      where posts.id = saved_posts.post_id
+      and posts.author_id = auth.uid()
+    )
+  );
 
 create policy "saved_posts_insert_own"
   on public.saved_posts for insert with check (auth.uid() = user_id);
 
 create policy "saved_posts_delete_own"
   on public.saved_posts for delete using (auth.uid() = user_id);
+
+-- post_share_events: 공개 공유 클릭을 집계하기 위해 누구나 기록 가능 / 조회는 공개
+create policy "post_share_events_select_all"
+  on public.post_share_events for select using (true);
+
+create policy "post_share_events_insert_public"
+  on public.post_share_events for insert with check (true);
 
 -- ============================================================
 -- 8. WES 월별 집계 View

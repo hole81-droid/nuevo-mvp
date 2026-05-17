@@ -1,28 +1,47 @@
 @AGENTS.md
 
-# nuevo — AI 창작물 공유 플랫폼
+# nuevo — AI 앱 체험 / 리믹스 플랫폼
 
 ## 핵심 비전 (MVP)
 
 **"올리고 → 바로 놀아보는"**
 
-창작자가 AI로 만든 앱을 올리면, 유저가 피드에서 탭 한 번으로 직접 체험한다.
-리믹스로 창작 생태계가 형성되고, 체험 시간 기반으로 창작자에게 수익이 돌아간다.
+창작자가 AI로 만든 앱을 올리면, 유저가 SNS 딥링크나 피드에서 탭 한 번으로 직접 체험한다.
+MVP의 중심은 수익배분이 아니라 **Fame loop + Play loop**다.
 
-> **MVP 범위**: 인증(Google 로그인) + 실 데이터 피드/업로드 + 리믹스 lineage
+- 창작자는 앱이 발견되고, 실행되고, 반응/저장/공유/리믹스되는 경험을 원한다.
+- 일반 사용자는 짧고 재밌는 앱을 가입 없이 만지고, 저장하고, 친구에게 보내고, 리믹스한다.
+- WES와 수익배분은 "큰돈 보장"이 아니라 성과/신뢰/향후 정산 근거로 다룬다.
+
+> **MVP 범위**: SNS 딥링크 즉시 실행 + URL 업로드/미리보기 + 비로그인 체험 + 태그 검색 + 리믹스 소셜 증명 + 창작자 Fame 대시보드
 > **"만들기"** (플랫폼 내 AI 생성) 기능은 Phase 2. `/create` 코드는 남아 있지만 MVP UI 진입점은 없다.
 
 전체 제품 상세: PRD.md | 태스크: TASK.md
 
-## 수익 모델 요약
+## 제품 우선순위
 
-```
-WES = (체험 세션 × 1.0) + (체험 시간(분) × 0.8) + (반응 × 1.5) + (댓글 × 2.0) + (리믹스 × 5.0)
-창작자 수익 = 플랫폼 월 배분 수익 × (내 WES / 전체 WES 합)
+1. SNS 딥링크 즉시 실행: `nuevo.app/@handle/app?autoplay=true`
+2. URL 업로드 + iframe 호환성 진단 + 모바일 미리보기
+3. 비로그인 앱 체험
+4. 태그 검색 / 카테고리 탐색
+5. 리믹스 생성 + 원본 상세 노출 + `N회 리믹스됨` 소셜 증명
+6. 반응 / 댓글 / 저장 / 공유
+7. 창작자 Fame 대시보드: 체험 수, 평균 체험 시간, 반응, 저장, 공유, 리믹스, 유입 채널
+8. WES breakdown / raw event log export
+
+## WES / 수익 모델 원칙
+
+WES는 MVP에서 즉시 큰 수익을 보장하기 위한 지표가 아니라, 창작자의 체험 성과와 향후 수익배분의 근거가 되는 신뢰 지표다.
+
+```text
+WES = (유효 체험 세션 × 1.0)
+    + (체험 시간(분) × 0.8)
+    + (반응 × 1.5)
+    + (댓글 × 2.0)
+    + (리믹스 × 5.0)
 ```
 
-파트너 티어: 새싹(60%) → 성장(70%) → 프로(75%) → 챔피언(80%)
-리믹스 수익 공유: 원본 창작자에게 리믹스 수익의 10% 귀속
+MVP에서는 실제 출금/복잡한 파트너 티어/브랜드 셀프서브 마켓플레이스를 핵심 플로우로 밀지 않는다. 이미 구현된 정산 UI/API는 유지할 수 있지만, 제품 메시지와 신규 작업 우선순위는 Fame/Play 중심으로 맞춘다.
 
 ## 기술 스택
 
@@ -83,6 +102,10 @@ follows(follower_id, following_id, created_at)
 comments(id, post_id, author_id, text, created_at)
 post_reactions(post_id, user_id, reaction, created_at)
 
+planned / PRD-required additions:
+post tags, external_links, share_count, save_count, traffic_source
+event export support for raw WES logs
+
 views:
 post_monthly_wes(post_id, author_id, title, content_type, month, sessions, minutes, reactions, comments, remixes, wes)
 creator_monthly_wes(author_id, month, sessions, minutes, reactions, comments, remixes, wes)
@@ -113,20 +136,31 @@ const [expandedId, setExpandedId] = useState<string | null>(null);
 ```tsx
 <iframe
   src={iframeUrl}
-  sandbox="allow-scripts allow-same-origin allow-forms allow-popups"
+  sandbox="allow-scripts allow-forms allow-popups"
   allow="camera; microphone"
 />
 ```
 
-`InteractiveDemo`는 iframe `onLoad` 시 `experience_events`에 세션을 만들고, 접힘/unmount/visibility hidden 시 `duration_seconds`를 업데이트한다. 피드/탐색/프로필 서버 조회는 `getExperienceMetrics()`로 세션 수와 체험 시간을 집계한다.
+`allow-same-origin`은 `allow-scripts`와 함께 쓰지 않는다. 앱 임베딩은 격리된 iframe/origin을 전제로 한다.
 
-### WES 집계
+`InteractiveDemo`는 iframe `onLoad` 시 `experience_events`에 세션을 만들고, 접힘/unmount/visibility hidden 시 `duration_seconds`를 업데이트한다. 피드/탐색/프로필 서버 조회는 `getExperienceMetrics()`로 세션 수와 체험 시간을 집계한다. 정밀 체험 시간/내부 인터랙션은 향후 SDK/postMessage 기반으로 보강한다.
 
-WES 계산 상수와 티어 로직은 `src/lib/wes.ts`에 둔다. Supabase SQL view `post_monthly_wes`, `creator_monthly_wes`가 월간 집계를 담당하고, `/studio`는 현재 로그인 유저의 view row를 읽어 예상 수익을 계산한다.
+### SNS 딥링크 / 비로그인 체험
+
+MVP 핵심 진입은 외부 SNS에서 오는 딥링크다.
+
+- 앱 상세 URL은 `?autoplay=true`를 지원해야 한다.
+- 비로그인 사용자는 피드 탐색, 태그 검색, 앱 체험까지 가능해야 한다.
+- 반응, 댓글, 저장, 리믹스, 업로드는 로그인 유도 지점이다.
+- Instagram/TikTok/YouTube/Reddit 공유 미리보기를 고려해 OG 메타를 유지한다.
+
+### Fame 대시보드 / WES 집계
+
+WES 계산 상수와 티어 로직은 `src/lib/wes.ts`에 둔다. Supabase SQL view `post_monthly_wes`, `creator_monthly_wes`가 월간 집계를 담당한다. `/studio`는 "수익 정산표"보다 먼저 Fame 대시보드로 보여야 한다: 체험 수, 평균 체험 시간, 반응, 댓글, 저장, 공유, 리믹스, 유입 채널을 우선 노출한다.
 
 ### 정산 요청
 
-정산 정책은 `src/lib/payout.ts`에 둔다. MVP에서는 실제 송금이 아니라 `payout_requests`에 월별 정산 요청을 남기고 상태(`requested`, `reviewing`, `approved`, `paid`, `rejected`)를 추적한다. `POST /api/payout-requests`는 로그인 유저만 호출 가능하며, 같은 달 중복 요청과 10,000원 미만 요청을 막는다.
+정산 정책은 `src/lib/payout.ts`에 둔다. 다만 PRD 1.0 기준으로 실제 출금은 MVP의 핵심 약속이 아니다. 구현이 남아 있더라도 제품 카피와 신규 작업 우선순위에서는 "예상 수익"보다 "Fame/성과 데이터"를 앞세운다.
 
 ### 티어 자동 승급
 
@@ -135,6 +169,8 @@ WES 계산 상수와 티어 로직은 `src/lib/wes.ts`에 둔다. Supabase SQL v
 ### 소셜 액션 저장
 
 팔로우, 댓글, 반응은 Supabase에 저장한다. 단, `mockPosts` fallback의 짧은 문자열 ID(`1`, `minsu` 등)는 DB FK와 맞지 않으므로 클라이언트 로컬 상태로만 처리한다. 실 DB UUID 포스트/유저일 때만 `follows`, `comments`, `post_reactions`에 기록한다.
+
+저장, 공유, 유입 채널, 리믹스 소셜 증명은 PRD 1.0 기준 MVP 핵심 지표다. 구현 시 mock fallback과 실 DB UUID 포스트를 분리해 처리한다.
 
 ### 컨텐츠 타입
 | 타입 | 컬러 | 표시 방식 |

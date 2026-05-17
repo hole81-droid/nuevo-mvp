@@ -52,6 +52,8 @@ export function mapDbPostToPost(row: DbPostWithAuthor, options?: { remixCount?: 
       reposts: options?.remixCount ?? 0,
       likes: 0,
       views: 0,
+      saves: 0,
+      shares: 0,
       experienceSessions: 0,
       experienceMinutes: 0,
     },
@@ -65,5 +67,7 @@ export function mapDbPostToPost(row: DbPostWithAuthor, options?: { remixCount?: 
     remixOf: row.remix_of ?? undefined,
     detailDescription: row.detail_description ?? undefined,
     tool: row.tool_used ?? undefined,
+    tags: row.tags ?? undefined,
+    externalLinks: row.external_links ?? undefined,
   };
 }
