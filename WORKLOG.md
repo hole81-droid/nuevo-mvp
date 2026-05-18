@@ -4,6 +4,96 @@
 
 ---
 
+## 세션 10 — 2026-05-18
+
+### 완료 내역
+
+#### 신규 PC 인수 및 로컬 환경 복원
+- GitHub 저장소 `https://github.com/hole81-droid/nuevo-mvp`를 `C:\Users\UX_Lab_Live\Desktop\Nuevo MVP`에 새로 클론.
+- `npm install` 실행 완료.
+  - 참고: 최초 실행은 사용자 npm cache 권한 문제로 실패했고, 승인된 권한으로 재실행해 완료.
+  - npm audit 기준 moderate 취약점 2건이 보고됨. 자동 `audit fix --force`는 breaking change 가능성이 있어 실행하지 않음.
+- `.env.local`은 git 제외 파일이며 현재 새 클론에는 없음.
+  - 실제 Supabase anon key는 별도 전달/대시보드 확인 필요.
+  - 검증 명령은 임시 placeholder 환경변수로만 실행.
+
+#### 인수 직후 품질 게이트 확인
+- `npm run lint` 통과.
+- `npx tsc --noEmit --pretty false` 통과.
+- `node --test src\lib\*.test.mjs` → 37 passed.
+- `npm run build`:
+  - `.env.local` 없이 실행하면 Supabase URL/anon key 누락으로 실패하는 것을 확인.
+  - 임시 환경변수(`NEXT_PUBLIC_SUPABASE_URL`, `NEXT_PUBLIC_SUPABASE_ANON_KEY`)를 주입하면 production build 통과.
+
+#### N1 모바일 LCP QA 준비 상태 확인
+- production build 후 `next start` 기준 로컬 HTTP 응답 확인:
+  - `/post/1` → 200, 약 77ms
+  - `/post/1?autoplay=true` → 200, 약 68ms
+  - `/demo/1` → 200, 약 57ms
+- 일반 상세 진입과 autoplay 상세 진입 모두 서버 응답은 빠르게 반환됨.
+- 실제 모바일 LCP 3초 이하 체크는 브라우저 렌더링 계측이 필요하므로 아직 완료 처리하지 않음.
+  - 현재 PC에는 gstack headless browser가 미설치 상태(`NEEDS_SETUP`).
+  - 다음에 브라우저 도구 1회 셋업 후 모바일 viewport에서 LCP/콘솔/네트워크를 확인하면 N1 QA를 마무리할 수 있음.
+
+#### LCP 계측 스크립트 추가
+- `scripts/lcp-check.mjs` 추가.
+  - Next production server를 띄운 뒤 Chrome DevTools Protocol로 모바일 viewport(`390x844`, DPR 3)에서 LCP를 측정.
+  - 기본 측정 경로: `/post/1`, `/post/1?autoplay=true`.
+  - `npm run qa:lcp`로 실행.
+  - 환경변수:
+    - `NEXT_PUBLIC_SUPABASE_URL`, `NEXT_PUBLIC_SUPABASE_ANON_KEY`: 실제/임시 Supabase 값.
+    - `CHROME_PATH`: 사용할 Chrome/Edge 실행 파일 경로.
+    - `LCP_OUTPUT`: JSON 결과 파일 저장 경로.
+    - `LCP_HEADLESS_MODE=old`: 구형 Chromium에서 old headless 강제.
+- 현재 PC에서 실행 결과:
+  - 시스템 Chrome, Edge, Puppeteer cache Chrome 모두 headless 시작 또는 페이지 로드 중 GPU process fatal 발생.
+  - 대표 오류: `GPU process isn't usable. Goodbye.`
+  - 따라서 이 PC/sandbox에서는 실제 LCP 수치를 확정하지 못함.
+  - 브라우저 실행 권한이 정상인 로컬 환경 또는 배포 URL + Lighthouse/PageSpeed 환경에서 같은 스크립트/측정을 재시도 필요.
+
+#### MVP 잔여 항목 정리
+- `TASK.md`의 stale 체크 상태를 실제 작업로그 기준으로 정리.
+  - Supabase Auth Google OAuth 설정은 세션 4에서 완료되어 체크 처리.
+  - 브랜드 셀프서브 마켓플레이스와 AI 앱 생성기는 MVP 제외/Phase 2 유지로 체크 처리.
+  - 커스텀 도메인은 선택 운영 작업이며 MVP 기능 완료 조건이 아니라고 명시.
+  - N1 모바일 LCP QA는 `npm run qa:lcp` 자동화 준비 완료, 현재 PC headless GPU 오류로 실측 차단 상태를 명시.
+- 새 클론 로컬 실행 안내가 깨지지 않도록 `.env.local.example` 추가.
+  - `.gitignore`에서 `.env.local.example`은 추적되도록 예외 처리.
+  - `README.md` 검증 명령을 현재 사용한 명령과 맞추고 `qa:lcp` 사용법 추가.
+
+#### 전체 UX Flow 점검판
+- `/ux-flow` 내부 점검 페이지 추가 (`src/app/ux-flow/page.tsx`).
+  - 핵심 유저 여정 12개를 `진입 → 버튼/행동 → 이동 → 메시지/상태 → 점검 포인트`로 정리.
+  - Route map, 상태 메시지, 외부 이동/다운로드/클립보드 동작을 한 화면에서 점검 가능.
+  - `/settings`의 MVP 테스트 섹션에 "UX Flow 점검판" 링크 추가.
+- 목적:
+  - 실제 개발 재개 전 전체 UX, 로그인 경계, 버튼 목적지, 내/외부 이동, Phase 2 노출 여부를 빠르게 리뷰.
+  - 제품팀/운영자가 코드 읽지 않고도 플로우 누락과 어색한 메시지를 체크.
+
+#### 전체 UX 화면 프로토타입
+- `/ux-prototype` 내부 프로토타입 보드 추가 (`src/app/ux-prototype/page.tsx`).
+  - 홈 피드, 상세 체험, 로그인 경계, 업로드, Fame Studio, 설정/운영 6개 모바일 목업을 한 화면에 배치.
+  - 각 목업 카드에 `누르는 버튼`과 `다음 이동`을 표시해 UX 리뷰 중 바로 대조 가능.
+  - `/ux-flow` 상단과 `/settings` MVP 테스트 섹션에서 접근 가능.
+- 목적:
+  - 문서형 플로우 점검 전에 실제 화면 감각을 먼저 보고, 어떤 흐름을 실제 앱에서 클릭 QA할지 합의.
+  - MVP의 핵심 톤인 "체험 먼저, 소셜 액션은 로그인 후, 수익보다 Fame/WES"가 화면에 보이는지 점검.
+
+#### 핵심 MVP 경험 반영 보강
+- 사용자 토론 결과 MVP에 추가된 핵심 경험이 프로토타입에 더 선명히 보이도록 `/ux-prototype` 개선.
+  - 외부 앱 딥링크 화면 추가: YouTube/TikTok/Instagram 등에서 `@handle/app-slug--postId?autoplay=true` 링크를 눌러 nuevo 상세로 들어오고 즉시 iframe 체험이 시작되는 흐름을 첫 화면으로 배치.
+  - 상세 체험 화면 개선: `autoplay=true`, `source: youtube`, iframe live 상태를 명시.
+  - 올리기 화면 개선: 앱 URL 외에 외부 자료 링크를 최대 3개 첨부하는 UX를 표시하고 YouTube/Instagram/TikTok/GitHub를 예시 플랫폼으로 노출.
+  - 리믹스 전용 화면 추가: `N회 리믹스됨` 소셜 증명, 리믹스 CTA, `/upload?remix=...`, 원본 배너, "이 앱의 리믹스들", 원본 창작자 알림과 피드 재노출까지 한 화면에 표시.
+  - Studio 화면 개선: YouTube/TikTok/Instagram/Direct 유입 채널 breakdown을 표시.
+- `/ux-flow` 문서형 점검판도 같은 내용으로 보강.
+
+### 현재 git 상태
+- 브랜치: `main`
+- 작업 트리: `.env.local.example`, `.gitignore`, `README.md`, `TASK.md`, `WORKLOG.md`, `package.json`, `scripts/lcp-check.mjs`, `src/app/ux-flow/page.tsx`, `src/app/ux-prototype/page.tsx`, `src/app/settings/SettingsClient.tsx` 수정/추가.
+
+---
+
 ## 세션 9 — 2026-05-18
 
 ### 완료 내역
@@ -474,3 +564,78 @@ NEXT_PUBLIC_SUPABASE_ANON_KEY=<키값>
 ```
 
 > 키값은 Supabase 대시보드 → Project Settings → API → `anon public` 키 참고.
+# nuevo 작업 로그
+
+## 다른 PC 인수인계 요약 - 2026-05-18
+
+### 저장소
+
+- Remote: `https://github.com/hole81-droid/nuevo-mvp`
+- Branch: `main`
+- 이번 세션 목표: 현재 MVP 앱과 UX 상황판/프로토타입의 정합성을 맞추고, PRD/Spec/Task/Design 문서를 읽히는 형태로 정리.
+
+### 이번에 반영한 핵심 변경
+
+- `/ux-flow`: 현재 MVP 앱 구현 상태와 프로토타입 반영 상태를 비교하는 UX Flow 점검판.
+- `/ux-prototype`: 외부 딥링크, 바로 체험, 피드 발견, 외부 자료 링크 첨부, 리믹스, Fame Studio, 운영 점검을 보는 화면형 모바일 프로토타입.
+- `PRD.md`: MVP PRD를 Fame loop + Play loop 기준으로 재정리.
+- `PRD_V3.md`: 구현 지향 Product Spec으로 정리.
+- `TASK.md`: 현재 MVP 완료/남은 QA 항목 기준으로 재정리.
+- `Design Ref.md`: UI/UX 디자인 기준 문서로 재정리.
+- `README.md`: 라우트, UX 점검 페이지, 검증 명령 정리.
+- `scripts/lcp-check.mjs`: 모바일 LCP 측정용 스크립트 추가.
+- `.env.local.example`: Supabase 공개 환경변수 템플릿 추가.
+
+### 검증 완료
+
+- `npm run lint` 통과.
+- `npx tsc --noEmit --pretty false` 통과.
+- `node --test src\lib\*.test.mjs` 통과, 37 tests.
+- placeholder env로 `npm run build` 통과.
+- 최신 빌드 서버 확인: `http://127.0.0.1:3002/ux-prototype`, `http://127.0.0.1:3002/ux-flow` 모두 200.
+
+### 다음 PC에서 바로 할 일
+
+```bash
+git pull origin main
+npm install
+cp .env.local.example .env.local
+npm run dev
+```
+
+Supabase 실제 값은 `.env.local`에 별도로 채워야 한다. `.env.local`은 git에 포함하지 않는다.
+
+### 남은 MVP QA
+
+- 실제 모바일 또는 정상 Chrome 환경에서 `/post/[id]`, `/post/[id]?autoplay=true` LCP 3초 목표 실측.
+- Instagram/TikTok/YouTube 인앱 브라우저에서 딥링크 및 iframe 실행 확인.
+- live Supabase 스키마가 `posts.tags`, `posts.external_links`, traffic source, remix notification 필드를 모두 반영하는지 확인.
+
+---
+
+## Session 11 - 2026-05-18
+
+### UX/PRD/Spec 정합성 점검
+
+- 현재 MVP 앱과 내부 UX 점검판을 비교했다.
+  - 딥링크 즉시 체험: `src/lib/deep-link.js`, `src/app/[handle]/[slug]/page.tsx`, `src/app/post/[id]/page.tsx`, `InteractiveDemo` 기준으로 구현 확인.
+  - 외부 자료 링크 첨부: `/upload`, `posts.external_links`, `normalizeExternalLinks`, PostCard/PostDetail 노출 기준으로 구현 확인.
+  - 리믹스 UX: `/upload?remix=`, `posts.remix_of`, `remixable`, 리믹스 카운트, 원본 상세의 리믹스 목록, 알림 흐름 기준으로 구현 확인.
+  - Fame/WES: `/studio`, traffic source, WES breakdown, `/api/studio/wes-export` 기준으로 구현 확인.
+- `/ux-flow`를 깨진 문구 없이 다시 작성하고, 현재 앱 구현 상태와 프로토타입 반영 상태를 나란히 비교하도록 개선.
+- `/ux-prototype`를 화면형 모바일 목업으로 다시 작성하고, 외부 딥링크, 즉시 체험, 업로드 외부 링크, 리믹스, Studio, 설정 점검 흐름을 핵심 화면으로 구성.
+- `PRD.md`를 읽히는 MVP PRD로 재작성.
+- `PRD_V3.md`를 구현 지향 Product Spec으로 재작성.
+- `Design Ref.md`를 UI/UX 기준 문서로 재작성.
+- `TASK.md`를 현재 MVP 체크리스트로 재작성하고 누락 QA 항목을 추가.
+- `README.md`를 현재 라우트, UX 점검 페이지, 검증 명령 기준으로 정리.
+
+### 남은 확인 항목
+
+- 실제 모바일 또는 정상 Chrome 환경에서 `/post/[id]`, `/post/[id]?autoplay=true` LCP 3초 목표 실측.
+- Instagram/TikTok/YouTube 인앱 브라우저에서 딥링크와 iframe 실행 확인.
+- live Supabase 스키마가 `posts.tags`, `posts.external_links`, traffic source, remix notification 필드를 모두 반영하는지 확인.
+
+---
+
+# 이전 작업 로그 원문

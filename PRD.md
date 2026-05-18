@@ -1,339 +1,226 @@
-# nuevo — Product Requirements Document
+# nuevo MVP PRD
 
-**버전**: 1.0 / MVP 재정의  
-**최종 수정**: 2026-05-18  
-**스코프**: Fame loop + Play loop 중심 MVP
+**Version:** 1.1
+**Updated:** 2026-05-18
+**Scope:** Fame loop + Play loop 중심 MVP
 
----
+## 1. Product Definition
 
-## 1. 제품 개요
+nuevo는 AI로 만든 작은 인터랙티브 앱을 기존 SNS 트래픽에서 바로 실행 가능한 체험으로 연결하고, 사용자가 그 앱을 체험, 반응, 공유, 리믹스하면서 창작자가 Fame과 검증된 데이터를 얻는 플랫폼입니다.
 
-### 한 줄 정의
+MVP 슬로건:
 
-nuevo는 AI로 만든 인터랙티브 앱을 외부 SNS에서 즉시 실행 가능한 체험으로 연결하고, 사용자가 앱을 직접 만지고 리믹스하며, 창작자가 Fame과 검증된 데이터를 얻는 플랫폼이다.
+> 올리고, 바로 플레이해보자.
 
-### MVP 슬로건
+MVP의 목적은 앱 생성기가 아닙니다. 창작자는 이미 Claude Code, Cursor, Replit, Vercel, GitHub Pages 등으로 앱을 만들고 있습니다. nuevo MVP는 그 앱을 배포, 발견, 체험, 리믹스, 성과 확인까지 이어주는 얇고 빠른 레이어입니다.
 
-> **"올리고 → 바로 놀아보는"**
+## 2. MVP Core Loops
 
-### MVP의 핵심 전제
-
-기존 PRD는 "체험 기반 수익 배분"을 너무 앞에 두었다. 고객 인터뷰와 추가 토론 기준으로, MVP의 1차 목표는 창작자에게 큰 수익을 주는 것이 아니다.
-
-MVP의 1차 목표는 다음이다.
-
-1. 창작자가 만든 앱이 실제 사람들에게 발견된다.
-2. 사용자가 가입 없이 즉시 실행해본다.
-3. 앱이 반응, 저장, 공유, 리믹스를 만든다.
-4. 창작자는 "내 앱이 세상에 닿았다"는 Fame과 검증 데이터를 얻는다.
-5. 수익배분은 장기 신뢰 장치로 남기되, MVP의 메인 약속으로 과장하지 않는다.
-
-### 핵심 제품 문장
-
-> nuevo MVP는 창작자가 AI 앱으로 바로 돈을 버는 플랫폼이 아니라,  
-> **자신이 만든 앱을 사람들이 실제로 체험하고, 반응하고, 리믹스하며, 창작자가 Fame과 검증된 데이터를 얻는 플랫폼**이다.
-
----
-
-## 2. 핵심 루프
-
-### 창작자 Fame Loop
+### Creator Fame Loop
 
 ```text
-앱 만들기 → URL 업로드 → SNS 딥링크 공유
-→ 사람들이 즉시 체험 → 반응/댓글/저장/공유
-→ 리믹스 발생 → 원본 재노출
-→ 창작자 Fame 대시보드에서 성과 확인
+앱 URL 올리기
+-> 외부 자료/태그/설명 첨부
+-> nuevo 상세 딥링크 공유
+-> 방문자가 로그인 없이 바로 체험
+-> 반응, 댓글, 저장, 공유, 리믹스 발생
+-> 원본 앱이 다시 노출
+-> 창작자가 Studio에서 Fame/WES 확인
 ```
 
-창작자가 원하는 것은 단순 수익이 아니라 distribution, fame, creative validation이다.
-
-### 사용자 Play Loop
+### User Play Loop
 
 ```text
-SNS/탐색/검색에서 앱 발견
-→ 가입 없이 바로 실행
-→ 재미있으면 반응/저장/공유
-→ 더 해보고 싶으면 비슷한 앱 탐색
-→ 직접 바꾸고 싶으면 리믹스
+SNS 링크, 피드, 탐색에서 앱 발견
+-> 바로 실행
+-> 마음에 들면 반응/댓글/저장/공유
+-> 직접 바꾸고 싶으면 리믹스
+-> 새 버전이 피드와 원본 상세에 재노출
 ```
 
-일반 사용자는 창작자가 아니어도 중요하다. 사용자가 오래 머물고 계속 만져야 체험 데이터, 리믹스, Fame, 수익화 가능성이 모두 생긴다.
-
-### 수익 Trust Loop
+### Trust / Data Loop
 
 ```text
-체험 이벤트 기록 → WES breakdown 제공
-→ raw event log export
-→ 향후 광고/구독/브랜드 수익 풀과 연결
+체험 이벤트 기록
+-> WES breakdown
+-> raw event CSV export
+-> 향후 브랜드/스폰서십/정산 근거로 사용
 ```
 
-WES는 MVP에서 "큰돈을 보장하는 정산표"가 아니라, 창작자의 성과와 향후 수익배분의 근거가 되는 신뢰 지표다.
+MVP에서 수익은 핵심 약속이 아닙니다. 현재 화면은 예상 수익을 보조 정보로만 다루고, 체험 성과와 데이터 신뢰를 먼저 검증합니다.
 
----
+## 3. Target Users
 
-## 3. 타겟 사용자
+### Creators
 
-### 창작자
+- AI 도구로 직접 앱, 퀴즈, 생성기, 인터랙티브 콘텐츠를 만드는 창작자
+- Instagram, TikTok, YouTube Shorts, Reddit, GitHub README 등에서 자기 앱을 보여주고 싶은 사람
+- 영상 조회수보다 “사람들이 실제로 실행했고, 리믹스했고, 반응했다”는 증거가 필요한 사람
 
-- Claude Code, Cursor, Replit, Vercel, GitHub Pages 등으로 앱을 만드는 바이브코더
-- Instagram/TikTok/YouTube에 앱 시연 영상을 올리는 AI 창작자
-- "영상 말고 앱 자체를 직접 해보게 하고 싶다"는 사람
-- 수익보다 먼저 발견, 반응, 리믹스, 포트폴리오, 브랜드 협업 가능성을 원함
+### Visitors / Players
 
-### 일반 사용자
+- SNS에서 본 AI 앱을 설치 없이 바로 눌러보고 싶은 사람
+- 재미있으면 댓글, 반응, 저장, 공유, 리믹스로 참여하고 싶은 사람
 
-- SNS에서 AI 앱 시연을 보고 "나도 해보고 싶다"고 느낀 사람
-- 짧고 재밌는 인터랙티브 앱을 구경하고 직접 만지고 싶은 사람
-- 창작자가 아니어도 저장, 공유, 반응, 댓글, 리믹스로 플랫폼의 수요를 만든다
+### Brands / Sponsors
 
-### 브랜드 / 스폰서
+- 일반 조회수보다 직접 체험 시간, 반응, 리믹스 데이터를 보고 싶은 브랜드
+- MVP에서는 운영팀 수동 매칭 또는 소개 페이지 수준으로 제한합니다.
 
-- 조회수가 아니라 실제 조작 시간, 반응, 리믹스 데이터를 보고 싶은 브랜드
-- MVP에서는 수동 매칭만 다루고, 셀프서브 브랜드 마켓플레이스는 Phase 2 이후로 둔다
+## 4. MVP Must-Have Experiences
 
----
+### 4.1 External Deep Link Immediate Play
 
-## 4. MVP 핵심 기능
+외부 앱에서 nuevo 링크를 누르면 곧바로 앱 체험이 시작되어야 합니다.
 
-### 4.1 SNS 딥링크 즉시 실행
+Required:
 
-창작자가 기존 SNS 트래픽을 nuevo 앱 체험으로 전환할 수 있어야 한다.
+- Creator URL: `/[handle]/[slug]`
+- Post URL: `/post/[id]`
+- Autoplay query: `?autoplay=true`
+- Source query: `utm_source=youtube|instagram|tiktok|reddit|direct`
+- Guest access: 로그인 없이 상세 체험 가능
+- Mobile LCP target: 3초 이하 목표
 
-| 기능 | 설명 | MVP |
-|------|------|-----|
-| 앱 딥링크 | `nuevo.app/@handle/app?autoplay=true` | 필수 |
-| 즉시 실행 | 딥링크 진입 시 앱 iframe 자동 전개 | 필수 |
-| 비로그인 체험 | 가입 없이 앱 실행 가능 | 필수 |
-| 공유 미리보기 | Instagram, TikTok, YouTube, Reddit, Discord OG 메타 | 필수 |
-| 모바일 성능 | 앱 체험 화면 LCP 3초 이하 목표 | 필수 |
-| 공유 버튼 | 앱 페이지에서 딥링크 복사 | 필수 |
+Current app mapping:
 
-목적은 "영상 보고 궁금한 사람이 바로 해보게 만들기"다.
+- `src/lib/deep-link.js`
+- `src/app/[handle]/[slug]/page.tsx`
+- `src/app/post/[id]/page.tsx`
+- `src/components/post/InteractiveDemo.tsx`
+- `src/lib/traffic-source.js`
 
-### 4.2 URL 업로드 / 미리보기
+### 4.2 Upload With External Resource Links
 
-창작자는 SDK나 복잡한 배포 설정을 배우고 싶지 않다. 기본 경험은 "URL 붙여넣으면 끝"이어야 한다.
+창작자는 앱 URL과 함께 제작 맥락을 보여주는 외부 자료 링크를 붙일 수 있어야 합니다.
 
-| 기능 | 설명 | MVP |
-|------|------|-----|
-| URL 제출 | Vercel/GitHub Pages/Glitch/CodePen/Replit 등 앱 URL 입력 | 필수 |
-| iframe 호환성 진단 | X-Frame-Options, CSP, HTTPS, 공개 접근 확인 | 필수 |
-| 실시간 미리보기 | 제출 전 iframe으로 직접 실행 확인 | 필수 |
-| 모바일 미리보기 | 390px 기준 레이아웃/스크롤/권한 확인 | 필수 |
-| 제목/설명/썸네일 | 피드 카드 기본 정보 | 필수 |
-| 태그 입력 | 최대 5개 | 필수 |
-| 외부 링크 | YouTube 튜토리얼, GitHub, 원본 영상 등 최대 3개 | 필수 |
-| 게시 후 피드백 | "탐색 탭에 노출됐어요" + 직접 보기 버튼 | 필수 |
+Required:
 
-핵심 감정은 "내가 만든 게 진짜 세상에 올라갔다"이다.
+- App URL
+- iframe compatibility check
+- Title, description, tags
+- External links up to 3
+- Examples: YouTube tutorial, Instagram post, TikTok video, GitHub repo, original demo page
+- Posted detail page shows the external links
 
-### 4.3 발견성: 태그 검색 / 카테고리 탐색
+Current app mapping:
 
-추천 알고리즘은 MVP에 과하다. 하지만 시간순 피드만으로는 창작자가 Fame을 얻기 어렵다.
+- `src/app/upload/page.tsx`
+- `src/lib/upload-metadata.js`
+- `posts.external_links`
+- `src/components/post/PostDetailClient.tsx`
+- `src/components/post/PostCard.tsx`
 
-| 기능 | 설명 | MVP |
-|------|------|-----|
-| 태그 검색 | 제목/설명/태그 검색 | 필수 |
-| 카테고리 탐색 | 게임, 퀴즈, 필터, 음악, 생산성, 이상한 앱 등 | 필수 |
-| 신규 첫 작품 보장 | 신규 창작자 첫 작품 탐색 탭 노출 | 필수 |
-| 관련 앱 | 앱 상세 하단에 비슷한 태그 앱 노출 | 필수 |
-| 인기 앱 | 조회수가 아니라 체험/반응/리믹스 중심 정렬 | 필수 |
+### 4.3 Remix Fame Loop
 
-목적은 팔로워 없는 창작자도 첫 반응을 받을 가능성을 만드는 것이다.
+리믹스는 단순 파생작 기능이 아니라 원본의 Fame을 다시 키우는 성장 루프입니다.
 
-### 4.4 리믹스 루프
+Required:
 
-리믹스는 수익 기능보다 Fame 기능이다. "내 앱이 누군가의 버전으로 다시 태어났다"는 경험이 창작자에게 강한 동기다.
+- Remix CTA on original posts
+- `/upload?remix=[postId]`
+- Original banner in upload flow
+- `remixable=false` blocks remix
+- `posts.remix_of` lineage
+- Remix count social proof: `N회 리믹스됨`
+- Original detail page shows “이 앱의 리믹스들”
+- Original creator receives remix notification
+- Remix posts can re-enter feed/explore
 
-| 기능 | 설명 | MVP |
-|------|------|-----|
-| 리믹스 버튼 | 원본 앱에서 리믹스 업로드 플로우 진입 | 필수 |
-| 원본 표시 | 리믹스 카드/상세에 원본 표시 | 필수 |
-| 원본 상세 리믹스 목록 | 원본 앱 상세에 파생작 노출 | 필수 |
-| 리믹스 소셜 증명 | 피드 카드에 `N회 리믹스됨` 표시 | 필수 |
-| 원본 창작자 알림 | 내 앱이 리믹스되면 알림 | 필수 |
-| 리믹스 챌린지 CTA | "이 앱을 더 웃기게 바꿔보세요" | 권장 |
+Current app mapping:
 
-리믹스의 목표는 원본 창작자의 수동 수익보다 먼저, 원본을 다시 발견시키는 바이럴 루프를 만드는 것이다.
+- `src/lib/remix-cta.js`
+- `src/lib/remix-social-proof.js`
+- `src/app/upload/page.tsx`
+- `src/components/post/PostCard.tsx`
+- `src/components/post/PostDetailClient.tsx`
+- `src/app/notifications/page.tsx`
 
-### 4.5 사용자 Play Retention
+### 4.4 Discovery / Play Retention
 
-일반 사용자를 붙잡는 전략이 필요하다. nuevo는 창작자 포트폴리오 사이트가 아니라, 앱을 만지고 변형하는 놀이터여야 한다.
+Required:
 
-| 기능 | 설명 | MVP |
-|------|------|-----|
-| Daily playable feed | 오늘 해볼 만한 앱 묶음 | 필수 |
-| 반응 버튼 | 댓글보다 가벼운 감정 표현 | 필수 |
-| 저장 / 컬렉션 | 나중에 다시 해볼 앱 저장 | 필수 |
-| 친구에게 공유 | 딥링크 공유 | 필수 |
-| 비슷한 앱 더 보기 | 태그 기반 관련 앱 추천 | 필수 |
-| 트렌딩 섹션 | 가장 많이 리믹스된 앱, 가장 오래 체험된 앱 등 | 필수 |
+- Public feed
+- Explore/search by title, text, tag, tool, author, external link label
+- Category and tag entry points
+- Daily playable / most remixed / longest played sections
+- Related posts under detail
 
-체류 전략은 무한 스크롤 중독이 아니라 play, remix, collect, share 중심이어야 한다.
+Current app mapping:
 
-### 4.6 창작자 Fame 대시보드
+- `src/app/page.tsx`
+- `src/app/explore/page.tsx`
+- `src/lib/explore-filters.js`
+- `src/lib/play-retention.js`
 
-초기 창작자에게 필요한 것은 정산표보다 반응이다.
+### 4.5 Creator Fame Studio
 
-| 지표 | 설명 | MVP |
-|------|------|-----|
-| 체험 수 | 앱 실행 세션 수 | 필수 |
-| 평균 체험 시간 | 가능한 경우 SDK/onLoad 기반 측정 | 필수 |
-| 반응 수 | 감정 반응 집계 | 필수 |
-| 댓글 수 | 댓글/답글 집계 | 필수 |
-| 저장 수 | 저장/컬렉션 수 | 필수 |
-| 공유 수 | 딥링크 공유 수 | 권장 |
-| 리믹스 수 | 원본 기준 파생작 수 | 필수 |
-| 유입 채널 | Instagram, TikTok, YouTube, Reddit 등 | 필수 |
-| 첫 체험 알림 | 누군가 내 앱을 처음 실행했을 때 | 필수 |
-| 첫 리믹스 알림 | 첫 파생작 발생 시 | 필수 |
+Required:
 
-이 화면은 "Creator Revenue Dashboard"가 아니라 "Creator Fame Dashboard"로 설계한다.
+- Experience sessions
+- Experience minutes
+- Reactions
+- Comments
+- Saves/shares where available
+- Remix count
+- Traffic source breakdown
+- WES breakdown
+- Raw event CSV export
 
-### 4.7 가벼운 커뮤니티 피드백
+Current app mapping:
 
-완성형 포럼은 MVP 범위가 아니다. 대신 앱 단위 대화는 필요하다.
+- `src/app/studio/page.tsx`
+- `src/app/api/studio/wes-export/route.ts`
+- `src/lib/wes.ts`
+- `src/lib/wes-export.js`
+- `src/lib/fame-dashboard.js`
 
-| 기능 | 설명 | MVP |
-|------|------|-----|
-| 댓글 | 앱 상세 댓글 | 필수 |
-| 댓글 답글 | depth 1 | 필수 |
-| 창작자 고정 댓글 | 제작 의도/질문 고정 | 권장 |
-| 피드백 요청 배지 | "피드백 원해요" 표시 | 권장 |
-| 리믹스 요청 CTA | "이 앱을 바꿔보세요" | 권장 |
+## 5. Non-Goals For MVP
 
----
+These should not become the primary MVP promise:
 
-## 5. 수익배분 / WES
+- In-app AI app generation
+- Real payout / withdrawal
+- Automated brand marketplace
+- Advanced recommendation algorithm
+- Multi-level remix settlement chain
+- Public creator WES profile for brands
+- Full community forum
+- Custom domain launch requirement
 
-### 원칙
+## 6. UX Validation Pages
 
-수익배분은 할 것인가? 한다. 하지만 MVP의 중심 가치로 과장하지 않는다.
+MVP includes two internal review surfaces:
 
-MVP에서 WES는 다음 역할을 한다.
+- `/ux-flow`: route, button, message, guard, and internal/external movement checklist
+- `/ux-prototype`: screen-first mobile prototype board for the core MVP experience
 
-1. 창작자의 앱 성과를 설명하는 지표
-2. 브랜드 협업/스폰서십의 근거 데이터
-3. 향후 정산을 위한 신뢰 가능한 이벤트 기록
+These pages are not end-user production surfaces. They are alignment tools for product, design, and QA.
 
-### WES 계산
+## 7. Success Metrics
 
-```text
-WES = (유효 체험 세션 수 × 1.0)
-    + (총 체험 시간(분) × 0.8)
-    + (반응 수 × 1.5)
-    + (댓글 수 × 2.0)
-    + (리믹스 수 × 5.0)
-```
+Launch validation:
 
-### MVP 포함 범위
+- External deep-link play success rate
+- Mobile detail LCP for `/post/[id]` and `/post/[id]?autoplay=true`
+- Upload completion rate
+- First play after publish time
+- Guest-to-login conversion at protected actions
+- Remix creation rate
+- Traffic source distribution
+- WES export usage by creators
 
-| 기능 | 설명 | MVP |
-|------|------|-----|
-| WES breakdown | 세션/시간/반응/댓글/리믹스 항목별 분해 | 필수 |
-| raw event log export | CSV 다운로드 | 필수 |
-| 정산 풀 표시 | 광고/구독/브랜드 수익 풀 구분 원칙 명시 | 필수 |
-| 예상 수익 | 실제 수익처럼 과장하지 않고 예상치로 표시 | 권장 |
+3-6 month goals:
 
-### MVP 제외 / mock
+- 100 early creators
+- 1,000 creators with at least one posted app
+- 10-15% remix rate target
+- Average meaningful play time above 2 minutes
+- External SNS traffic becomes a measurable top source
 
-- 실제 출금
-- 복잡한 파트너 티어
-- 광고 수익 정산 자동화
-- 브랜드 셀프서브 마켓플레이스
-- 다단계 리믹스 정산 체인
+## 8. Open QA / Risk
 
-### PRD 문구 기준
-
-> WES는 MVP에서 즉시 큰 수익을 보장하기 위한 지표가 아니라, 창작자의 체험 성과와 향후 수익배분의 근거가 되는 신뢰 지표다.
-
----
-
-## 6. MVP에서 빠지는 것
-
-아래는 제품이 작동한 뒤 붙여도 된다.
-
-- AI 앱 생성기
-- 고도화 추천 알고리즘
-- 실제 정산/출금
-- 브랜드 마켓플레이스
-- 복잡한 파트너 등급
-- 오픈 API / webhook
-- 완성형 커뮤니티 포럼
-- 고도화된 리믹스 수익 체인
-
----
-
-## 7. 성공 지표
-
-### MVP 선행 지표
-
-| 지표 | 의미 |
-|------|------|
-| 딥링크 실행 성공률 | 외부 SNS 유입이 앱 체험으로 이어지는가 |
-| 업로드 완료율 | 창작자가 URL 붙여넣기에서 게시까지 성공하는가 |
-| 첫 체험 발생 시간 | 창작자가 게시 후 얼마나 빨리 반응을 받는가 |
-| 비로그인 체험 수 | 일반 사용자가 가입 전에도 놀고 있는가 |
-| 리믹스율 | 앱이 변형 가능한 놀잇감이 되는가 |
-| 저장/공유율 | 일반 사용자가 다시 오거나 퍼뜨릴 의향이 있는가 |
-| 창작자 재업로드율 | 창작자가 Fame을 느끼고 다시 올리는가 |
-| 유입 채널 분포 | Instagram/TikTok/YouTube/Reddit 브릿지가 작동하는가 |
-
-### 3-6개월 목표
-
-| 지표 | 목표 |
-|------|------|
-| 얼리 파트너 창작자 | 100명 |
-| 작품 1개 이상 게시 창작자 | 1,000명 |
-| 월간 활성 사용자 | 50,000명 |
-| 리믹스율 | 15% |
-| 평균 체험 시간 | 2분 이상 |
-| 신규 창작자 첫 작품 평균 체험 수 | 채널별 측정 후 개선 |
-
-수익성 KPI는 MVP 선행 지표가 검증된 뒤 재설정한다.
-
----
-
-## 8. Phase 2 이후
-
-### Growth
-
-- WES 기반 추천 정렬
-- 개인화 피드
-- 고급 컬렉션
-- 리믹스 챌린지 운영 도구
-- 외부 커뮤니티 공유 자동화
-
-### Creation
-
-- nuevo 내부 AI 앱 생성
-- 기존 앱 기반 AI 리믹스
-- 템플릿 기반 앱 만들기
-
-### Monetization
-
-- 실제 정산/출금
-- 파트너 등급 재정의
-- 브랜드 협업 인박스
-- 공개 창작자 성과 프로필
-- 셀프서브 브랜드 캠페인
-
----
-
-## 9. 요약
-
-새 MVP의 우선순위는 다음이다.
-
-1. SNS 딥링크 즉시 실행
-2. URL 업로드 + 모바일 미리보기 + 호환성 진단
-3. 비로그인 앱 체험
-4. 태그 검색 / 카테고리 탐색
-5. 리믹스 생성 + 리믹스 소셜 증명
-6. 반응 / 댓글 / 공유 / 저장
-7. 창작자 Fame 대시보드
-8. 유입 채널 분석
-9. WES breakdown / raw data export
-10. 가벼운 커뮤니티 피드백 루프
-
-MVP의 중심축은 수익배분이 아니라 **Fame loop + Play loop**다. 수익배분은 장기적으로 중요하지만, MVP에서는 창작자 신뢰를 위한 데이터 기반 장치로 다룬다.
+- Mobile LCP needs real Chrome/device confirmation. The local `npm run qa:lcp` script exists, but the current Windows headless browser hit a GPU startup failure.
+- Instagram/TikTok in-app browser behavior should be tested on real devices.
+- iframe compatibility varies by creator hosting platform and must keep clear diagnostics.
+- Revenue language must stay conservative until real settlement exists.

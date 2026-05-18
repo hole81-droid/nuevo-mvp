@@ -163,6 +163,18 @@ export default function SettingsClient() {
       {/* MVP 테스트 */}
       <SectionHeader title="MVP 테스트" />
       <SeedDemoPostsButton />
+      <div className="mx-4 mt-3 rounded-2xl bg-white border border-gray-100 overflow-hidden">
+        <LinkRow
+          label="UX Flow 점검판"
+          desc="버튼, 이동 경로, 메시지, 외부 이동을 한 화면에서 확인"
+          href="/ux-flow"
+        />
+        <LinkRow
+          label="UX 화면 프로토타입"
+          desc="핵심 화면 6개를 모바일 목업으로 먼저 확인"
+          href="/ux-prototype"
+        />
+      </div>
 
       {/* 알림 설정 */}
       <SectionHeader title="알림" />

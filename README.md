@@ -1,22 +1,25 @@
-# nuevo-instagram
+# nuevo MVP
 
-AI로 만든 앱을 URL로 올리고, 사람들이 피드 안에서 바로 실행해보는 모바일-first 경험 플랫폼입니다.
+nuevo is a mobile-first platform for posting already-built AI apps, letting visitors play them instantly from external links, and growing them through reactions, sharing, remix, and creator Fame/WES data.
 
-## 핵심 UX
+## Core MVP
 
-- 창작자: 배포된 앱 URL 입력 → iframe 미리보기 → 게시
-- 유저: 피드 카드 탭 → 페이지 이동 없이 인라인 확장 → 바로 체험 / 댓글 / 반응 / 리믹스
-- 수익: 체험 세션, 체험 시간, 반응, 댓글, 리믹스 기반 WES로 창작자 수익 배분
+- External deep links from YouTube, Instagram, TikTok, Reddit, GitHub, and other pages can open directly into playable detail pages.
+- `?autoplay=true` starts the embedded app immediately.
+- Upload supports an app URL, tags, and external resource links such as YouTube, Instagram, TikTok, and GitHub.
+- Remix preserves original lineage, shows `N회 리믹스됨`, notifies the original creator, and re-exposes the original app.
+- Creator Studio shows Fame/WES, traffic source breakdown, and CSV export.
 
-## 기술 스택
+## Tech Stack
 
 - Next.js 16 App Router
+- React 19
 - TypeScript
 - Tailwind CSS v4
 - Supabase Auth + PostgreSQL
-- Vercel 배포 완료 (`https://nuevo-instagram-test.vercel.app`)
+- Vercel deployment
 
-## 로컬 실행
+## Local Setup
 
 ```bash
 npm install
@@ -24,54 +27,68 @@ cp .env.local.example .env.local
 npm run dev
 ```
 
-브라우저에서 `http://localhost:3000`을 엽니다.
+Open `http://localhost:3000`.
 
-## 환경변수
-
-Supabase Dashboard > Settings > API에서 값을 복사합니다.
+Required local env:
 
 ```bash
 NEXT_PUBLIC_SUPABASE_URL=https://xxxxxxxxxxxx.supabase.co
-NEXT_PUBLIC_SUPABASE_ANON_KEY=eyJ...
+NEXT_PUBLIC_SUPABASE_ANON_KEY=replace-with-supabase-anon-public-key
 ```
 
-Google OAuth를 사용할 때 Supabase Auth Redirect URL에 아래 주소를 추가합니다.
+Supabase OAuth redirect URLs:
 
 ```text
 http://localhost:3000/auth/callback
 https://nuevo-instagram-test.vercel.app/auth/callback
 ```
 
-## DB 스키마
+## Main Routes
 
-`supabase/schema.sql`을 Supabase SQL Editor에서 실행합니다.
+| Route | Purpose |
+| --- | --- |
+| `/` | Public feed |
+| `/[handle]/[slug]` | Creator deep link |
+| `/post/[id]` | Playable app detail |
+| `/explore` | Search, tags, categories |
+| `/upload` | Post an app URL and metadata |
+| `/upload?remix=[postId]` | Remix an existing app |
+| `/notifications` | Remix/reaction/comment notifications |
+| `/profile/[username]` | Creator profile |
+| `/studio` | Creator Fame/WES dashboard |
+| `/settings` | MVP demo seed and internal QA links |
+| `/ux-flow` | Internal UX flow checklist |
+| `/ux-prototype` | Internal mobile prototype board |
 
-주요 테이블:
+## UX Review
 
-- `users`
-- `posts`
-- `notifications`
-- `experience_events`
-- `payout_requests`
-- `follows`
-- `comments`
-- `post_reactions`
+Use these internal pages before making more product changes:
 
-주요 View:
+- `/ux-flow`: compares the current MVP app with the intended UX flow, including routes, buttons, login guards, state messages, and internal/external movement.
+- `/ux-prototype`: screen-first mobile prototype board for external deep link play, upload with external links, remix UX, Studio/WES, and settings QA.
 
-- `post_monthly_wes`
-- `creator_monthly_wes`
-
-## 검증 명령
+## Validation
 
 ```bash
-./node_modules/.bin/tsc --noEmit
 npm run lint
+npx tsc --noEmit --pretty false
+node --test src\lib\*.test.mjs
 npm run build
 ```
 
-## 문서
+Mobile LCP check:
 
-- `PRD.md`: 제품 요구사항
-- `TASK.md`: 개발 태스크와 진행 상태
-- `CLAUDE.md`: 구현 패턴과 프로젝트 컨텍스트
+```bash
+npm run qa:lcp
+```
+
+If local headless Chrome/Edge fails with a GPU startup error, run the LCP check on a real browser/device or CI browser environment.
+
+## Documentation
+
+- `PRD.md`: product requirements and MVP intent
+- `PRD_V3.md`: implementation-facing product spec
+- `TASK.md`: current task tracker
+- `Design Ref.md`: UI/UX and visual reference
+- `WORKLOG.md`: session history and operational notes
+- `AGENTS.md`, `CLAUDE.md`: agent/project context
