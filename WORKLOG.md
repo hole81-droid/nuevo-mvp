@@ -566,6 +566,128 @@ NEXT_PUBLIC_SUPABASE_ANON_KEY=<키값>
 > 키값은 Supabase 대시보드 → Project Settings → API → `anon public` 키 참고.
 # nuevo 작업 로그
 
+## Session 31 - 2026-05-18
+
+### 다음 단계 개발: QA target link bundle
+
+- `/qa`에서 현재 QA Target 기준의 실행 URL 묶음을 Markdown으로 복사/다운로드할 수 있게 했다.
+  - 실기기 QA 전에 YouTube/Instagram/TikTok/LCP/WES/visual QA 링크만 빠르게 폰이나 메신저로 보낼 수 있다.
+- `buildQaTargetLinksMarkdown()`를 추가했다.
+  - 각 항목 title, area, runnable target URL을 compact Markdown list로 만든다.
+- README/TASK/WORKLOG에 target-link bundle 흐름을 반영했다.
+
+### 검증
+
+- `node --test src\lib\mvp-qa-progress.test.mjs` RED/GREEN 확인.
+
+## Session 30 - 2026-05-18
+
+### 다음 단계 개발: QA Target localStorage 저장
+
+- `/qa` QA Target 입력값을 브라우저 localStorage에 저장하도록 했다.
+  - Base URL, handle, app slug, post ID, month가 새로고침 후에도 유지된다.
+  - 다른 탭/브라우저 storage 이벤트에도 동기화된다.
+- `getDefaultMvpQaTarget()`와 `normalizeMvpQaTarget()`를 추가했다.
+  - 저장된 target 값이 일부 비어 있거나 오래된 형태여도 안전한 기본값으로 보정한다.
+  - handle은 `@` prefix를 정규화하고 base URL trailing slash를 제거한다.
+- README/TASK/WORKLOG에 QA target local persistence를 반영했다.
+
+### 검증
+
+- `node --test src\lib\mvp-qa-checklist.test.mjs` RED/GREEN 확인.
+- `npm run lint -- --format stylish` 통과.
+- `npx tsc --noEmit --pretty false` 통과.
+
+## Session 29 - 2026-05-18
+
+### 다음 단계 개발: QA report target 복원
+
+- `/qa` JSON report import가 진행상태뿐 아니라 saved QA Target 값도 복원하도록 했다.
+  - 다른 브라우저/PC에서 리포트를 붙여넣으면 Base URL, handle, app slug, post ID, month가 함께 복원된다.
+  - month 복원 시 WES CSV import month 입력도 같은 값으로 동기화한다.
+- `importQaProgressReport()`가 report `target` 객체를 반환하도록 확장했다.
+- README/TASK/WORKLOG에 target 복원 흐름을 반영했다.
+
+### 검증
+
+- `node --test src\lib\mvp-qa-progress.test.mjs` RED/GREEN 확인.
+
+## Session 28 - 2026-05-18
+
+### 다음 단계 개발: QA 리포트 target URL 포함
+
+- `/qa` JSON 리포트에 현재 QA Target 값과 항목별 `targetUrl`을 포함했다.
+- `/qa` Markdown 리포트 표에 Target URL 컬럼을 추가했다.
+  - QA 결과 공유 시 어떤 실제 URL로 검증했는지 evidence note와 함께 남는다.
+- `buildQaProgressReport()`와 `buildQaMarkdownReport()`가 target 옵션을 받도록 확장했다.
+- README/TASK/WORKLOG에 target URL 포함 리포트 흐름을 반영했다.
+
+### 검증
+
+- `node --test src\lib\mvp-qa-progress.test.mjs` RED/GREEN 확인.
+
+## Session 27 - 2026-05-18
+
+### 다음 단계 개발: QA target URL 생성
+
+- `/qa`에 QA Target 입력을 추가했다.
+  - Base URL, creator handle, app slug, post ID, month를 입력하면 각 체크리스트 route placeholder가 실제 실행 URL로 바뀐다.
+  - 실기기 딥링크, 모바일 LCP, WES CSV export, 시각 QA를 같은 target 기준으로 바로 열 수 있다.
+- `buildMvpQaTargetUrl()`를 추가했다.
+  - `/@creator/app-slug--postId`, `/post/[id]`, `YYYY-MM` placeholder를 치환한다.
+  - base URL trailing slash를 정리하고 handle의 `@` 중복을 방지한다.
+- README/TASK/WORKLOG에 runnable target URL 흐름을 반영했다.
+
+### 검증
+
+- `node --test src\lib\mvp-qa-checklist.test.mjs` RED/GREEN 확인.
+
+## Session 26 - 2026-05-18
+
+### 다음 단계 개발: WES CSV QA import
+
+- `/qa`에서 live WES CSV 원문과 `YYYY-MM` month를 붙여넣어 WES QA 항목에 반영할 수 있게 했다.
+  - CSV 컬럼 검증 결과는 `wes-live-columns` 항목으로 매핑한다.
+  - `occurred_at` month 범위 검증 결과는 `wes-live-month` 항목으로 매핑한다.
+  - row count, month, 컬럼/month 판정, 실패 사유를 evidence note로 저장한다.
+- `importWesExportCsvQa()`를 추가하고 기존 `validateWesExportCsv()`를 재사용했다.
+- README/TASK/WORKLOG에 WES CSV import 흐름을 반영했다.
+
+### 검증
+
+- `node --test src\lib\mvp-qa-progress.test.mjs` RED/GREEN 확인.
+
+## Session 25 - 2026-05-18
+
+### 다음 단계 개발: LCP QA 결과 import
+
+- `/qa`에서 `npm run qa:lcp` 출력 JSON을 붙여넣어 모바일 LCP 항목에 반영할 수 있게 했다.
+  - 일반 `/post/[id]` 측정 결과는 `lcp-detail` 항목으로 매핑한다.
+  - `?autoplay=true` 측정 결과는 `lcp-autoplay` 항목으로 매핑한다.
+  - LCP 값, target, network failure, runtime exception, autoplay iframe mount 여부, 실패 사유를 evidence note로 저장한다.
+- `importMobileLcpQaReport()`를 추가했다.
+- README/TASK/WORKLOG에 LCP JSON import 흐름을 반영했다.
+
+### 검증
+
+- `node --test src\lib\mvp-qa-progress.test.mjs` RED/GREEN 확인.
+
+## Session 24 - 2026-05-18
+
+### 다음 단계 개발: QA 실행 런북
+
+- `/qa` 체크리스트 항목마다 실행 절차, evidence hint, PASS 기준을 추가했다.
+  - 실기기 딥링크, 모바일 LCP, live WES export, 시각 QA를 다음 작업자가 바로 수행할 수 있게 했다.
+  - 증거 메모 placeholder가 항목별 evidence hint를 사용하도록 바꿨다.
+- `/qa` UI에 Runbook 섹션과 PASS 기준 박스를 추가했다.
+- Markdown QA 리포트 표에 PASS 기준 컬럼을 포함했다.
+- README/TASK/WORKLOG에 QA runbook 기능을 반영했다.
+
+### 검증
+
+- `node --test src\lib\mvp-qa-checklist.test.mjs` RED/GREEN 확인.
+- `node --test src\lib\mvp-qa-progress.test.mjs` RED/GREEN 확인.
+
 ## Session 23 - 2026-05-18
 
 ### 다음 단계 개발: QA 증거 누락 필터

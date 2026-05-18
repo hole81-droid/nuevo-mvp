@@ -67,7 +67,7 @@ Use these internal pages before making more product changes:
 
 - `/ux-flow`: compares the current MVP app with the intended UX flow, including routes, buttons, login guards, state messages, and internal/external movement.
 - `/ux-prototype`: screen-first mobile prototype board for external deep link play, upload with external links, remix UX, Studio/WES, and settings QA.
-- `/qa`: execution checklist for real-device deep links, mobile LCP, live WES export, and final visual QA. PASS/FAIL/notes are stored locally in the browser, with evidence-required notes, evidence-missing filtering, a release gate banner, importable JSON reports, and shareable Markdown reports.
+- `/qa`: execution checklist for real-device deep links, mobile LCP, live WES export, and final visual QA. PASS/FAIL/notes and QA target values are stored locally in the browser, with runnable target URL generation, copyable target-link bundles, per-item runbooks, pass criteria, evidence-required notes, evidence-missing filtering, a release gate banner, `npm run qa:lcp` JSON import, WES CSV import, and shareable JSON/Markdown reports that include and restore target URLs.
 
 ## Validation
 

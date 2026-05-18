@@ -106,6 +106,14 @@ MVP is complete when:
 - [x] `/qa` release gate blocks passed items that are missing required evidence notes
 - [x] `/qa` can generate shareable Markdown QA reports
 - [x] `/qa` can filter passed items that are missing required evidence notes
+- [x] `/qa` includes per-item runbooks, evidence hints, and PASS criteria
+- [x] `/qa` can import `npm run qa:lcp` JSON into the mobile LCP QA items
+- [x] `/qa` can validate live WES CSV columns and month filtering from pasted export data
+- [x] `/qa` can generate runnable target URLs from base URL, handle, slug, post ID, and month
+- [x] `/qa` JSON and Markdown reports include the runnable target URLs used for QA
+- [x] `/qa` JSON report import restores the saved QA target values
+- [x] `/qa` persists QA target inputs locally across refreshes
+- [x] `/qa` can copy/download a compact Markdown bundle of runnable QA target links
 
 ## Documentation
 
