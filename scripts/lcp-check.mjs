@@ -2,6 +2,7 @@ import { spawn } from 'node:child_process';
 import { mkdtemp, rm, writeFile } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
+import { summarizeMobileLcpQa } from '../src/lib/mobile-qa-report.js';
 
 const chromePath =
   process.env.CHROME_PATH ||
@@ -9,6 +10,7 @@ const chromePath =
 const nextCliPath = join(process.cwd(), 'node_modules', 'next', 'dist', 'bin', 'next');
 const appPort = Number(process.env.LCP_APP_PORT || 3000);
 const chromePort = Number(process.env.LCP_CHROME_PORT || 9222);
+const targetMs = Number(process.env.LCP_TARGET_MS || 3000);
 const baseUrl = `http://127.0.0.1:${appPort}`;
 const targets = [
   '/post/1',
@@ -295,7 +297,8 @@ async function main() {
       results.push(await measurePath(chromeBaseUrl, target));
     }
 
-    const payload = JSON.stringify({ viewport: '390x844 DPR3 mobile', results }, null, 2);
+    const summary = summarizeMobileLcpQa({ results, targetMs });
+    const payload = JSON.stringify({ viewport: '390x844 DPR3 mobile', targetMs, summary, results }, null, 2);
     if (process.env.LCP_DEBUG === '1') console.error('lcp-check:write-result');
     if (process.env.LCP_OUTPUT) await writeFile(process.env.LCP_OUTPUT, `${payload}\n`);
     console.log(payload);

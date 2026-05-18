@@ -82,6 +82,8 @@ Mobile LCP check:
 npm run qa:lcp
 ```
 
+The output includes a `summary` block with pass/fail checks for the 3 second mobile LCP target, network/runtime errors, and whether the autoplay deep-link route mounted an iframe immediately. Override the threshold with `LCP_TARGET_MS=3000`.
+
 If local headless Chrome/Edge fails with a GPU startup error, run the LCP check on a real browser/device or CI browser environment.
 
 ## Documentation

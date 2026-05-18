@@ -566,6 +566,22 @@ NEXT_PUBLIC_SUPABASE_ANON_KEY=<키값>
 > 키값은 Supabase 대시보드 → Project Settings → API → `anon public` 키 참고.
 # nuevo 작업 로그
 
+## Session 15 - 2026-05-18
+
+### 다음 단계 개발: 모바일 LCP QA 판정 출력
+
+- `npm run qa:lcp` 결과를 사람이 수동 해석하지 않아도 되도록 pass/fail summary를 추가했다.
+  - 3초 LCP target 초과 여부.
+  - 네트워크 실패/런타임 예외 여부.
+  - `?autoplay=true` 딥링크 진입에서 iframe이 즉시 mount 되었는지 여부.
+- `src/lib/mobile-qa-report.js`와 테스트를 추가했다.
+- `scripts/lcp-check.mjs`가 `summary`와 `targetMs`를 JSON 출력에 포함하도록 연결했다.
+- README/TASK에 LCP QA 출력 방식과 남은 실제 기기 QA 범위를 정리했다.
+
+### 검증
+
+- `node --test src\lib\mobile-qa-report.test.mjs` RED/GREEN 확인.
+
 ## Session 14 - 2026-05-18
 
 ### 다음 단계 3개 동시 진행

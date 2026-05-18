@@ -126,6 +126,8 @@ Optional LCP check:
 npm run qa:lcp
 ```
 
+`qa:lcp` now prints a summary with pass/fail checks for the 3 second LCP target, failed network requests, runtime exceptions, and autoplay iframe mounting. The real-device/mobile in-app browser QA items remain open until measured outside the local headless-browser limitation.
+
 Known local issue: current Windows headless Chrome/Edge may fail with GPU startup errors. Use real Chrome/device or a CI/browser environment if this happens.
 
 ## Explicit Non-Goals For MVP
