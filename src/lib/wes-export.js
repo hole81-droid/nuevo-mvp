@@ -88,3 +88,72 @@ export function toCsv(rows, columns = WES_EXPORT_COLUMNS) {
     ...rows.map((row) => columns.map((column) => csvCell(row[column])).join(',')),
   ].join('\n');
 }
+
+function parseCsvLine(line) {
+  const cells = [];
+  let cell = '';
+  let quoted = false;
+
+  for (let index = 0; index < line.length; index += 1) {
+    const char = line[index];
+    const next = line[index + 1];
+
+    if (char === '"' && quoted && next === '"') {
+      cell += '"';
+      index += 1;
+      continue;
+    }
+    if (char === '"') {
+      quoted = !quoted;
+      continue;
+    }
+    if (char === ',' && !quoted) {
+      cells.push(cell);
+      cell = '';
+      continue;
+    }
+    cell += char;
+  }
+
+  cells.push(cell);
+  return cells;
+}
+
+function monthBounds(month) {
+  if (!/^\d{4}-(0[1-9]|1[0-2])$/.test(month ?? '')) return null;
+  const [year, monthNumber] = month.split('-').map(Number);
+  return {
+    start: Date.UTC(year, monthNumber - 1, 1),
+    end: Date.UTC(year, monthNumber, 1),
+  };
+}
+
+export function validateWesExportCsv(csv, { month, columns = WES_EXPORT_COLUMNS } = {}) {
+  const lines = String(csv ?? '').trimEnd().split(/\r?\n/);
+  const headers = lines[0] ? parseCsvLine(lines[0]) : [];
+  const errors = [];
+  const missingColumns = columns.filter((column) => !headers.includes(column));
+  const occurredAtIndex = headers.indexOf('occurred_at');
+  const bounds = monthBounds(month);
+
+  if (missingColumns.length) {
+    errors.push(`Missing columns: ${missingColumns.join(', ')}`);
+  }
+
+  const rows = lines.slice(1).filter((line) => line.length > 0);
+  if (bounds && occurredAtIndex >= 0) {
+    rows.forEach((line, index) => {
+      const occurredAt = parseCsvLine(line)[occurredAtIndex];
+      const time = Date.parse(occurredAt);
+      if (!Number.isFinite(time) || time < bounds.start || time >= bounds.end) {
+        errors.push(`Row ${index + 1} occurred_at is outside ${month}`);
+      }
+    });
+  }
+
+  return {
+    ok: errors.length === 0,
+    rowCount: rows.length,
+    errors,
+  };
+}

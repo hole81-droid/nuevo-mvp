@@ -63,6 +63,7 @@ MVP is complete when:
 - [x] Traffic source breakdown exists
 - [x] Raw WES CSV export exists
 - [x] WES export handles missing/malformed month parameters safely
+- [x] WES export CSV columns and month range can be validated automatically
 - [x] Revenue copy has been de-emphasized in PRD/design docs
 - [ ] QA: export file columns and month filtering with live data
 

@@ -8,3 +8,8 @@ export function buildWesEventRows(input?: {
 }): Array<Record<string, string | number>>;
 
 export function toCsv(rows: Array<Record<string, unknown>>, columns?: string[]): string;
+
+export function validateWesExportCsv(
+  csv: string,
+  options?: { month?: string; columns?: string[] },
+): { ok: boolean; rowCount: number; errors: string[] };

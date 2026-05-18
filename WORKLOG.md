@@ -566,6 +566,19 @@ NEXT_PUBLIC_SUPABASE_ANON_KEY=<키값>
 > 키값은 Supabase 대시보드 → Project Settings → API → `anon public` 키 참고.
 # nuevo 작업 로그
 
+## Session 16 - 2026-05-18
+
+### 다음 단계 개발: WES CSV export 자동 검증
+
+- WES CSV export가 기대 컬럼을 유지하는지 자동 검증하는 `validateWesExportCsv()`를 추가했다.
+- 요청 월(`YYYY-MM`) 밖의 `occurred_at` 행을 실패로 판정한다.
+- 데이터가 없는 CSV도 헤더만 올바르면 유효한 export로 판정한다.
+- live Supabase 데이터로 실제 다운로드 파일을 확인하는 QA는 아직 남아 있다.
+
+### 검증
+
+- `node --test src\lib\wes-export.test.mjs` RED/GREEN 확인.
+
 ## Session 15 - 2026-05-18
 
 ### 다음 단계 개발: 모바일 LCP QA 판정 출력
