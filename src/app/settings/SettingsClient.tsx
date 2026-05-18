@@ -281,8 +281,8 @@ export default function SettingsClient() {
         <LinkRow label="출금 계좌 관리" href="/studio" />
         <LinkRow label="창작자 가이드" href="/guide" />
         <LinkRow label="브랜드 파트너십" href="/brand" />
-        <LinkRow label="서비스 이용약관" href="#" />
-        <LinkRow label="개인정보 처리방침" href="#" />
+        <LinkRow label="서비스 이용약관" href="/terms" />
+        <LinkRow label="개인정보 처리방침" href="/privacy" />
       </div>
 
       {/* 위험 구역 */}
@@ -295,8 +295,8 @@ export default function SettingsClient() {
           <div className="text-[15px] font-medium text-gray-900">로그아웃</div>
           <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#9CA3AF" strokeWidth="2" strokeLinecap="round"><path d="M9 18l6-6-6-6" /></svg>
         </button>
-        <LinkRow label="계정 비활성화" href="#" danger />
-        <LinkRow label="계정 삭제" href="#" danger />
+        <LinkRow label="계정 비활성화" href="/settings/delete-account" danger />
+        <LinkRow label="계정 삭제" href="/settings/delete-account" danger />
       </div>
 
       {/* Version */}

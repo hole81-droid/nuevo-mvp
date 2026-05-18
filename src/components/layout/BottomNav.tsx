@@ -4,6 +4,12 @@ import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
 import { useNotifications } from '@/contexts/NotificationContext';
 import { useAuth } from '@/contexts/AuthContext';
+import {
+  BOTTOM_NAV_CENTER_CLASS,
+  BOTTOM_NAV_CLASS,
+  BOTTOM_NAV_ITEM_CLASS,
+  BOTTOM_NAV_STYLE,
+} from '@/lib/bottom-nav-layout';
 
 const tabs = [
   {
@@ -20,7 +26,7 @@ const tabs = [
   },
   {
     href: '/explore',
-    label: '탐색',
+    label: '검색',
     icon: (filled: boolean) => (
       <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={filled ? 2.5 : 2} strokeLinecap="round">
         <circle cx="11" cy="11" r="8" />
@@ -42,7 +48,7 @@ const tabs = [
   },
   {
     href: '/profile/me',
-    label: '프로필',
+    label: 'MY',
     icon: (filled: boolean) => (
       <svg width="26" height="26" viewBox="0 0 24 24" fill={filled ? 'currentColor' : 'none'} stroke="currentColor" strokeWidth={filled ? 0 : 2} strokeLinecap="round">
         {filled
@@ -68,7 +74,7 @@ export default function BottomNav() {
 
   return (
     <>
-      <nav className="fixed bottom-0 left-0 right-0 z-50 bg-white border-t border-gray-200 flex items-center justify-around px-2 h-[54px] max-w-[430px] mx-auto">
+      <nav className={BOTTOM_NAV_CLASS} style={BOTTOM_NAV_STYLE} aria-label="하단 메뉴">
         {/* Home + Explore */}
         {tabs.slice(0, 2).map((tab) => {
           const isActive = pathname === tab.href;
@@ -76,12 +82,13 @@ export default function BottomNav() {
             <Link
               key={tab.href}
               href={tab.href}
-              className={`flex items-center justify-center w-10 h-10 rounded-full transition-colors ${
+              className={`${BOTTOM_NAV_ITEM_CLASS} ${
                 isActive ? 'text-gray-900' : 'text-gray-500'
               }`}
               aria-label={tab.label}
             >
               {tab.icon(isActive)}
+              <span className="truncate">{tab.label}</span>
             </Link>
           );
         })}
@@ -89,13 +96,16 @@ export default function BottomNav() {
         {/* Center + button */}
         <button
           onClick={() => router.push('/upload')}
-          className="flex items-center justify-center w-[46px] h-[36px] rounded-lg bg-warm text-white shadow-sm"
+          className={`${BOTTOM_NAV_ITEM_CLASS} ${pathname === '/upload' ? 'text-gray-900' : 'text-gray-500'}`}
           aria-label="올리기"
         >
-          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round">
-            <line x1="12" y1="5" x2="12" y2="19" />
-            <line x1="5" y1="12" x2="19" y2="12" />
-          </svg>
+          <span className={BOTTOM_NAV_CENTER_CLASS}>
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round">
+              <line x1="12" y1="5" x2="12" y2="19" />
+              <line x1="5" y1="12" x2="19" y2="12" />
+            </svg>
+          </span>
+          <span className="truncate">올리기</span>
         </button>
 
         {/* Notifications + Profile */}
@@ -109,21 +119,24 @@ export default function BottomNav() {
             <Link
               key={tab.href}
               href={href}
-              className={`relative flex items-center justify-center w-10 h-10 rounded-full transition-colors ${
+              className={`${BOTTOM_NAV_ITEM_CLASS} ${
                 isActive ? 'text-gray-900' : 'text-gray-500'
               }`}
               aria-label={tab.label}
             >
-              {isProfile && profile ? (
-                <span
-                  className={`w-7 h-7 rounded-full flex items-center justify-center text-[15px] ${isActive ? 'ring-2 ring-gray-900 ring-offset-2' : ''}`}
-                  style={{ backgroundColor: profile.avatar_bg }}
-                >
-                  {profile.avatar_emoji}
-                </span>
-              ) : (
-                tab.icon(isActive)
-              )}
+              <span className="relative flex h-[28px] items-center justify-center">
+                {isProfile && profile ? (
+                  <span
+                    className={`w-7 h-7 rounded-full flex items-center justify-center text-[15px] ${isActive ? 'ring-2 ring-gray-900 ring-offset-2' : ''}`}
+                    style={{ backgroundColor: profile.avatar_bg }}
+                  >
+                    {profile.avatar_emoji}
+                  </span>
+                ) : (
+                  tab.icon(isActive)
+                )}
+              </span>
+              <span className="truncate">{tab.label}</span>
               {showBadge && (
                 <span className="absolute top-1 right-1 min-w-[14px] h-[14px] rounded-full bg-red-500 text-white text-[8px] font-bold flex items-center justify-center px-0.5 leading-none pointer-events-none">
                   {unreadCount > 9 ? '9+' : unreadCount}

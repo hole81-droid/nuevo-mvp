@@ -80,7 +80,11 @@ function LoginPageInner() {
         </button>
 
         <div className="mt-auto pt-8 text-[12px] text-gray-400 leading-relaxed text-center">
-          계속하면 nuevo의 이용약관과 개인정보 처리방침에 동의하는 것으로 간주됩니다.
+          계속하면 nuevo의{' '}
+          <Link href="/terms" className="font-bold text-gray-600 underline underline-offset-2">이용약관</Link>
+          과{' '}
+          <Link href="/privacy" className="font-bold text-gray-600 underline underline-offset-2">개인정보 처리방침</Link>
+          에 동의하는 것으로 간주됩니다.
         </div>
       </main>
     </div>

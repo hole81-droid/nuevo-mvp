@@ -4,6 +4,64 @@
 
 ---
 
+## 세션 12 — 2026-05-19
+
+### 다음 단계 개발: 모바일 하단 메뉴바 폭 최적화
+
+- 모바일에서 하단 메뉴바가 좌우로 좁게 보이는 문제를 수정했다.
+- `BottomNav`를 `justify-around` 기반 배치에서 5칸 고정 grid로 변경했다.
+  - 홈 / 검색 / 올리기 / 알림 / MY가 동일한 터치 영역을 갖는다.
+  - `w-full max-w-[430px] left-1/2 -translate-x-1/2` 기준으로 화면 폭을 채우면서 앱 프레임 중앙에 고정된다.
+  - safe-area inset을 반영해 iPhone 하단 영역에서도 높이가 안정적이다.
+- `src/lib/bottom-nav-layout.js`와 테스트를 추가해 하단바 폭/정렬/5칸 구조 계약을 고정했다.
+- `globals.css`의 하단바 전역 보정도 새 grid 구조에 맞게 업데이트했다.
+
+### 검증 완료
+
+- `node --test src\lib\bottom-nav-layout.test.mjs` 통과.
+- `node --test src\lib\*.test.mjs` 통과: 88 tests.
+- `npm.cmd run lint` 통과.
+- `npx.cmd tsc --noEmit --pretty false` 통과.
+- placeholder `NEXT_PUBLIC_SUPABASE_URL`, `NEXT_PUBLIC_SUPABASE_ANON_KEY`를 주입한 `npm.cmd run build` 통과.
+
+---
+
+### 다음 단계 개발: 최소 Trust/Safety 출시 표면
+
+- 전략 점검에서 나온 앱스토어/초기 사용자 신뢰 리스크를 줄이기 위해, 코드로 바로 닫을 수 있는 최소 표면부터 구현했다.
+- `src/lib/trust-safety.js`와 타입 정의를 추가했다.
+  - 게시물 신고 요청서 생성.
+  - 계정 삭제 요청서 생성.
+  - 안전한 `/report/post/[id]?next=` 경로 생성.
+  - mailto 링크 인코딩.
+- `src/lib/trust-safety.test.mjs`를 RED로 먼저 추가했고, helper 구현 후 GREEN 확인.
+- 신규 사용자 표면:
+  - `/terms`: MVP 이용약관.
+  - `/privacy`: 개인정보 처리방침.
+  - `/settings/delete-account`: 로그인 사용자 기준 계정 삭제 요청서 생성/복사/메일 발송.
+  - `/report/post/[id]`: 게시물 신고 사유, 상세 설명, 연락처를 포함한 신고 요청서 생성/복사/메일 발송.
+- 기존 화면 연결:
+  - `/login` 하단 약관/개인정보 문구를 실제 링크로 연결.
+  - `/settings`의 약관/개인정보/계정 삭제 placeholder 링크를 실제 라우트로 연결.
+  - 게시물 상세 하단에 `게시물 신고` 링크 추가.
+- README/TASK에 Trust/Safety 라우트와 남은 store-readiness 작업을 반영했다.
+
+### 검증 완료
+
+- `node --test src\lib\trust-safety.test.mjs` RED/GREEN 확인.
+- `node --test src\lib\*.test.mjs` 통과: 86 tests.
+- `npm.cmd run lint` 통과.
+- `npx.cmd tsc --noEmit --pretty false` 통과.
+- `npm.cmd run build`는 Supabase 공개 env 미설정 상태에서 기존과 동일하게 prerender 실패.
+- placeholder `NEXT_PUBLIC_SUPABASE_URL`, `NEXT_PUBLIC_SUPABASE_ANON_KEY`를 주입한 `npm.cmd run build` 통과.
+
+### 남은 확인 항목
+
+- 현재 신고/삭제는 MVP용 이메일 기반 intake다. 앱스토어 제출 전에는 DB 기반 moderation queue와 실제 auth-user 삭제 플로우로 강화 필요.
+- 네이티브 앱스토어 제출을 선택하면 Sign in with Apple, privacy/data-safety disclosure, 계정 삭제 자동화 체크가 별도 필요.
+
+---
+
 ## 세션 10 — 2026-05-18
 
 ### 완료 내역

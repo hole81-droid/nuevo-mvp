@@ -1,7 +1,7 @@
 # nuevo MVP Task Tracker
 
-**Updated:** 2026-05-18
-**Current focus:** Make the MVP prove external deep-link play, upload with context links, remix growth, and creator Fame/WES.
+**Updated:** 2026-05-19
+**Current focus:** Make the MVP prove external deep-link play, upload with context links, remix growth, creator Fame/WES, and minimum trust/safety readiness.
 
 ## MVP Definition
 
@@ -86,6 +86,18 @@ MVP is complete when:
 - [x] Reactions/comments/saves require login
 - [x] Guest play remains available
 - [x] QA: OAuth callback failure copy and next restoration
+
+## P1 Trust / Safety / Store Readiness
+
+- [x] Login links to public `/terms` and `/privacy` pages
+- [x] Settings links to public terms/privacy pages
+- [x] Settings links to an account deletion request flow
+- [x] Post detail links to `/report/post/[id]`
+- [x] Safety helper tests cover report/deletion request generation
+- [ ] Replace email-based report intake with a database-backed moderation queue
+- [ ] Add true auth-user deletion or service-role deletion workflow after Supabase secret handling is decided
+- [ ] Add Sign in with Apple or store-specific login fallback if native App Store submission becomes the chosen path
+- [ ] Add app-store privacy/data safety disclosure checklist before native submission
 
 ## Internal UX Review Surfaces
 

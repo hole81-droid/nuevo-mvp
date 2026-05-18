@@ -15,6 +15,7 @@ import { buildLoginRedirectFromLocation } from '@/lib/protected-action';
 import { getRemixSocialProofLabel, shouldShowRemixSocialProof } from '@/lib/remix-social-proof';
 import { getRemixCtaCopy, shouldShowRemixCta } from '@/lib/remix-cta';
 import { buildTrafficSourcePayload } from '@/lib/traffic-source';
+import { buildPostReportPath } from '@/lib/trust-safety';
 import InteractiveDemo from './InteractiveDemo';
 import AudioPlayer from './AudioPlayer';
 import ImageGallery, { SUBWAY_SLIDES } from './ImageGallery';
@@ -70,6 +71,7 @@ export default function PostDetailClient({
   const [copied, setCopied] = useState(false);
   const remixSocialProof = getRemixSocialProofLabel(repostCount);
   const remixCtaCopy = getRemixCtaCopy();
+  const reportPath = buildPostReportPath(post.id, `/post/${post.id}${autoplay ? '?autoplay=true' : ''}`);
 
   const requireLogin = () => {
     router.push(buildLoginRedirectFromLocation(window.location));
@@ -335,6 +337,15 @@ export default function PostDetailClient({
             }
             label={copied ? '복사됨' : undefined}
           />
+        </div>
+
+        <div className="flex justify-end border-b border-gray-100 py-2">
+          <Link
+            href={reportPath}
+            className="rounded-full px-2 py-1 text-[12px] font-bold text-gray-400 hover:bg-gray-50 hover:text-red-500"
+          >
+            게시물 신고
+          </Link>
         </div>
 
         {/* Detail / tools */}

@@ -57,6 +57,10 @@ https://nuevo-instagram-test.vercel.app/auth/callback
 | `/profile/[username]` | Creator profile |
 | `/studio` | Creator Fame/WES dashboard |
 | `/settings` | MVP demo seed and internal QA links |
+| `/settings/delete-account` | Account deletion request flow |
+| `/terms` | Public MVP terms |
+| `/privacy` | Public privacy policy |
+| `/report/post/[id]` | Post safety/IP/privacy report request |
 | `/qa` | Real-device MVP QA checklist |
 | `/ux-flow` | Internal UX flow checklist |
 | `/ux-prototype` | Internal mobile prototype board |
@@ -68,6 +72,13 @@ Use these internal pages before making more product changes:
 - `/ux-flow`: compares the current MVP app with the intended UX flow, including routes, buttons, login guards, state messages, and internal/external movement.
 - `/ux-prototype`: screen-first mobile prototype board for external deep link play, upload with external links, remix UX, Studio/WES, and settings QA.
 - `/qa`: execution checklist for real-device deep links, mobile LCP, live WES export, and final visual QA. PASS/FAIL/notes and QA target values are stored locally in the browser, with runnable target URL generation, copyable target-link bundles, per-item runbooks, pass criteria, evidence-required notes, evidence-missing filtering, a release gate banner, `npm run qa:lcp` JSON import, WES CSV import, and shareable JSON/Markdown reports that include and restore target URLs.
+
+## Trust and Safety
+
+- Login and settings link to live `/terms` and `/privacy` pages instead of placeholder URLs.
+- Post detail pages include a report link that opens `/report/post/[id]` with a structured safety/IP/privacy report request.
+- `/settings/delete-account` creates a structured account deletion request for the signed-in user.
+- Current MVP deletion/report handling is email-based. A database-backed moderation queue and automated auth-user deletion remain future hardening work before app-store submission.
 
 ## Validation
 
