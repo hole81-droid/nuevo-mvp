@@ -8,7 +8,7 @@ export async function POST(request: Request) {
 
   if (!validation.ok) {
     return Response.json(
-      { ok: false, error: validation.message ?? '앱 URL을 확인해 주세요.', checks: [] },
+      { ok: false, error: validation.message ?? '앱 URL을 다시 확인해 주세요.', checks: [] },
       { status: 400 },
     );
   }
@@ -41,7 +41,7 @@ export async function POST(request: Request) {
           key: 'access',
           label: '공개 접근',
           level: 'fail',
-          message: '서버에서 URL에 접근하지 못했어요.',
+          message: '서버에서 이 URL에 접근하지 못했어요.',
         }],
       },
       { status: 200 },

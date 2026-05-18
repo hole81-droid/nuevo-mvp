@@ -5,6 +5,7 @@ import { useRouter, useSearchParams } from 'next/navigation';
 import { Suspense, useEffect, useState } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 import NuevoGlyph from '@/components/ui/NuevoGlyph';
+import { getAuthErrorCopy } from '@/lib/auth-callback-redirect';
 import { safeNextPath } from '@/lib/safe-next-path';
 
 export default function LoginPage() {
@@ -19,6 +20,7 @@ function LoginPageInner() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const next = safeNextPath(searchParams.get('next'), '/');
+  const authErrorMessage = getAuthErrorCopy(searchParams.get('auth_error'));
   const { user, loading, signInWithGoogle } = useAuth();
   const [submitting, setSubmitting] = useState(false);
 
@@ -61,6 +63,12 @@ function LoginPageInner() {
             업로드, 리믹스, 스튜디오 수익 대시보드는 창작자 계정과 연결됩니다.
           </div>
         </div>
+
+        {authErrorMessage && (
+          <div className="mb-4 rounded-[22px] border-2 border-[#F3C7C3] bg-[#FFF4F2] px-4 py-3 text-[13px] font-bold leading-relaxed text-[#A3362D]">
+            {authErrorMessage}
+          </div>
+        )}
 
         <button
           onClick={handleGoogleLogin}

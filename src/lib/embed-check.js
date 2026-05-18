@@ -34,7 +34,7 @@ function checkAccess(status) {
     key: 'access',
     label: '공개 접근',
     level: pass ? 'pass' : 'fail',
-    message: pass ? `${status} 응답으로 접근 가능해요.` : `${status} 응답이에요. 공개 접근을 확인해 주세요.`,
+    message: pass ? `${status} 응답으로 접근 가능해요.` : `${status} 응답입니다. 공개 접근 설정을 확인해 주세요.`,
   };
 }
 

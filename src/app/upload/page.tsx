@@ -10,6 +10,7 @@ import { createClient } from '@/lib/supabase/client';
 import { DbPostWithAuthor, mapDbPostToPost } from '@/lib/post-mapper';
 import { validateEmbedUrl } from '@/lib/embed-url';
 import { normalizeExternalLinks, normalizeTags } from '@/lib/upload-metadata';
+import { getUploadRemixState } from '@/lib/upload-remix-state';
 import type { Post } from '@/lib/types';
 
 const INITIAL_FORM: UploadFormData = {
@@ -61,6 +62,7 @@ function UploadPageInner() {
   const remixPostId = searchParams.get('remix');
   const mockOriginalPost = remixPostId ? mockPosts.find((p) => p.id === remixPostId) ?? null : null;
   const [dbOriginalPost, setDbOriginalPost] = useState<Post | null>(null);
+  const [hasCheckedOriginal, setHasCheckedOriginal] = useState(!remixPostId || !!mockOriginalPost || !isUuid(remixPostId));
   const originalPost = dbOriginalPost ?? mockOriginalPost;
 
   const [step, setStep] = useState<UploadStep>(1);
@@ -83,6 +85,7 @@ function UploadPageInner() {
     if (!remixPostId || !isUuid(remixPostId)) return;
 
     const loadOriginal = async () => {
+      setHasCheckedOriginal(false);
       const { data } = await supabase
         .from('posts')
         .select('*, author:users(*)')
@@ -98,6 +101,7 @@ function UploadPageInner() {
           remixOf: remixPostId,
         }));
       }
+      setHasCheckedOriginal(true);
     };
 
     loadOriginal();
@@ -106,8 +110,9 @@ function UploadPageInner() {
   const updateForm = (updates: Partial<UploadFormData>) =>
     setForm((prev) => ({ ...prev, ...updates }));
 
-  const remixBlocked = originalPost?.remixable === false;
-  const canProceedStep1 = form.contentType !== null && !remixBlocked;
+  const remixState = getUploadRemixState({ remixPostId, originalPost, hasCheckedOriginal });
+  const remixBlocked = !remixState.canContinue;
+  const canProceedStep1 = form.contentType !== null && remixState.canContinue;
   const canProceedStep2 =
     form.title.trim().length > 0 &&
     form.description.trim().length > 0 &&
@@ -117,6 +122,11 @@ function UploadPageInner() {
     if (!user) {
       const next = `/upload${remixPostId ? `?remix=${remixPostId}` : ''}`;
       router.push(`/login?next=${encodeURIComponent(next)}`);
+      return;
+    }
+
+    if (!remixState.canContinue) {
+      setPublishError(remixState.message);
       return;
     }
 
@@ -239,16 +249,22 @@ function UploadPageInner() {
       </div>
 
       {/* Remix origin banner */}
-      {originalPost && (
+      {remixPostId && (
         <div className={`mx-4 mt-3 p-3 rounded-xl border flex items-center gap-3 ${remixBlocked ? 'bg-red-50 border-red-100' : 'bg-orange-50 border-orange-100'}`}>
-          <div className={`w-10 h-10 rounded-xl flex items-center justify-center text-2xl flex-shrink-0 bg-gradient-to-br ${originalPost.media.bgGradient ?? 'from-gray-100 to-gray-200'}`}>
-            {originalPost.media.emoji ?? originalPost.media.coverEmoji}
-          </div>
+          {originalPost ? (
+            <div className={`w-10 h-10 rounded-xl flex items-center justify-center text-2xl flex-shrink-0 bg-gradient-to-br ${originalPost.media.bgGradient ?? 'from-gray-100 to-gray-200'}`}>
+              {originalPost.media.emoji ?? originalPost.media.coverEmoji}
+            </div>
+          ) : (
+            <div className={`w-10 h-10 rounded-xl flex items-center justify-center text-[18px] font-black flex-shrink-0 ${remixState.status === 'loading' ? 'bg-orange-100 text-orange-700' : 'bg-red-100 text-red-700'}`}>
+              {remixState.status === 'loading' ? '...' : '!'}
+            </div>
+          )}
           <div className="flex-1 min-w-0">
             <div className="text-[11px] text-gray-400 font-medium">원본 작품 리믹스 중</div>
-            <div className="text-[13px] font-bold text-gray-900 truncate">{originalPost.title}</div>
+            <div className="text-[13px] font-bold text-gray-900 truncate">{originalPost?.title ?? '원본 확인 필요'}</div>
             <div className={remixBlocked ? 'text-[11px] text-red-500' : 'text-[11px] text-warm'}>
-              {remixBlocked ? '이 작품은 리믹스를 허용하지 않아요' : `@${originalPost.author.handle}`}
+              {remixState.status === 'ready' && originalPost ? `@${originalPost.author.handle}` : remixState.message}
             </div>
           </div>
           <div className="text-[20px]">🔁</div>
@@ -261,7 +277,7 @@ function UploadPageInner() {
           <Step1
             selected={form.contentType}
             onSelect={(type) => updateForm({ contentType: type })}
-            isRemix={!!originalPost}
+            isRemix={!!remixPostId}
           />
         )}
         {step === 2 && (
@@ -621,12 +637,38 @@ function ExternalLinksInput({
   links: UploadFormData['externalLinks'];
   onChange: (links: UploadFormData['externalLinks']) => void;
 }) {
+  const suggestions = [
+    { label: 'YouTube', placeholder: 'https://youtube.com/watch?v=...' },
+    { label: 'Instagram', placeholder: 'https://instagram.com/p/...' },
+    { label: 'TikTok', placeholder: 'https://tiktok.com/@user/video/...' },
+    { label: 'GitHub', placeholder: 'https://github.com/user/repo' },
+  ];
+
   const updateLink = (index: number, updates: Partial<UploadFormData['externalLinks'][number]>) => {
     onChange(links.map((link, i) => (i === index ? { ...link, ...updates } : link)));
   };
 
   return (
     <FormGroup label="외부 링크" hint="YouTube, GitHub, 원본 영상 등 최대 3개">
+      <p className="mb-3 rounded-2xl border border-[#E9E2D3] bg-[#FFFDF5] px-3 py-2 text-[12px] leading-5 text-[#575752]">
+        YouTube, Instagram, TikTok 영상이나 GitHub 저장소처럼 사용자가 제작 맥락을 확인할 수 있는 링크를 최대 3개까지 붙일 수 있어요.
+      </p>
+      <div className="mb-3 grid grid-cols-2 gap-1.5">
+        {suggestions.map((item) => (
+          <button
+            key={item.label}
+            type="button"
+            onClick={() => {
+              const targetIndex = links.findIndex((link) => !link.label.trim() && !link.url.trim());
+              if (targetIndex === -1) return;
+              updateLink(targetIndex, { label: item.label });
+            }}
+            className="rounded-full border border-[#D8D8D0] bg-white px-3 py-2 text-[11px] font-black text-black active:scale-[0.98]"
+          >
+            + {item.label}
+          </button>
+        ))}
+      </div>
       <div className="flex flex-col gap-2">
         {links.map((link, index) => (
           <div key={index} className="grid grid-cols-[96px_1fr] gap-2">
@@ -634,7 +676,7 @@ function ExternalLinksInput({
               type="text"
               value={link.label}
               onChange={(e) => updateLink(index, { label: e.target.value })}
-              placeholder={index === 0 ? 'YouTube' : `Link ${index + 1}`}
+              placeholder={['YouTube', 'Instagram', 'TikTok'][index] ?? `Link ${index + 1}`}
               maxLength={24}
               className="min-w-0 px-3 py-3 rounded-xl border border-gray-200 text-[14px] text-gray-900 placeholder-gray-400 outline-none focus:border-warm focus:ring-2 focus:ring-orange-100"
             />
@@ -642,7 +684,7 @@ function ExternalLinksInput({
               type="url"
               value={link.url}
               onChange={(e) => updateLink(index, { url: e.target.value })}
-              placeholder="https://..."
+              placeholder={suggestions[index]?.placeholder ?? 'https://...'}
               className="min-w-0 px-3 py-3 rounded-xl border border-gray-200 text-[14px] text-gray-900 placeholder-gray-400 outline-none focus:border-warm focus:ring-2 focus:ring-orange-100 font-mono"
             />
           </div>

@@ -7,6 +7,7 @@ import { Post } from '@/lib/types';
 import PostCard from '@/components/post/PostCard';
 import { useFollow } from '@/contexts/FollowContext';
 import NuevoGlyph from '@/components/ui/NuevoGlyph';
+import { getExploreEmptyState, type ExploreEmptyMode } from '@/lib/explore-empty-state';
 import { DEFAULT_EXPLORE_CATEGORIES, filterPostsByCategory, searchPosts } from '@/lib/explore-filters';
 import { getDailyPlayablePosts, getLongestPlayedPosts, getMostRemixedPosts } from '@/lib/play-retention';
 
@@ -160,14 +161,42 @@ function ImageSection({ posts, expandedId, onToggle }: {
 }
 
 /* ── Empty state ── */
-function EmptyState({ query }: { query?: string }) {
+function EmptyState({
+  mode = 'default',
+  query,
+  label,
+  onAction,
+}: {
+  mode?: ExploreEmptyMode;
+  query?: string;
+  label?: string;
+  onAction?: () => void;
+}) {
+  const emptyState = getExploreEmptyState({ mode, query, label });
+
   return (
     <div className="flex flex-col items-center justify-center py-20 text-center px-8">
       <div className="mb-4"><NuevoGlyph kind="search" size={64} /></div>
       <div className="text-[16px] font-bold text-gray-900 mb-1">
-        {query ? `"${query}" 검색 결과 없음` : '작품이 없어요'}
+        {emptyState.title}
       </div>
-      <div className="text-[14px] text-gray-500">다른 검색어나 태그를 시도해 보세요</div>
+      <div className="text-[14px] text-gray-500 leading-relaxed">{emptyState.body}</div>
+      {emptyState.actionHref ? (
+        <Link
+          href={emptyState.actionHref}
+          className="mt-5 inline-flex h-11 items-center justify-center rounded-full bg-black px-5 text-[14px] font-black text-white active:scale-95"
+        >
+          {emptyState.actionLabel}
+        </Link>
+      ) : onAction ? (
+        <button
+          type="button"
+          onClick={onAction}
+          className="mt-5 inline-flex h-11 items-center justify-center rounded-full border-2 border-black px-5 text-[14px] font-black text-black active:scale-95"
+        >
+          {emptyState.actionLabel}
+        </button>
+      ) : null}
     </div>
   );
 }
@@ -322,7 +351,7 @@ export default function ExploreClient({ posts = mockPosts }: { posts?: Post[] })
                 ))}
               </div>
             )
-            : <EmptyState query={query} />
+            : <EmptyState mode="search" query={query} onAction={() => { setQuery(''); setExpandedId(null); }} />
           }
         </div>
       )}
@@ -354,7 +383,7 @@ export default function ExploreClient({ posts = mockPosts }: { posts?: Post[] })
                 ))}
               </div>
             )
-            : <EmptyState />
+            : <EmptyState mode="category" label={selectedCategoryLabel} onAction={() => { setSelectedCategory(null); setExpandedId(null); }} />
           }
         </div>
       )}
@@ -386,14 +415,18 @@ export default function ExploreClient({ posts = mockPosts }: { posts?: Post[] })
                 ))}
               </div>
             )
-            : <EmptyState />
+            : <EmptyState mode="tag" label={selectedTag ?? ''} onAction={() => { setSelectedTag(null); setExpandedId(null); }} />
           }
         </div>
       )}
 
       {/* ── Default explore ── */}
-      {!isSearching && !isTagFiltering && (
+      {!isSearching && !isCategoryFiltering && !isTagFiltering && (
         <div className="flex-1 overflow-y-auto pb-[54px] scrollbar-hide">
+          {posts.length === 0 ? (
+            <EmptyState />
+          ) : (
+            <>
 
           {/* MVP categories */}
           <div className="px-4 pt-4 pb-1">
@@ -486,6 +519,8 @@ export default function ExploreClient({ posts = mockPosts }: { posts?: Post[] })
           />
 
           <div className="h-6" />
+            </>
+          )}
         </div>
       )}
     </>

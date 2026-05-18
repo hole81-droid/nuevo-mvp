@@ -566,6 +566,104 @@ NEXT_PUBLIC_SUPABASE_ANON_KEY=<키값>
 > 키값은 Supabase 대시보드 → Project Settings → API → `anon public` 키 참고.
 # nuevo 작업 로그
 
+## Session 14 - 2026-05-18
+
+### 다음 단계 3개 동시 진행
+
+- `/explore` empty/no-result UX를 정리했다.
+  - 전체 피드가 비었을 때는 `/upload` CTA를 보여준다.
+  - 검색 결과 없음, 카테고리 결과 없음, 태그 결과 없음 상태는 각각 복구 버튼을 제공한다.
+  - `src/lib/explore-empty-state.js`와 테스트를 추가했다.
+- OAuth callback 실패 상태를 로그인 화면까지 전달한다.
+  - `missing_code`, `exchange_failed`, `missing_user` reason을 `/login?auth_error=...&next=...`로 전달한다.
+  - 로그인 화면에서 사용자가 다시 시도할 수 있는 한국어 안내를 보여준다.
+  - `src/lib/auth-callback-redirect.js`와 테스트를 추가했다.
+- Studio WES CSV export의 month 파라미터를 안정화했다.
+  - `YYYY-MM` 형식만 허용하고, 누락/오염된 값은 현재 월 fallback으로 처리한다.
+  - 비어 있는 CSV 응답도 동일한 month fallback 및 header 정책을 따른다.
+  - `src/lib/wes-export-month.js`와 테스트를 추가했다.
+
+### 이번 커밋에 함께 포함된 이전 진행분
+
+- `/upload` 외부 자료 링크 UX에 YouTube, Instagram, TikTok, GitHub 예시를 명확히 반영했다.
+- URL 검사 API/헬퍼 메시지를 한국어로 읽기 쉽게 정리했다.
+- `/upload?remix=...` 상태 판단을 `upload-remix-state`로 분리하고, 원본 없음/삭제/리믹스 금지 상태에서 다음 단계와 게시를 차단한다.
+
+### 검증
+
+- `npm run lint` 통과.
+- `npx tsc --noEmit --pretty false` 통과.
+- `node --test src\lib\*.test.mjs` 통과, 51 tests.
+- placeholder Supabase env로 `npm run build` 통과.
+
+### 다음 PC 인수인계
+
+- 최신 `main`을 pull한 뒤 `.env.local`을 준비하고 `npm run dev`를 실행하면 된다.
+- 아직 실제 모바일 인앱 브라우저 LCP/딥링크 QA와 live data 기반 WES export 확인은 남아 있다.
+
+## Session 13 - 2026-05-18
+
+### 다음 단계 개발: 리믹스 차단/누락 상태 UX
+
+- `/upload?remix=...` 상태 판단을 `src/lib/upload-remix-state.js`로 분리.
+- `src/lib/upload-remix-state.test.mjs` 추가.
+  - remix param 없음: 일반 업로드
+  - 잘못된 remix id: 차단
+  - 원본 조회 중: 차단/대기
+  - 원본 삭제/누락: 차단
+  - `remixable=false`: 차단
+  - 정상 원본: 리믹스 허용
+  - mock demo 원본: non-UUID여도 원본이 있으면 허용
+- `/upload`에 리믹스 상태를 연결.
+  - 원본 조회 중/누락/차단 배너를 표시.
+  - 차단 상태에서는 다음 단계 이동과 게시를 막고 상태 메시지를 보여준다.
+  - invalid/missing 상태에서도 일반 업로드로 조용히 넘어가지 않도록 변경.
+- `TASK.md`에서 리믹스 QA 항목 완료 처리.
+
+### 검증
+
+- `node --test src\lib\upload-remix-state.test.mjs` RED/GREEN 확인.
+- `npm run lint` 통과.
+- `npx tsc --noEmit --pretty false` 통과.
+- `node --test src\lib\*.test.mjs` 통과, 44 tests.
+- placeholder env로 `npm run build` 통과.
+
+### 다음 후보
+
+- 실제 모바일/인앱 브라우저에서 딥링크 + iframe 실행 QA.
+- `/explore` empty/no-result 상태 UX 점검.
+
+---
+
+## Session 12 - 2026-05-18
+
+### 다음 단계 개발: 업로드 외부 링크/URL 검사 UX
+
+- `/upload`의 외부 자료 링크 입력 영역을 MVP 프로토타입과 맞췄다.
+  - YouTube, Instagram, TikTok, GitHub 예시 버튼 추가.
+  - 예시 버튼은 가짜 URL을 저장하지 않고 라벨만 채워 실제 URL 입력을 유도한다.
+  - 외부 링크 설명 문구를 “제작 맥락/데모 영상/코드 저장소” 중심으로 보강.
+- URL 검사 관련 문구를 읽히는 한국어로 정리했다.
+  - `src/lib/embed-url.ts`
+  - `src/lib/embed-check.js`
+  - `src/app/api/check-url/route.ts`
+- `src/lib/embed-check.test.mjs`에 한국어 label/message 기대값을 추가했다.
+- `TASK.md`에서 업로드 외부 링크 production copy와 URL check copy 항목을 완료 처리.
+
+### 검증
+
+- `npm run lint` 통과.
+- `npx tsc --noEmit --pretty false` 통과.
+- `node --test src\lib\*.test.mjs` 통과, 37 tests.
+- placeholder env로 `npm run build` 통과.
+
+### 다음 후보
+
+- 리믹스 QA: `remixable=false`, 원본 없음, 삭제된 원본 상태의 안내 문구와 차단 UX 확인.
+- 실제 모바일/인앱 브라우저에서 딥링크 + iframe 실행 QA.
+
+---
+
 ## 다른 PC 인수인계 요약 - 2026-05-18
 
 ### 저장소

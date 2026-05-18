@@ -34,7 +34,7 @@ export function validateEmbedUrl(
     return {
       ok: false,
       normalizedUrl: value,
-      message: 'https:// 로 시작하는 전체 주소를 입력해 주세요.',
+      message: 'https://로 시작하는 전체 주소를 입력해 주세요.',
     };
   }
 
@@ -51,7 +51,7 @@ export function validateEmbedUrl(
     return {
       ok: false,
       normalizedUrl: value,
-      message: '공개 앱은 https 주소를 권장합니다. 로컬 테스트는 localhost만 허용돼요.',
+      message: '공개 앱은 https 주소가 필요해요. 로컬 테스트는 localhost만 허용됩니다.',
     };
   }
 

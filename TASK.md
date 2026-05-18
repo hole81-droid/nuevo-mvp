@@ -38,8 +38,8 @@ MVP is complete when:
 - [x] External links are normalized and limited to 3
 - [x] Detail/card surfaces can render external links
 - [x] Prototype explicitly shows YouTube, Instagram, TikTok, GitHub examples
-- [ ] Production upload copy should make those examples equally explicit
-- [ ] URL check errors should be reviewed for clarity in Korean
+- [x] Production upload copy should make those examples equally explicit
+- [x] URL check errors should be reviewed for clarity in Korean
 
 ### Remix UX
 
@@ -53,7 +53,7 @@ MVP is complete when:
 - [x] Remix publish notifies original creator
 - [x] Feed can show remix-related cards/alerts
 - [x] Prototype has a dedicated remix screen
-- [ ] QA: blocked remix state, missing original state, deleted original state
+- [x] QA: blocked remix state, missing original state, deleted original state
 
 ### Creator Fame / WES
 
@@ -62,6 +62,7 @@ MVP is complete when:
 - [x] WES breakdown exists
 - [x] Traffic source breakdown exists
 - [x] Raw WES CSV export exists
+- [x] WES export handles missing/malformed month parameters safely
 - [x] Revenue copy has been de-emphasized in PRD/design docs
 - [ ] QA: export file columns and month filtering with live data
 
@@ -73,7 +74,7 @@ MVP is complete when:
 - [x] Category/tag discovery exists
 - [x] Daily playable / most remixed / longest played logic exists
 - [x] Related posts exist on detail
-- [ ] QA: empty states and no-result states
+- [x] QA: empty states and no-result states
 
 ## P1 Authentication / Guardrails
 
@@ -83,7 +84,7 @@ MVP is complete when:
 - [x] Remix requires login
 - [x] Reactions/comments/saves require login
 - [x] Guest play remains available
-- [ ] QA: OAuth callback failure copy and next restoration
+- [x] QA: OAuth callback failure copy and next restoration
 
 ## Internal UX Review Surfaces
 

@@ -1,15 +1,9 @@
 import { createClient } from '@/lib/supabase/server';
 import { monthKey } from '@/lib/wes';
+import { getWesExportMonth } from '@/lib/wes-export-month';
 import { buildWesEventRows, toCsv, WES_EXPORT_COLUMNS } from '@/lib/wes-export';
 
 type PostPick = { id: string; title: string };
-
-function monthRange(month: string) {
-  const start = new Date(month);
-  const end = new Date(start);
-  end.setMonth(end.getMonth() + 1);
-  return { start: start.toISOString(), end: end.toISOString() };
-}
 
 function titleMap(posts: PostPick[]) {
   return new Map(posts.map((post) => [post.id, post.title]));
@@ -24,8 +18,7 @@ export async function GET(request: Request) {
   }
 
   const url = new URL(request.url);
-  const month = url.searchParams.get('month') ?? monthKey();
-  const { start, end } = monthRange(month);
+  const { month, start, end, fallbackUsed } = getWesExportMonth(url.searchParams.get('month'), monthKey());
 
   const { data: posts } = await supabase
     .from('posts')
@@ -41,6 +34,7 @@ export async function GET(request: Request) {
       headers: {
         'Content-Type': 'text/csv; charset=utf-8',
         'Content-Disposition': `attachment; filename="nuevo-wes-${month}.csv"`,
+        ...(fallbackUsed ? { 'X-Nuevo-Month-Fallback': 'true' } : {}),
       },
     });
   }
@@ -100,6 +94,7 @@ export async function GET(request: Request) {
     headers: {
       'Content-Type': 'text/csv; charset=utf-8',
       'Content-Disposition': `attachment; filename="nuevo-wes-${month}.csv"`,
+      ...(fallbackUsed ? { 'X-Nuevo-Month-Fallback': 'true' } : {}),
     },
   });
 }
