@@ -174,6 +174,11 @@ export default function SettingsClient() {
           desc="핵심 화면 6개를 모바일 목업으로 먼저 확인"
           href="/ux-prototype"
         />
+        <LinkRow
+          label="MVP QA 실행판"
+          desc="실기기 딥링크, LCP, WES export, 시각 QA 체크리스트"
+          href="/qa"
+        />
       </div>
 
       {/* 알림 설정 */}

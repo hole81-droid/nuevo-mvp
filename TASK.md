@@ -99,6 +99,13 @@ MVP is complete when:
 - [x] Prototype covers remix social proof, original banner, notification/re-exposure
 - [x] Prototype covers Studio/WES/traffic source
 - [x] Settings links to both UX review pages
+- [x] `/qa` real-device QA checklist route created
+- [x] `/qa` supports local PASS/FAIL/notes progress tracking
+- [x] `/qa` supports status filtering, release gate, and JSON report export
+- [x] `/qa` can import a saved QA JSON report on another PC/browser
+- [x] `/qa` release gate blocks passed items that are missing required evidence notes
+- [x] `/qa` can generate shareable Markdown QA reports
+- [x] `/qa` can filter passed items that are missing required evidence notes
 
 ## Documentation
 

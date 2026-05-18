@@ -566,6 +566,116 @@ NEXT_PUBLIC_SUPABASE_ANON_KEY=<키값>
 > 키값은 Supabase 대시보드 → Project Settings → API → `anon public` 키 참고.
 # nuevo 작업 로그
 
+## Session 23 - 2026-05-18
+
+### 다음 단계 개발: QA 증거 누락 필터
+
+- `/qa`에 `evidence` 필터를 추가했다.
+  - PASS 상태지만 evidence-required 메모가 비어 있는 항목만 보여준다.
+  - release gate가 BLOCKED일 때 어떤 항목 때문에 막혔는지 빠르게 찾기 위한 기능이다.
+- `filterQaItemsByStatus(..., 'evidence-missing')`를 추가했다.
+- README/TASK/WORKLOG에 evidence-missing filter를 반영했다.
+
+### 검증
+
+- `node --test src\lib\mvp-qa-progress.test.mjs` RED/GREEN 확인.
+
+## Session 22 - 2026-05-18
+
+### 다음 단계 개발: Markdown QA 리포트
+
+- `buildQaMarkdownReport()`를 추가했다.
+  - release gate, summary, 항목별 status/note를 Markdown 표로 출력한다.
+  - GitHub issue, Slack, 작업로그에 바로 붙일 수 있는 사람 읽기용 리포트다.
+- `/qa`에 Markdown 복사와 `.md` 다운로드 버튼을 추가했다.
+- README/TASK/WORKLOG에 Markdown report 흐름을 반영했다.
+
+### 검증
+
+- `node --test src\lib\mvp-qa-progress.test.mjs` RED/GREEN 확인.
+
+## Session 21 - 2026-05-18
+
+### 다음 단계 개발: QA 증거 메모 gate
+
+- 실기기/LCP/live WES/시각 QA 항목에 `evidenceRequired`를 추가했다.
+- PASS 상태여도 증거 메모가 비어 있으면 release gate가 `MVP QA BLOCKED`로 남도록 했다.
+- `/qa` UI에 `EVIDENCE REQUIRED` 배지와 증거 메모 placeholder를 추가했다.
+- README/TASK/WORKLOG에 evidence-required 흐름을 반영했다.
+
+### 검증
+
+- `node --test src\lib\mvp-qa-progress.test.mjs` RED/GREEN 확인.
+
+## Session 20 - 2026-05-18
+
+### 다음 단계 개발: QA 리포트 import
+
+- `/qa`에서 다운로드/복사한 JSON 리포트를 다시 붙여넣어 진행상태를 복원할 수 있게 했다.
+- `importQaProgressReport()`를 추가했다.
+  - 현재 체크리스트에 없는 항목 id는 무시한다.
+  - 알 수 없는 status는 `pending`으로 안전하게 처리한다.
+  - 잘못된 JSON은 기존 진행상태를 덮어쓰지 않고 오류 메시지를 반환한다.
+- README/TASK/WORKLOG에 import 가능한 QA report 흐름을 반영했다.
+
+### 검증
+
+- `node --test src\lib\mvp-qa-progress.test.mjs` RED/GREEN 확인.
+
+## Session 19 - 2026-05-18
+
+### 다음 단계 5개 연속 개발
+
+1. QA 진행상태 리포트 헬퍼를 추가했다.
+   - `buildQaProgressReport()`가 summary, item status, note를 포함한 portable report를 만든다.
+2. QA 상태 필터를 추가했다.
+   - `/qa`에서 all / pending / pass / fail 필터로 항목을 좁혀 볼 수 있다.
+3. MVP release gate 판정을 추가했다.
+   - FAIL 또는 PENDING이 남아 있으면 `MVP QA BLOCKED`, 모두 PASS면 `MVP QA READY`를 보여준다.
+4. QA 리포트 액션을 추가했다.
+   - 현재 진행상태를 클립보드에 복사하거나 JSON 파일로 다운로드할 수 있다.
+5. 문서와 작업로그를 갱신했다.
+   - README/TASK에 `/qa`의 실행형 기능을 반영했다.
+
+### 검증
+
+- `node --test src\lib\mvp-qa-progress.test.mjs` RED/GREEN 확인.
+- `npm run lint -- --format stylish` 통과.
+- `npx tsc --noEmit --pretty false` 통과.
+
+## Session 18 - 2026-05-18
+
+### 다음 단계 개발: QA 실행판 진행상태 저장
+
+- `/qa`를 정적 체크리스트에서 실제 실행 도구로 개선했다.
+  - 각 QA 항목에 PASS / FAIL / PENDING 버튼 추가.
+  - 항목별 결과 메모 입력 추가.
+  - 진행률, PASS, FAIL, PENDING, TOTAL 카운터 표시.
+  - 브라우저 `localStorage`에 진행상태를 저장한다.
+- React 19 lint 규칙에 맞춰 `useSyncExternalStore`로 localStorage snapshot을 구독하도록 구현했다.
+
+### 검증
+
+- `node --test src\lib\mvp-qa-progress.test.mjs` RED/GREEN 확인.
+- `npm run lint` 통과.
+- `npx tsc --noEmit --pretty false` 통과.
+
+## Session 17 - 2026-05-18
+
+### 다음 단계 개발: MVP QA 실행판
+
+- 실제 기기에서 닫아야 하는 남은 QA를 앱 안에서 바로 실행할 수 있도록 `/qa` 페이지를 추가했다.
+- QA 체크리스트 데이터는 `src/lib/mvp-qa-checklist.js`로 분리했다.
+  - YouTube/Instagram/TikTok 딥링크 진입.
+  - 일반 상세/autoplay 상세 모바일 LCP.
+  - live WES CSV 컬럼/month 필터.
+  - `/ux-prototype`, `/ux-flow` 시각 QA.
+- `/settings` MVP 테스트 섹션에 `MVP QA 실행판` 링크를 추가했다.
+
+### 검증
+
+- `node --test src\lib\mvp-qa-checklist.test.mjs` RED/GREEN 확인.
+
 ## Session 16 - 2026-05-18
 
 ### 다음 단계 개발: WES CSV export 자동 검증

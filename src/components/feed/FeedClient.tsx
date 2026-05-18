@@ -6,6 +6,7 @@ import { Post } from '@/lib/types';
 import PostCard from '@/components/post/PostCard';
 import { useFollow } from '@/contexts/FollowContext';
 import NuevoGlyph from '@/components/ui/NuevoGlyph';
+import { FEED_TABS_STICKY_CLASS } from '@/lib/feed-layout';
 
 export default function FeedClient({ posts }: { posts: Post[] }) {
   const [tab, setTab] = useState<'recommend' | 'following'>('recommend');
@@ -23,7 +24,7 @@ export default function FeedClient({ posts }: { posts: Post[] }) {
   return (
     <>
       {/* Feed tabs */}
-      <div className="flex sticky top-[64px] z-30 bg-[#F8F8F3]/95 backdrop-blur-sm border-b border-[#D8D8D0]">
+      <div className={FEED_TABS_STICKY_CLASS}>
         {(['recommend', 'following'] as const).map((t) => {
           const label = t === 'recommend' ? '추천' : '팔로잉';
           const active = tab === t;

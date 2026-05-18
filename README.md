@@ -57,6 +57,7 @@ https://nuevo-instagram-test.vercel.app/auth/callback
 | `/profile/[username]` | Creator profile |
 | `/studio` | Creator Fame/WES dashboard |
 | `/settings` | MVP demo seed and internal QA links |
+| `/qa` | Real-device MVP QA checklist |
 | `/ux-flow` | Internal UX flow checklist |
 | `/ux-prototype` | Internal mobile prototype board |
 
@@ -66,6 +67,7 @@ Use these internal pages before making more product changes:
 
 - `/ux-flow`: compares the current MVP app with the intended UX flow, including routes, buttons, login guards, state messages, and internal/external movement.
 - `/ux-prototype`: screen-first mobile prototype board for external deep link play, upload with external links, remix UX, Studio/WES, and settings QA.
+- `/qa`: execution checklist for real-device deep links, mobile LCP, live WES export, and final visual QA. PASS/FAIL/notes are stored locally in the browser, with evidence-required notes, evidence-missing filtering, a release gate banner, importable JSON reports, and shareable Markdown reports.
 
 ## Validation
 
