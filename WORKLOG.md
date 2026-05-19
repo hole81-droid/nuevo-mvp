@@ -6,6 +6,22 @@
 
 ## 세션 12 — 2026-05-19
 
+### 다음 단계 개발: 모바일 상단 여백 축소
+
+- 모바일 화면 상단에 검은 여백과 가짜 상태바 영역이 크게 남아 콘텐츠 공간을 낭비하던 문제를 수정했다.
+- `globals.css`의 앱 shell top offset을 `80px`에서 `12px`로 줄였다.
+  - 앱 컨테이너 `margin-top: 12px`.
+  - `min-height: calc(100dvh - 12px)`로 실제 모바일 viewport 기준 높이 계산.
+  - 배경 stage 장식도 `top: 12px`로 위로 이동.
+  - 가짜 `9:41` 상태바 텍스트는 숨김 처리.
+- `src/lib/mobile-shell-css.test.mjs`를 추가해 상단 여백이 다시 커지지 않도록 CSS 계약을 테스트한다.
+
+### 검증 완료
+
+- `node --test src\lib\mobile-shell-css.test.mjs` RED/GREEN 확인.
+
+---
+
 ### 다음 단계 개발: 모바일 하단 메뉴바 폭 최적화
 
 - 모바일에서 하단 메뉴바가 좌우로 좁게 보이는 문제를 수정했다.
