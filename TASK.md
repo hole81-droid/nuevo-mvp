@@ -33,16 +33,16 @@ MVP is complete when:
 
 ### Play-first Vertical Stack
 
-- [ ] Define external-entry detail layout for app-first vertical stack
-- [ ] Add next playable app section below first app detail
-- [ ] Reuse `getSimilarPosts()` or simple tag/creator/remix heuristics for MVP recommendations
-- [ ] Add fallback CTA to feed/explore when no next app exists
-- [ ] Ensure iframe touch/scroll interactions are not hijacked by stack behavior
-- [ ] Track next app reveal rate
-- [ ] Track second app play rate
-- [ ] Track 2+ app session rate from Instagram/TikTok/YouTube
-- [ ] Update `/ux-prototype` with “외부 유입 → 첫 앱 전체화면 체험 → 다음 앱 스크롤 진입”
-- [ ] Add QA runbook item for external-entry vertical stack on real mobile
+- [x] Define external-entry detail layout for app-first vertical stack
+- [x] Add next playable app section below first app detail
+- [x] Reuse `getSimilarPosts()` or simple tag/creator/remix heuristics for MVP recommendations
+- [x] Add fallback CTA to feed/explore when no next app exists
+- [x] Ensure iframe touch/scroll interactions are not hijacked by stack behavior
+- [x] Track next app reveal rate
+- [x] Track second app play rate
+- [x] Track 2+ app session rate from Instagram/TikTok/YouTube
+- [x] Update `/ux-prototype` with “외부 유입 → 첫 앱 전체화면 체험 → 다음 앱 스크롤 진입”
+- [x] Add QA runbook item for external-entry vertical stack on real mobile
 
 ### Upload with external resource links
 
@@ -91,7 +91,7 @@ MVP is complete when:
 - [x] Category/tag discovery exists
 - [x] Daily playable / most remixed / longest played logic exists
 - [x] Related posts exist on detail
-- [ ] External-entry sessions prefer vertical next-app continuation before search/feed
+- [x] External-entry sessions prefer vertical next-app continuation before search/feed
 - [x] QA: empty states and no-result states
 
 ## P1 Authentication / Guardrails
@@ -124,7 +124,7 @@ MVP is complete when:
 - [x] `/ux-prototype` route created
 - [x] `/ux-prototype` has screen-first mobile mockups
 - [x] Prototype covers external deep link immediate play
-- [ ] Prototype covers external-entry Play-first Vertical Stack
+- [x] Prototype covers external-entry Play-first Vertical Stack
 - [x] Prototype covers upload external links
 - [x] Prototype covers remix social proof, original banner, notification/re-exposure
 - [x] Prototype covers Studio/WES/traffic source

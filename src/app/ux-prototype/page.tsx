@@ -10,7 +10,7 @@ type Screen = {
   content: React.ReactNode;
 };
 
-const FLOW_RAIL = ['외부 딥링크', '바로 체험', '피드 발견', '외부 자료 첨부', '리믹스', 'Fame Studio', '운영 점검'];
+const FLOW_RAIL = ['외부 딥링크', 'Play Mode', 'Browse to Play', '외부 자료 첨부', '리믹스', 'Fame Studio', '운영 점검'];
 
 function Chip({ children, dark = false }: { children: React.ReactNode; dark?: boolean }) {
   return <span className={`rounded-full px-2.5 py-1 text-[10px] font-black ${dark ? 'bg-black text-white' : 'bg-[#EFEFE8] text-[#050505]'}`}>{children}</span>;
@@ -82,55 +82,71 @@ function DeepLinkMock() {
   );
 }
 
-function DetailMock() {
+function ExternalPlayModeMock() {
   return (
-    <div className="h-full">
-      <TopBar title="앱 상세" right="공유" />
+    <div className="h-full bg-[#F8F8F3]">
+      <TopBar title="바로 체험" right="SNS" />
       <div className="px-4 py-4">
-        <div className="mb-3 rounded-full bg-black px-3 py-2 text-[11px] font-black text-white">YouTube 딥링크 · autoplay=true · 바로 실행 중</div>
-        <div className="text-[12px] font-black text-[#7D7D78]">@minsu_lab · source: youtube</div>
-        <h3 className="mt-1 text-[23px] font-black leading-[1.05] tracking-[-0.06em]">오늘의 감정을 고르면 AI가 한마디</h3>
-        <p className="mt-2 text-[13px] leading-5 text-[#575752]">로그인 없이 먼저 체험합니다. 반응, 댓글, 저장, 리믹스는 로그인 후 이어집니다.</p>
-        <div className="mt-4 rounded-[22px] border border-[#D7D7CF] bg-white p-3">
-          <div className="h-52 rounded-[18px] bg-[#EFEFE8] p-4">
-            <div className="flex items-center justify-between"><div className="text-[11px] font-black uppercase tracking-[0.12em] text-[#207A3A]">iframe live</div><Chip>즉시 실행</Chip></div>
-            <div className="mt-7 text-center text-[28px] font-black tracking-[-0.06em]">지금 기분은?</div>
-            <div className="mx-auto mt-8 flex w-fit gap-2">
+        <div className="rounded-[22px] bg-black p-4 text-white">
+          <div className="text-[11px] font-black uppercase tracking-[0.14em] text-white/55">Play Mode</div>
+          <div className="mt-2 text-[22px] font-black leading-[1] tracking-[-0.06em]">앱부터 바로 체험하세요</div>
+          <p className="mt-2 text-[12px] leading-5 text-white/65">
+            아래로 스크롤하면 이어지는 다음 앱을 바로 만날 수 있어요.
+          </p>
+        </div>
+        <div className="mt-4 rounded-[24px] border border-[#D7D7CF] bg-white p-3">
+          <div className="h-52 rounded-[20px] bg-[#EFEFE8] p-4">
+            <div className="flex items-center justify-between">
+              <div className="text-[11px] font-black uppercase tracking-[0.12em] text-[#207A3A]">iframe live</div>
+              <Chip>autoplay=true</Chip>
+            </div>
+            <div className="mt-12 text-center text-[26px] font-black tracking-[-0.06em]">지금 기분은?</div>
+            <div className="mx-auto mt-6 flex w-fit gap-2">
               <button className="rounded-full bg-black px-5 py-3 text-[12px] font-black text-white">기쁨</button>
               <button className="rounded-full bg-white px-5 py-3 text-[12px] font-black">불안</button>
             </div>
           </div>
         </div>
-        <div className="mt-4 grid grid-cols-5 gap-2 text-center text-[10px] font-black">
-          {['댓글', '리믹스', '좋아요', '공유', '저장'].map((item) => <div key={item} className="rounded-full bg-[#EFEFE8] py-2">{item}</div>)}
+        <div className="mt-4 rounded-[22px] border-2 border-black bg-[#FFFDF5] p-4">
+          <div className="text-[11px] font-black uppercase tracking-[0.12em] text-[#8A6A22]">Next App</div>
+          <div className="mt-1 text-[18px] font-black tracking-[-0.05em]">다음 앱 바로 보기</div>
+          <p className="mt-1 text-[12px] leading-5 text-[#575752]">방금 본 앱과 비슷한 체험이에요.</p>
+          <div className="mt-3 flex items-center justify-between rounded-[16px] bg-white px-3 py-3 text-[12px] font-black">
+            <span>Emotion card remix</span>
+            <span className="rounded-full bg-black px-3 py-2 text-white">체험</span>
+          </div>
         </div>
       </div>
     </div>
   );
 }
 
-function FeedMock() {
+function InternalBrowseToPlayMock() {
   return (
     <div className="relative h-full pb-14">
-      <TopBar title="NUEVO" right="브랜드" />
-      <div className="border-b border-[#D7D7CF] px-4 py-3">
-        <div className="mb-2 flex items-center gap-2">
-          <div className="flex h-9 w-9 items-center justify-center rounded-full bg-[#E7D8C9] text-[18px]">M</div>
-          <div><div className="text-[13px] font-black">민수 @minsu_lab</div><div className="text-[11px] text-[#7D7D78]">30분 전</div></div>
-        </div>
-        <p className="text-[13px] leading-5">감정을 고르면 AI가 오늘의 위로를 건네주는 작은 앱.</p>
-        <div className="mt-3 rounded-[18px] border border-[#D7D7CF] bg-white p-4">
-          <div className="text-[11px] font-black text-[#7D7D78]">INTERACTIVE APP</div>
-          <div className="mt-2 h-28 rounded-[16px] bg-[#EFEFE8] p-4">
-            <div className="text-[22px] font-black tracking-[-0.05em]">감정 위로 생성기</div>
-            <button className="mt-5 rounded-full bg-black px-4 py-2 text-[12px] font-black text-white">상세 보기</button>
+      <TopBar title="NUEVO" right="Browse Mode" />
+      <div className="border-b border-[#D7D7CF] px-4 py-4">
+        <div className="text-[11px] font-black uppercase tracking-[0.12em] text-[#7D7D78]">피드 카드</div>
+        <div className="mt-2 text-[16px] font-black tracking-[-0.04em]">카드 탭은 인라인 확장, CTA는 Play Mode</div>
+        <div className="mt-3 rounded-[20px] border border-[#D7D7CF] bg-white p-3">
+          <div className="h-24 rounded-[16px] bg-[#EFEFE8] p-4">
+            <div className="text-[18px] font-black tracking-[-0.05em]">감정 위로 생성기</div>
+            <div className="mt-2 text-[12px] text-[#575752]">인라인 preview · 8회 리믹스됨</div>
           </div>
+          <button className="mt-3 h-11 w-full rounded-full bg-black text-[13px] font-black text-white">바로 체험</button>
         </div>
-        <div className="mt-3 flex justify-between text-[11px] font-black text-[#7D7D78]"><span>댓글 12</span><span>8회 리믹스됨</span><span>공유</span></div>
+        <div className="mt-3 rounded-[16px] bg-[#EFEFE8] p-3 text-[12px] leading-5">
+          CTA → <code>/post/1?mode=play&autoplay=true&utm_source=feed</code>
+        </div>
       </div>
-      <div className="px-4 py-5 text-center">
-        <div className="text-[14px] font-black">Daily playable</div>
-        <div className="mt-2 rounded-[16px] bg-[#EFEFE8] p-3 text-[12px]">많이 리믹스된 앱 · 오래 체험한 앱</div>
+      <div className="px-4 py-5">
+        <div className="rounded-[20px] bg-black p-4 text-white">
+          <div className="text-[11px] font-black uppercase tracking-[0.12em] text-white/55">CTA 이후</div>
+          <div className="mt-1 text-[20px] font-black tracking-[-0.06em]">Play Mode로 전환</div>
+          <p className="mt-2 text-[12px] leading-5 text-white/65">
+            피드 탐색 후 체험 결심 → Play Mode와 동일한 next-app 흐름.
+          </p>
+        </div>
       </div>
       <BottomTabs active="홈" />
     </div>
@@ -219,8 +235,8 @@ function SettingsMock() {
 
 const SCREENS: Screen[] = [
   { title: '외부 앱 딥링크', route: 'YouTube/TikTok/Instagram -> nuevo', purpose: '외부 SNS에서 링크를 누르면 바로 체험으로 들어오는 첫 순간입니다.', primaryCta: 'nuevo 링크 탭', next: '/[handle]/[slug] -> /post/[id]?autoplay=true', status: '핵심', content: <DeepLinkMock /> },
-  { title: '상세 바로 체험', route: '/post/[id]', purpose: '방문자는 로그인 없이 체험하고, 소셜 액션에서만 로그인 경계를 만납니다.', primaryCta: '체험 시작 또는 autoplay', next: 'iframe 실행 또는 /login?next=...', status: '구현', content: <DetailMock /> },
-  { title: '피드 발견', route: '/', purpose: '피드 안에서 앱의 가치, 리믹스 수, 공유 가능성이 한눈에 보여야 합니다.', primaryCta: '카드 탭', next: '/post/[id]', status: '구현', content: <FeedMock /> },
+  { title: '외부 유입 Play Mode', route: '/post/[id]?autoplay=true', purpose: '앱이 첫 화면입니다. 다음 앱 섹션이 바로 이어지고 피드/검색은 보조 CTA입니다.', primaryCta: '다음 앱 바로 보기', next: '/post/[nextId]?mode=play&autoplay=true&utm_source=next_app', status: 'Play Mode', content: <ExternalPlayModeMock /> },
+  { title: '내부 Browse → Play', route: '/ → /post/[id]?mode=play', purpose: '피드 탐색은 가볍게 유지하고, 바로 체험 CTA 탭 시 Play Mode로 전환합니다.', primaryCta: '바로 체험', next: '/post/[id]?mode=play&autoplay=true&utm_source=feed', status: 'Play Mode', content: <InternalBrowseToPlayMock /> },
   { title: '올리기 + 외부 자료', route: '/upload', purpose: '앱 URL과 함께 YouTube/Instagram/TikTok/GitHub 같은 제작 맥락을 첨부합니다.', primaryCta: '게시하기', next: '/post/[newId]', status: '구현', content: <UploadMock /> },
   { title: '리믹스 UX', route: '/upload?remix=[postId]', purpose: '원본을 다시 띄우고 새 버전을 만들게 하는 MVP의 핵심 성장 루프입니다.', primaryCta: '이 앱을 다르게 바꿔보기', next: '원본 배너 -> 게시 -> 원작자 알림', status: '구현', content: <RemixMock /> },
   { title: 'Fame Studio', route: '/studio', purpose: '창작자가 체험 성과, 리믹스, 유입 채널, WES export를 확인합니다.', primaryCta: 'CSV export', next: '/api/studio/wes-export', status: '구현', content: <StudioMock /> },
