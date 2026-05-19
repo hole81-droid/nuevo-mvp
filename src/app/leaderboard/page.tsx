@@ -4,6 +4,7 @@ import BackButton from '@/components/ui/BackButton';
 import LeaderboardClient from './LeaderboardClient';
 import { createClient } from '@/lib/supabase/server';
 import { monthKey, monthLabel, MONTHLY_POOL } from '@/lib/wes';
+import { BOTTOM_NAV_SCROLL_PADDING_CLASS } from '@/lib/bottom-nav-layout';
 import type { CreatorMonthlyWesRow, PostMonthlyWesRow, UserRow, PostRow } from '@/lib/supabase/types';
 
 export const dynamic = 'force-dynamic';
@@ -153,7 +154,7 @@ export default async function LeaderboardPage() {
         </div>
       </header>
 
-      <main className="flex-1 overflow-y-auto pb-[54px] scrollbar-hide">
+      <main className={`flex-1 overflow-y-auto ${BOTTOM_NAV_SCROLL_PADDING_CLASS} scrollbar-hide`}>
 
         {/* Top 3 podium */}
         <div className="px-4 pt-5 pb-3 bg-gradient-to-b from-amber-50/60 to-transparent">

@@ -6,6 +6,74 @@
 
 ## 세션 12 — 2026-05-19
 
+### 다음 단계 개발: DB 기반 신고 큐 연결
+
+- 앱스토어/초기 운영 준비 리스크를 줄이기 위해 이메일 중심 게시물 신고 흐름을 DB 기반 moderation queue 중심으로 전환했다.
+- `moderation_reports` Supabase 테이블, 인덱스, RLS 정책을 스키마에 추가했다.
+  - 누구나 신고 생성 가능.
+  - 로그인 신고자는 본인 신고만 조회 가능.
+  - 운영 처리는 service role/admin에서 수행하는 전제.
+- `/api/moderation-reports` Route Handler를 추가해 신고 payload를 서버에서 정규화한 뒤 DB에 저장한다.
+- 게시물 신고 화면의 기본 CTA를 `신고 제출`로 바꾸고, 이메일 신고는 백업 경로로 낮췄다.
+- `buildModerationReportInsert`와 테스트를 추가해 신고 사유, 대상 ID, 선택 입력값, 길이 제한 정규화가 유지되도록 했다.
+- `TASK.md`의 DB 기반 moderation queue 항목을 완료 처리했다.
+
+### 검증 완료
+
+- `node --test src\lib\trust-safety.test.mjs` RED/GREEN 확인.
+- `node --test src\lib\*.test.mjs` 통과: 95 tests.
+- `npm.cmd run lint` 통과.
+- `npx.cmd tsc --noEmit --pretty false` 통과.
+- placeholder `NEXT_PUBLIC_SUPABASE_URL`, `NEXT_PUBLIC_SUPABASE_ANON_KEY`를 주입한 `npm.cmd run build` 통과.
+
+---
+
+### 다음 단계 개발: 하단바 기준 스크롤 여백 정리
+
+- 하단 메뉴바 높이를 `64px + safe-area`로 키운 뒤에도 일부 화면 본문이 예전 `pb-[54px]`를 유지하던 문제를 정리했다.
+- `BOTTOM_NAV_SCROLL_PADDING_CLASS`를 추가해 고정 하단바 아래로 콘텐츠가 가려지지 않도록 공통 하단 여백을 관리한다.
+- 홈, 검색, 알림, 프로필, 상세, 리더보드, 스튜디오 화면의 스크롤 컨테이너를 새 공통 여백 기준으로 맞췄다.
+- `src/lib/bottom-nav-layout.test.mjs`에 예전 54px 여백으로 돌아가지 않도록 회귀 테스트를 추가했다.
+
+### 검증 완료
+
+- `node --test src\lib\bottom-nav-layout.test.mjs` 통과.
+- `node --test src\lib\*.test.mjs` 통과: 93 tests.
+- `npm.cmd run lint` 통과.
+- `npx.cmd tsc --noEmit --pretty false` 통과.
+- placeholder `NEXT_PUBLIC_SUPABASE_URL`, `NEXT_PUBLIC_SUPABASE_ANON_KEY`를 주입한 `npm.cmd run build` 통과.
+
+---
+
+### 다음 단계 개발: 댓글 입력 바 floating 제거
+
+- 컨텐츠 실행 후 댓글 달기 입력 바가 카드/상세 중간에 붕 떠 보이는 문제를 수정했다.
+- 원인은 `CommentSection` 입력 바의 `sticky bottom-0`가 피드 확장 카드와 상세 스크롤 영역 안에서 viewport 기준으로 붙으면서 콘텐츠 위에 떠 보이는 구조였다.
+- `COMMENT_INPUT_BAR_CLASS`를 추가하고 입력 바를 일반 document flow에 배치했다.
+  - 댓글 목록 아래에 자연스럽게 위치.
+  - sticky/fixed/bottom-0 제거.
+  - 확장 카드 안에서 iframe과 댓글 입력 바가 겹치지 않음.
+- `src/lib/comment-layout.test.mjs`로 댓글 입력 바가 다시 floating 레이아웃으로 돌아가지 않도록 고정했다.
+
+### 검증 완료
+
+- `node --test src\lib\comment-layout.test.mjs` 통과.
+
+---
+
+### 다음 단계 개발: 프로필 탭 상단 간격 제거
+
+- 계정/개인 페이지의 `작품`, `리믹스` 탭이 홈 화면의 `추천`, `팔로잉` 탭보다 아래로 떠 보이는 문제를 수정했다.
+- `ProfileTabsClient`의 `sticky top-[53px]`를 제거하고, 홈 피드 탭과 같은 `top-0` sticky 클래스를 사용하도록 변경했다.
+- `PROFILE_TABS_STICKY_CLASS`를 추가해 홈/프로필 탭 위치 기준을 같은 레이아웃 helper에서 관리한다.
+- 프로필 탭 활성/비활성 border 스타일도 홈 탭과 동일한 방식으로 맞췄다.
+
+### 검증 완료
+
+- `node --test src\lib\feed-layout.test.mjs` RED/GREEN 확인.
+
+---
+
 ### 다음 단계 개발: 모바일 상단 여백 축소
 
 - 모바일 화면 상단에 검은 여백과 가짜 상태바 영역이 크게 남아 콘텐츠 공간을 낭비하던 문제를 수정했다.

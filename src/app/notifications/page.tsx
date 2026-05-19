@@ -8,6 +8,7 @@ import { useAuth } from '@/contexts/AuthContext';
 import { createClient } from '@/lib/supabase/client';
 import NuevoGlyph from '@/components/ui/NuevoGlyph';
 import { relativeTime } from '@/lib/social';
+import { BOTTOM_NAV_SCROLL_PADDING_CLASS } from '@/lib/bottom-nav-layout';
 import type { NotificationRow, PostRow, UserRow } from '@/lib/supabase/types';
 
 type NotifType = 'like' | 'remix' | 'follow' | 'comment' | 'reaction' | 'revenue' | 'tier_up' | 'remix_revenue';
@@ -290,7 +291,7 @@ export default function NotificationsPage() {
         <button onClick={handleMarkAllRead} className="text-[14px] text-gray-500 font-medium hover:text-gray-700">모두 읽음</button>
       </header>
 
-      <main className="flex-1 overflow-y-auto pb-[54px] scrollbar-hide">
+      <main className={`flex-1 overflow-y-auto ${BOTTOM_NAV_SCROLL_PADDING_CLASS} scrollbar-hide`}>
         {isLoading ? (
           <div className="px-4 py-14 text-center text-gray-400 text-[15px]">로딩 중...</div>
         ) : displayedNotifications.length === 0 ? (

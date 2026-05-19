@@ -110,7 +110,29 @@ create index payout_requests_creator_idx on public.payout_requests(creator_id, r
 create index payout_requests_status_idx on public.payout_requests(status, requested_at desc);
 
 -- ============================================================
--- 6. 소셜 액션
+-- 6. 신고/모더레이션 큐
+-- ============================================================
+create table public.moderation_reports (
+  id             uuid primary key default uuid_generate_v4(),
+  target_type    text not null check (target_type in ('post')),
+  target_id      text not null,
+  reporter_id    uuid references public.users(id) on delete set null,
+  reason         text not null check (reason in ('unsafe', 'hateful', 'sexual', 'spam', 'ip', 'privacy', 'other')),
+  detail         text,
+  reporter_email text,
+  current_url    text,
+  status         text not null default 'open' check (status in ('open', 'reviewing', 'resolved', 'rejected')),
+  created_at     timestamptz not null default now(),
+  reviewed_at    timestamptz,
+  reviewer_note  text
+);
+
+create index moderation_reports_status_idx on public.moderation_reports(status, created_at desc);
+create index moderation_reports_target_idx on public.moderation_reports(target_type, target_id, created_at desc);
+create index moderation_reports_reporter_idx on public.moderation_reports(reporter_id, created_at desc);
+
+-- ============================================================
+-- 7. 소셜 액션
 -- ============================================================
 create table public.follows (
   follower_id  uuid references public.users(id) on delete cascade not null,
@@ -170,6 +192,7 @@ alter table public.posts         enable row level security;
 alter table public.notifications enable row level security;
 alter table public.experience_events enable row level security;
 alter table public.payout_requests enable row level security;
+alter table public.moderation_reports enable row level security;
 alter table public.follows enable row level security;
 alter table public.comments enable row level security;
 alter table public.post_reactions enable row level security;
@@ -227,6 +250,13 @@ create policy "payout_requests_select_own"
 
 create policy "payout_requests_insert_own"
   on public.payout_requests for insert with check (auth.uid() = creator_id);
+
+-- moderation_reports: 누구나 신고 생성 / 로그인 신고자는 본인 신고만 조회 / 처리는 관리자 service role에서 수행
+create policy "moderation_reports_insert_public"
+  on public.moderation_reports for insert with check (true);
+
+create policy "moderation_reports_select_own"
+  on public.moderation_reports for select using (auth.uid() = reporter_id);
 
 -- follows: 누구나 관계 조회 / 본인 팔로우만 생성·삭제
 create policy "follows_select_all"

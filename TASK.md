@@ -94,7 +94,7 @@ MVP is complete when:
 - [x] Settings links to an account deletion request flow
 - [x] Post detail links to `/report/post/[id]`
 - [x] Safety helper tests cover report/deletion request generation
-- [ ] Replace email-based report intake with a database-backed moderation queue
+- [x] Replace email-based report intake with a database-backed moderation queue
 - [ ] Add true auth-user deletion or service-role deletion workflow after Supabase secret handling is decided
 - [ ] Add Sign in with Apple or store-specific login fallback if native App Store submission becomes the chosen path
 - [ ] Add app-store privacy/data safety disclosure checklist before native submission

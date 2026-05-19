@@ -13,6 +13,9 @@ export default function ReportPostClient({ postId, nextPath }: { postId: string;
   const [detail, setDetail] = useState('');
   const [reporterEmail, setReporterEmail] = useState('');
   const [copied, setCopied] = useState(false);
+  const [submitting, setSubmitting] = useState(false);
+  const [submitted, setSubmitted] = useState(false);
+  const [submitError, setSubmitError] = useState('');
 
   const reportRequest = useMemo(
     () => buildPostReportRequest({
@@ -30,6 +33,32 @@ export default function ReportPostClient({ postId, nextPath }: { postId: string;
     await navigator.clipboard.writeText(reportRequest.body);
     setCopied(true);
     setTimeout(() => setCopied(false), 1800);
+  };
+
+  const submitReport = async () => {
+    setSubmitting(true);
+    setSubmitError('');
+    setSubmitted(false);
+
+    const response = await fetch('/api/moderation-reports', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        postId,
+        reason,
+        detail,
+        reporterEmail,
+        currentUrl: nextPath,
+      }),
+    });
+    const result = await response.json().catch(() => ({}));
+
+    setSubmitting(false);
+    if (!response.ok) {
+      setSubmitError(result.error ?? '신고 접수에 실패했습니다. 잠시 후 다시 시도해 주세요.');
+      return;
+    }
+    setSubmitted(true);
   };
 
   return (
@@ -85,18 +114,37 @@ export default function ReportPostClient({ postId, nextPath }: { postId: string;
       <div className="mt-5 grid grid-cols-2 gap-2">
         <button
           type="button"
+          onClick={submitReport}
+          disabled={submitting || submitted}
+          className="h-12 rounded-full bg-black text-[13px] font-black text-white disabled:bg-gray-300"
+        >
+          {submitted ? '접수 완료' : submitting ? '접수 중...' : '신고 제출'}
+        </button>
+        <button
+          type="button"
           onClick={copyReport}
           className="h-12 rounded-full border-2 border-black text-[13px] font-black text-black"
         >
           {copied ? '복사됨' : '신고서 복사'}
         </button>
-        <a
-          href={reportRequest.href}
-          className="flex h-12 items-center justify-center rounded-full bg-black text-[13px] font-black text-white"
-        >
-          메일로 신고
-        </a>
       </div>
+
+      {submitted && (
+        <div className="mt-3 rounded-2xl bg-green-50 px-4 py-3 text-[13px] font-bold leading-relaxed text-green-700">
+          신고가 운영 검토 큐에 접수되었습니다. 필요한 경우 입력한 연락처로 추가 확인을 요청할게요.
+        </div>
+      )}
+      {submitError && (
+        <div className="mt-3 rounded-2xl bg-red-50 px-4 py-3 text-[13px] font-bold leading-relaxed text-red-600">
+          {submitError}
+        </div>
+      )}
+      <a
+        href={reportRequest.href}
+        className="mt-3 flex h-11 items-center justify-center rounded-full border border-gray-200 bg-white text-[13px] font-black text-gray-600"
+      >
+        메일로 백업 신고
+      </a>
 
       <Link
         href={nextPath}

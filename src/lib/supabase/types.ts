@@ -197,6 +197,50 @@ export interface Database {
           rejection_reason?: string | null;
         };
       };
+      moderation_reports: {
+        Row: {
+          id: string;
+          target_type: 'post';
+          target_id: string;
+          reporter_id: string | null;
+          reason: 'unsafe' | 'hateful' | 'sexual' | 'spam' | 'ip' | 'privacy' | 'other';
+          detail: string | null;
+          reporter_email: string | null;
+          current_url: string | null;
+          status: 'open' | 'reviewing' | 'resolved' | 'rejected';
+          created_at: string;
+          reviewed_at: string | null;
+          reviewer_note: string | null;
+        };
+        Insert: {
+          id?: string;
+          target_type: 'post';
+          target_id: string;
+          reporter_id?: string | null;
+          reason: 'unsafe' | 'hateful' | 'sexual' | 'spam' | 'ip' | 'privacy' | 'other';
+          detail?: string | null;
+          reporter_email?: string | null;
+          current_url?: string | null;
+          status?: 'open' | 'reviewing' | 'resolved' | 'rejected';
+          created_at?: string;
+          reviewed_at?: string | null;
+          reviewer_note?: string | null;
+        };
+        Update: {
+          id?: string;
+          target_type?: 'post';
+          target_id?: string;
+          reporter_id?: string | null;
+          reason?: 'unsafe' | 'hateful' | 'sexual' | 'spam' | 'ip' | 'privacy' | 'other';
+          detail?: string | null;
+          reporter_email?: string | null;
+          current_url?: string | null;
+          status?: 'open' | 'reviewing' | 'resolved' | 'rejected';
+          created_at?: string;
+          reviewed_at?: string | null;
+          reviewer_note?: string | null;
+        };
+      };
       follows: {
         Row: {
           follower_id: string;
@@ -362,6 +406,7 @@ export type PostRow = Database['public']['Tables']['posts']['Row'];
 export type NotificationRow = Database['public']['Tables']['notifications']['Row'];
 export type ExperienceEventRow = Database['public']['Tables']['experience_events']['Row'];
 export type PayoutRequestRow = Database['public']['Tables']['payout_requests']['Row'];
+export type ModerationReportRow = Database['public']['Tables']['moderation_reports']['Row'];
 export type FollowRow = Database['public']['Tables']['follows']['Row'];
 export type CommentRow = Database['public']['Tables']['comments']['Row'];
 export type PostReactionRow = Database['public']['Tables']['post_reactions']['Row'];

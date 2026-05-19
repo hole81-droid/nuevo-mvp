@@ -4,6 +4,7 @@ import { useState } from 'react';
 import { Post } from '@/lib/types';
 import PostCard from '@/components/post/PostCard';
 import { useSaved } from '@/contexts/SavedContext';
+import { PROFILE_TABS_STICKY_CLASS } from '@/lib/feed-layout';
 
 const TABS_BASE = ['작품', '리믹스'] as const;
 const TABS_ME   = ['작품', '리믹스', '좋아요', '저장'] as const;
@@ -34,15 +35,15 @@ export default function ProfileTabsClient({ posts, remixedPosts, likedPosts, isM
 
   return (
     <>
-      <div className="flex border-b border-gray-100 sticky top-[53px] bg-white z-30">
+      <div className={PROFILE_TABS_STICKY_CLASS}>
         {TABS.map((tab) => (
           <button
             key={tab}
             onClick={() => { setActiveTab(tab); setExpandedId(null); }}
-            className={`flex-1 py-3 text-[14px] font-semibold transition-colors ${
+            className={`flex-1 border-b-2 py-3 text-[14px] font-semibold transition-colors ${
               activeTab === tab
-                ? 'text-gray-900 border-b-2 border-warm'
-                : 'text-gray-500 hover:text-gray-700'
+                ? 'border-black text-black'
+                : 'border-transparent text-gray-400 hover:text-gray-700'
             }`}
           >
             {tab}

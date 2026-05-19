@@ -7,6 +7,17 @@ export type TrustMailRequest = {
   href: string;
 };
 
+export type ModerationReportInsert = {
+  target_type: 'post';
+  target_id: string;
+  reporter_id: string | null;
+  reason: ReportReason;
+  detail: string | null;
+  reporter_email: string | null;
+  current_url: string | null;
+  status: 'open';
+};
+
 export const TRUST_CONTACT_EMAILS: {
   privacy: string;
   safety: string;
@@ -36,6 +47,15 @@ export function buildPostReportRequest(input?: {
   reporterEmail?: string;
   currentUrl?: string;
 }): TrustMailRequest;
+
+export function buildModerationReportInsert(input?: {
+  postId?: string;
+  reporterId?: string | null;
+  reason?: string;
+  detail?: string;
+  reporterEmail?: string;
+  currentUrl?: string;
+}): ModerationReportInsert;
 
 export function buildAccountDeletionRequest(input?: {
   userId?: string;

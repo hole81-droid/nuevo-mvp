@@ -11,6 +11,7 @@ import { DbPostWithAuthor, mapDbAuthorToAuthor, mapDbPostToPost } from '@/lib/po
 import NuevoGlyph from '@/components/ui/NuevoGlyph';
 import { applyExperienceMetrics, getExperienceMetrics } from '@/lib/experience-metrics';
 import { applySocialMetrics, getSocialMetrics } from '@/lib/social-metrics';
+import { BOTTOM_NAV_SCROLL_PADDING_CLASS } from '@/lib/bottom-nav-layout';
 import type { UserRow } from '@/lib/supabase/types';
 
 interface Props {
@@ -180,7 +181,7 @@ export default async function ProfilePage({ params }: Props) {
         )}
       </header>
 
-      <main className="flex-1 overflow-y-auto pb-[54px] scrollbar-hide">
+      <main className={`flex-1 overflow-y-auto ${BOTTOM_NAV_SCROLL_PADDING_CLASS} scrollbar-hide`}>
         {/* Cover */}
         <div className="h-[110px] bg-[#EFEFE8] border-b border-[#D8D8D0] flex items-center justify-center">
           <NuevoGlyph kind="spark" size={58} />

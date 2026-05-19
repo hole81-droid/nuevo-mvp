@@ -5,6 +5,7 @@ import {
   BOTTOM_NAV_CENTER_CLASS,
   BOTTOM_NAV_CLASS,
   BOTTOM_NAV_ITEM_CLASS,
+  BOTTOM_NAV_SCROLL_PADDING_CLASS,
   BOTTOM_NAV_STYLE,
 } from './bottom-nav-layout.js';
 
@@ -24,4 +25,9 @@ test('bottom nav reserves five stable tap columns and safe-area height', () => {
   assert.match(BOTTOM_NAV_CENTER_CLASS, /\bw-12\b/);
   assert.equal(BOTTOM_NAV_STYLE.height, 'calc(64px + env(safe-area-inset-bottom, 0px))');
   assert.equal(BOTTOM_NAV_STYLE.paddingBottom, 'max(8px, env(safe-area-inset-bottom, 0px))');
+});
+
+test('bottom nav scroll padding leaves room below the fixed nav', () => {
+  assert.match(BOTTOM_NAV_SCROLL_PADDING_CLASS, /pb-\[calc\(80px\+env\(safe-area-inset-bottom,0px\)\)\]/);
+  assert.doesNotMatch(BOTTOM_NAV_SCROLL_PADDING_CLASS, /54px/);
 });

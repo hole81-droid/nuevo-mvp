@@ -8,6 +8,7 @@ import { DbPostWithAuthor, mapDbPostToPost } from '@/lib/post-mapper';
 import NuevoGlyph from '@/components/ui/NuevoGlyph';
 import { applyExperienceMetrics, getExperienceMetrics } from '@/lib/experience-metrics';
 import { applySocialMetrics, getSocialMetrics } from '@/lib/social-metrics';
+import { BOTTOM_NAV_SCROLL_PADDING_CLASS } from '@/lib/bottom-nav-layout';
 
 export const dynamic = 'force-dynamic';
 
@@ -74,7 +75,7 @@ export default async function FeedPage() {
       </header>
 
       {/* Feed */}
-      <main className="flex-1 overflow-y-auto pb-[54px] scrollbar-hide">
+      <main className={`flex-1 overflow-y-auto ${BOTTOM_NAV_SCROLL_PADDING_CLASS} scrollbar-hide`}>
         <OnboardingBanner />
         {posts.length ? (
           <FeedClient posts={posts} />

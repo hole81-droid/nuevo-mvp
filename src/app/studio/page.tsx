@@ -21,6 +21,7 @@ import {
 } from '@/lib/wes';
 import { buildFameMetrics } from '@/lib/fame-dashboard';
 import { summarizeTrafficSources } from '@/lib/traffic-source';
+import { BOTTOM_NAV_SCROLL_PADDING_CLASS } from '@/lib/bottom-nav-layout';
 
 
 function fmt(n: number) {
@@ -184,7 +185,7 @@ export default async function StudioPage() {
         </Link>
       </header>
 
-      <main className="flex-1 overflow-y-auto pb-[54px] scrollbar-hide">
+      <main className={`flex-1 overflow-y-auto ${BOTTOM_NAV_SCROLL_PADDING_CLASS} scrollbar-hide`}>
         <TierSyncNotice enabled={studio.isLive} />
 
         {/* Fame dashboard */}

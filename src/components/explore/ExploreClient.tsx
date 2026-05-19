@@ -10,6 +10,7 @@ import NuevoGlyph from '@/components/ui/NuevoGlyph';
 import { getExploreEmptyState, type ExploreEmptyMode } from '@/lib/explore-empty-state';
 import { DEFAULT_EXPLORE_CATEGORIES, filterPostsByCategory, searchPosts } from '@/lib/explore-filters';
 import { getDailyPlayablePosts, getLongestPlayedPosts, getMostRemixedPosts } from '@/lib/play-retention';
+import { BOTTOM_NAV_SCROLL_PADDING_CLASS } from '@/lib/bottom-nav-layout';
 
 const TRENDING_TAGS = [
   '직장인', '고양이', '철학', '밈생성', '전생', '시',
@@ -334,7 +335,7 @@ export default function ExploreClient({ posts = mockPosts }: { posts?: Post[] })
 
       {/* ── Search results ── */}
       {isSearching && (
-        <div className="flex-1 overflow-y-auto pb-[54px] scrollbar-hide">
+        <div className={`flex-1 overflow-y-auto ${BOTTOM_NAV_SCROLL_PADDING_CLASS} scrollbar-hide`}>
           <div className="px-4 py-3 text-[13px] text-gray-500">
             <span className="font-bold text-gray-900">「{query}」</span> 검색 결과 {searchResults.length}개
           </div>
@@ -358,7 +359,7 @@ export default function ExploreClient({ posts = mockPosts }: { posts?: Post[] })
 
       {/* ── Category filter results ── */}
       {isCategoryFiltering && (
-        <div className="flex-1 overflow-y-auto pb-[54px] scrollbar-hide">
+        <div className={`flex-1 overflow-y-auto ${BOTTOM_NAV_SCROLL_PADDING_CLASS} scrollbar-hide`}>
           <div className="flex items-center gap-2 px-4 py-3">
             <span className="text-[14px] font-bold text-gray-900">{selectedCategoryLabel}</span>
             <span className="text-[13px] text-gray-400">{categoryResults.length}개 작품</span>
@@ -390,7 +391,7 @@ export default function ExploreClient({ posts = mockPosts }: { posts?: Post[] })
 
       {/* ── Tag filter results ── */}
       {isTagFiltering && (
-        <div className="flex-1 overflow-y-auto pb-[54px] scrollbar-hide">
+        <div className={`flex-1 overflow-y-auto ${BOTTOM_NAV_SCROLL_PADDING_CLASS} scrollbar-hide`}>
           <div className="flex items-center gap-2 px-4 py-3">
             <span className="text-[14px] font-bold text-gray-900">#{selectedTag}</span>
             <span className="text-[13px] text-gray-400">{tagResults.length}개 작품</span>
@@ -422,7 +423,7 @@ export default function ExploreClient({ posts = mockPosts }: { posts?: Post[] })
 
       {/* ── Default explore ── */}
       {!isSearching && !isCategoryFiltering && !isTagFiltering && (
-        <div className="flex-1 overflow-y-auto pb-[54px] scrollbar-hide">
+        <div className={`flex-1 overflow-y-auto ${BOTTOM_NAV_SCROLL_PADDING_CLASS} scrollbar-hide`}>
           {posts.length === 0 ? (
             <EmptyState />
           ) : (

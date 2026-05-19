@@ -16,6 +16,7 @@ import { getRemixSocialProofLabel, shouldShowRemixSocialProof } from '@/lib/remi
 import { getRemixCtaCopy, shouldShowRemixCta } from '@/lib/remix-cta';
 import { buildTrafficSourcePayload } from '@/lib/traffic-source';
 import { buildPostReportPath } from '@/lib/trust-safety';
+import { BOTTOM_NAV_SCROLL_PADDING_CLASS } from '@/lib/bottom-nav-layout';
 import InteractiveDemo from './InteractiveDemo';
 import AudioPlayer from './AudioPlayer';
 import ImageGallery, { SUBWAY_SLIDES } from './ImageGallery';
@@ -203,7 +204,7 @@ export default function PostDetailClient({
   };
 
   return (
-    <main className="flex-1 overflow-y-auto pb-[54px] scrollbar-hide">
+    <main className={`flex-1 overflow-y-auto ${BOTTOM_NAV_SCROLL_PADDING_CLASS} scrollbar-hide`}>
       <div className="px-4 pt-4">
         {/* Author */}
         <div className="flex items-center gap-3">

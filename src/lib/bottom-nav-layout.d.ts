@@ -5,3 +5,4 @@ export const BOTTOM_NAV_STYLE: {
 };
 export const BOTTOM_NAV_ITEM_CLASS: string;
 export const BOTTOM_NAV_CENTER_CLASS: string;
+export const BOTTOM_NAV_SCROLL_PADDING_CLASS: string;

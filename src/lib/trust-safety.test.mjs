@@ -4,6 +4,7 @@ import { describe, it } from 'node:test';
 import {
   buildAccountDeletionRequest,
   buildMailtoHref,
+  buildModerationReportInsert,
   buildPostReportPath,
   buildPostReportRequest,
   normalizeReportReason,
@@ -54,6 +55,49 @@ describe('trust and safety helpers', () => {
     assert.match(request.body, /신고 대상: post-123/);
     assert.match(request.body, /연락처: creator@example.com/);
     assert.match(request.href, /^mailto:safety%40nuevo\.app\?/);
+  });
+
+  it('builds a database moderation report insert with normalized public fields', () => {
+    const insert = buildModerationReportInsert({
+      postId: ' post-123 ',
+      reporterId: 'user-123',
+      reason: 'spam',
+      detail: 'x'.repeat(1300),
+      reporterEmail: ' reporter@example.com ',
+      currentUrl: ' https://nuevo.app/post/post-123 ',
+    });
+
+    assert.deepEqual(insert, {
+      target_type: 'post',
+      target_id: 'post-123',
+      reporter_id: 'user-123',
+      reason: 'spam',
+      detail: `${'x'.repeat(1200)}...`,
+      reporter_email: 'reporter@example.com',
+      current_url: 'https://nuevo.app/post/post-123',
+      status: 'open',
+    });
+  });
+
+  it('allows guest moderation reports without leaking empty optional fields', () => {
+    const insert = buildModerationReportInsert({
+      postId: '',
+      reason: 'unsupported',
+      detail: '',
+      reporterEmail: '',
+      currentUrl: '',
+    });
+
+    assert.deepEqual(insert, {
+      target_type: 'post',
+      target_id: 'unknown',
+      reporter_id: null,
+      reason: 'other',
+      detail: null,
+      reporter_email: null,
+      current_url: null,
+      status: 'open',
+    });
   });
 
   it('builds an account deletion request from the signed-in profile', () => {

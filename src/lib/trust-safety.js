@@ -83,6 +83,31 @@ export function buildPostReportRequest({
   };
 }
 
+function nullableTrimmed(value = '') {
+  const text = String(value || '').trim();
+  return text || null;
+}
+
+export function buildModerationReportInsert({
+  postId,
+  reporterId = null,
+  reason = 'other',
+  detail = '',
+  reporterEmail = '',
+  currentUrl = '',
+} = {}) {
+  return {
+    target_type: 'post',
+    target_id: String(postId || '').trim() || 'unknown',
+    reporter_id: nullableTrimmed(reporterId),
+    reason: normalizeReportReason(reason),
+    detail: nullableTrimmed(truncateText(detail)),
+    reporter_email: nullableTrimmed(reporterEmail),
+    current_url: nullableTrimmed(currentUrl),
+    status: 'open',
+  };
+}
+
 export function buildAccountDeletionRequest({ userId = '', email = '', handle = '' } = {}) {
   const normalizedHandle = normalizeHandle(handle);
   const body = [

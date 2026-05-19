@@ -11,3 +11,6 @@ export const BOTTOM_NAV_ITEM_CLASS =
 
 export const BOTTOM_NAV_CENTER_CLASS =
   'mx-auto flex h-10 w-12 items-center justify-center rounded-full bg-warm text-white shadow-sm';
+
+export const BOTTOM_NAV_SCROLL_PADDING_CLASS =
+  'pb-[calc(80px+env(safe-area-inset-bottom,0px))]';
