@@ -14,6 +14,8 @@ import { buildCreatorPostPath, buildPostDeepLink } from '@/lib/deep-link';
 import { buildLoginRedirectFromLocation } from '@/lib/protected-action';
 import { getRemixSocialProofLabel, shouldShowRemixSocialProof } from '@/lib/remix-social-proof';
 import { buildTrafficSourcePayload } from '@/lib/traffic-source';
+import { buildPlayModePath } from '@/lib/play-mode';
+import { buildPlayModeEventPayload, recordPlayModeEvent } from '@/lib/play-mode-analytics';
 import ContentViewer from './ContentViewer';
 import InteractiveDemo from './InteractiveDemo';
 import AudioPlayer from './AudioPlayer';
@@ -252,6 +254,21 @@ export default function PostCard({
             {!expanded && (
               <>
                 <ContentViewer post={post} compact />
+                <button
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    recordPlayModeEvent(buildPlayModeEventPayload({
+                      eventName: 'internal_play_start',
+                      postId: post.id,
+                      search: '?mode=play&autoplay=true&utm_source=feed',
+                      referrer: window.location.href,
+                    }));
+                    router.push(buildPlayModePath(post.id, { source: 'feed' }));
+                  }}
+                  className="mt-3 flex h-11 w-full items-center justify-center rounded-full bg-black px-4 text-[14px] font-black text-white active:scale-[0.99]"
+                >
+                  바로 체험
+                </button>
                 <div className="flex items-center mt-3 -ml-2 text-gray-500">
                   <SmallBtn
                     onClick={(e) => { e.stopPropagation(); router.push(`/post/${post.id}`); }}

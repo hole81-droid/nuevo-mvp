@@ -17,6 +17,8 @@ import { getRemixCtaCopy, shouldShowRemixCta } from '@/lib/remix-cta';
 import { buildTrafficSourcePayload, getExternalEntryCopy } from '@/lib/traffic-source';
 import { buildPostReportPath } from '@/lib/trust-safety';
 import { BOTTOM_NAV_SCROLL_PADDING_CLASS } from '@/lib/bottom-nav-layout';
+import { buildPlayModePath, getPlayModeContinuation } from '@/lib/play-mode';
+import { buildPlayModeEventPayload, recordPlayModeEvent } from '@/lib/play-mode-analytics';
 import InteractiveDemo from './InteractiveDemo';
 import AudioPlayer from './AudioPlayer';
 import ImageGallery, { SUBWAY_SLIDES } from './ImageGallery';
@@ -33,11 +35,13 @@ const REACTIONS = [
 export default function PostDetailClient({
   post,
   autoplay = false,
+  playMode = false,
   relatedPosts = [],
   remixPosts = [],
 }: {
   post: Post;
   autoplay?: boolean;
+  playMode?: boolean;
   relatedPosts?: Post[];
   remixPosts?: Post[];
 }) {
@@ -78,6 +82,8 @@ export default function PostDetailClient({
   const remixSocialProof = getRemixSocialProofLabel(repostCount);
   const remixCtaCopy = getRemixCtaCopy();
   const reportPath = buildPostReportPath(post.id, `/post/${post.id}${autoplay ? '?autoplay=true' : ''}`);
+  const playModeContinuation = useMemo(() => getPlayModeContinuation(post, relatedPosts), [post, relatedPosts]);
+  const nextPlayablePost = playModeContinuation.kind === 'next' ? playModeContinuation.post : null;
 
   const requireLogin = () => {
     router.push(buildLoginRedirectFromLocation(window.location));
@@ -107,6 +113,17 @@ export default function PostDetailClient({
       mounted = false;
     };
   }, [post.id, supabase, useDbSocial, user?.id]);
+
+  useEffect(() => {
+    if (!playMode || !nextPlayablePost) return;
+    recordPlayModeEvent(buildPlayModeEventPayload({
+      eventName: 'next_app_reveal',
+      postId: nextPlayablePost.id,
+      fromPostId: post.id,
+      search: window.location.search,
+      referrer: document.referrer,
+    }));
+  }, [nextPlayablePost, playMode, post.id]);
 
   const handleShare = () => {
     const url = buildPostDeepLink(post.id, {
@@ -208,9 +225,48 @@ export default function PostDetailClient({
     });
   };
 
+  const contentBlock = (
+    <div className={playMode ? 'overscroll-contain touch-pan-y' : undefined}>
+      {contentType === 'interactive' && (
+        <InteractiveDemo
+          postId={post.id}
+          postTitle={title}
+          iframeUrl={media.iframeUrl}
+          autoplay={autoplay}
+          deferUntilStart={!autoplay}
+        />
+      )}
+      {contentType === 'audio' && (
+        <AudioPlayer coverEmoji={media.coverEmoji ?? '🎵'} title={title} />
+      )}
+      {contentType === 'image' && (
+        <ImageGallery
+          title={title}
+          slides={post.id === '3' ? SUBWAY_SLIDES : Array.from({ length: media.imageCount ?? 1 }, (_, i) => ({
+            emoji: media.emoji ?? '🖼️',
+            bgGradient: media.bgGradient ?? 'from-pink-100 to-pink-200',
+            label: `${title} ${i + 1}/${media.imageCount ?? 1}`,
+          }))}
+        />
+      )}
+    </div>
+  );
+
   return (
     <main className={`flex-1 overflow-y-auto ${BOTTOM_NAV_SCROLL_PADDING_CLASS} scrollbar-hide`}>
       <div className="px-4 pt-4">
+        {playMode && (
+          <section className="mb-4 rounded-[28px] border-2 border-black bg-black px-4 py-3 text-white">
+            <div className="text-[11px] font-black uppercase tracking-wider text-white/55">Play Mode</div>
+            <div className="mt-1 text-[18px] font-black tracking-[-0.04em]">앱부터 바로 체험하세요</div>
+            <p className="mt-1 text-[12px] leading-snug text-white/65">
+              아래로 스크롤하면 방금 본 앱과 이어지는 다음 앱을 바로 만날 수 있어요.
+            </p>
+          </section>
+        )}
+
+        {playMode && contentBlock}
+
         {/* Author */}
         <div className="flex items-center gap-3">
           <Link href={`/profile/${author.handle}`}>
@@ -252,36 +308,72 @@ export default function PostDetailClient({
         )}
 
         {/* Content by type */}
-        {contentType === 'interactive' && (
-          <InteractiveDemo
-            postId={post.id}
-            postTitle={title}
-            iframeUrl={media.iframeUrl}
-            autoplay={autoplay}
-            deferUntilStart={!autoplay}
-          />
-        )}
-        {contentType === 'audio' && (
-          <AudioPlayer coverEmoji={media.coverEmoji ?? '🎵'} title={title} />
-        )}
-        {contentType === 'image' && (
-          <ImageGallery
-            title={title}
-            slides={post.id === '3' ? SUBWAY_SLIDES : Array.from({ length: media.imageCount ?? 1 }, (_, i) => ({
-              emoji: media.emoji ?? '🖼️',
-              bgGradient: media.bgGradient ?? 'from-pink-100 to-pink-200',
-              label: `${title} ${i + 1}/${media.imageCount ?? 1}`,
-            }))}
-          />
-        )}
+        {!playMode && contentBlock}
 
         {/* Experience stats (interactive/audio only) */}
         {(contentType === 'interactive' || contentType === 'audio') && (
-          <div className="mt-3 flex items-center gap-3 px-3 py-2.5 rounded-xl bg-orange-50 border border-orange-100">
-            <span className="text-[13px] font-semibold text-warm">체험 {formatViews(stats.experienceSessions)}회</span>
-            <span className="text-gray-300">·</span>
-            <span className="text-[13px] font-semibold text-warm">총 체험 시간 {formatViews(stats.experienceMinutes)}분</span>
+          <div className="flex items-center gap-3 px-4 py-2.5 bg-[#FFFDF5] border-b border-[#D8D8D0] mt-3">
+            <span className="text-[13px] font-black text-black flex items-center gap-1.5">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><path d="M8 5v14l11-7z"/></svg>
+              체험 {formatViews(stats.experienceSessions)}회
+            </span>
+            <span className="text-[#B7B7AF]">·</span>
+            <span className="text-[13px] font-black text-black flex items-center gap-1.5">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/></svg>
+              총 체험 시간 {formatViews(stats.experienceMinutes)}분
+            </span>
           </div>
+        )}
+
+        {playMode && nextPlayablePost && (
+          <section className="mt-4 rounded-[28px] border-2 border-black bg-[#FFFDF5] p-4 shadow-[0_18px_30px_rgba(0,0,0,0.08)]">
+            <div className="text-[11px] font-black uppercase tracking-wider text-[#8A6A22]">Next App</div>
+            <div className="mt-1 text-[18px] font-black tracking-[-0.04em] text-black">다음 앱 바로 보기</div>
+            <p className="mt-1 text-[13px] leading-snug text-[#666660]">방금 본 앱과 비슷한 체험이에요.</p>
+            <Link
+              href={buildPlayModePath(nextPlayablePost.id, { source: 'next_app' })}
+              onClick={() => recordPlayModeEvent(buildPlayModeEventPayload({
+                eventName: 'next_app_click',
+                postId: nextPlayablePost.id,
+                fromPostId: post.id,
+                search: '?mode=play&autoplay=true&utm_source=next_app',
+                referrer: window.location.href,
+              }))}
+              className="mt-3 flex items-center gap-3 rounded-2xl border border-[#D8D8D0] bg-white px-3 py-3 active:scale-[0.99]"
+            >
+              <div className="flex h-12 w-12 flex-shrink-0 items-center justify-center rounded-2xl bg-[#F7F7F2] text-[22px]">
+                {nextPlayablePost.media.coverEmoji ?? nextPlayablePost.media.emoji ?? '▶'}
+              </div>
+              <div className="min-w-0 flex-1">
+                <div className="truncate text-[14px] font-black text-gray-900">{nextPlayablePost.title}</div>
+                <div className="truncate text-[12px] text-gray-500">@{nextPlayablePost.author.handle}</div>
+              </div>
+              <span className="rounded-full bg-black px-3 py-2 text-[12px] font-black text-white">
+                체험
+              </span>
+            </Link>
+          </section>
+        )}
+
+        {playMode && playModeContinuation.kind === 'fallback' && (
+          <section className="mt-4 rounded-[28px] border-2 border-black bg-[#FFFDF5] p-4 shadow-[0_18px_30px_rgba(0,0,0,0.08)]">
+            <div className="text-[11px] font-black uppercase tracking-wider text-[#8A6A22]">More Apps</div>
+            <div className="mt-1 text-[18px] font-black tracking-[-0.04em] text-black">추천 앱을 준비 중이에요</div>
+            <p className="mt-1 text-[13px] leading-snug text-[#666660]">
+              지금은 피드나 탐색에서 다른 앱을 이어서 볼 수 있어요.
+            </p>
+            <div className="mt-3 grid grid-cols-2 gap-2">
+              {playModeContinuation.links.map((link) => (
+                <Link
+                  key={link.href}
+                  href={link.href}
+                  className="flex h-11 items-center justify-center rounded-full border border-[#D8D8D0] bg-white px-3 text-center text-[13px] font-black text-gray-900 active:scale-[0.98]"
+                >
+                  {link.label}
+                </Link>
+              ))}
+            </div>
+          </section>
         )}
 
         {/* Timestamp + views */}

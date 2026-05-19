@@ -11,6 +11,7 @@ import { applySocialMetrics, getSocialMetrics } from '@/lib/social-metrics';
 import { isUuid } from '@/lib/social';
 import { isAutoplayRequested } from '@/lib/deep-link';
 import { getSimilarPosts } from '@/lib/play-retention';
+import { isPlayModeRequested } from '@/lib/play-mode';
 import type { Post } from '@/lib/types';
 
 interface Props {
@@ -132,6 +133,8 @@ export default async function PostDetailPage({ params, searchParams }: Props) {
   const resolvedSearchParams = await searchParams;
   const post = await getPost(id);
   if (!post) notFound();
+  const autoplay = isAutoplayRequested(resolvedSearchParams);
+  const playMode = isPlayModeRequested(resolvedSearchParams);
   const [relatedPosts, remixPosts] = await Promise.all([
     getRelatedPosts(post),
     getRemixPosts(post),
@@ -142,17 +145,18 @@ export default async function PostDetailPage({ params, searchParams }: Props) {
       {/* Top bar */}
       <header className="sticky top-0 z-40 bg-white border-b border-gray-100 flex items-center gap-3 px-4 h-[53px]">
         <BackButton />
-        <span className="text-[17px] font-bold text-gray-900">작품</span>
+        <span className="text-[17px] font-bold text-gray-900">{playMode ? '바로 체험' : '작품'}</span>
       </header>
 
       <PostDetailClient
         post={post}
-        autoplay={isAutoplayRequested(resolvedSearchParams)}
+        autoplay={autoplay}
+        playMode={playMode}
         relatedPosts={relatedPosts}
         remixPosts={remixPosts}
       />
 
-      <BottomNav />
+      {!playMode && <BottomNav />}
     </div>
   );
 }
