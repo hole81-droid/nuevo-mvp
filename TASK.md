@@ -1,7 +1,7 @@
 # nuevo MVP Task Tracker
 
 **Updated:** 2026-05-19
-**Current focus:** Make the MVP prove external deep-link play, upload with context links, remix growth, creator Fame/WES, and minimum trust/safety readiness.
+**Current focus:** Make the MVP prove external deep-link play, Play-first Vertical Stack retention, upload with context links, remix growth, creator Fame/WES, and minimum trust/safety readiness.
 
 ## MVP Definition
 
@@ -9,6 +9,7 @@ MVP is complete when:
 
 - A creator can upload an already-deployed app URL.
 - A visitor can enter from an external app and play immediately.
+- After that first external app play, the visitor can scroll into a next recommended playable app without using search first.
 - Upload supports external resource links such as YouTube, Instagram, TikTok, and GitHub.
 - Remix creates lineage, social proof, notification, and feed/detail re-exposure.
 - Creator can see Fame/WES and export event data.
@@ -25,8 +26,23 @@ MVP is complete when:
 - [x] `utm_source`/referrer traffic source classification exists
 - [x] Guest users can play without login
 - [x] Protected actions preserve `next` path through login
+- [x] External-entry copy distinguishes Instagram/TikTok/YouTube autoplay visits
+- [x] External social autoplay back button falls back to nuevo home
 - [ ] Real mobile QA: Instagram/TikTok/YouTube in-app browsers
 - [ ] Real LCP QA: `/post/[id]` and `/post/[id]?autoplay=true` under 3 seconds target
+
+### Play-first Vertical Stack
+
+- [ ] Define external-entry detail layout for app-first vertical stack
+- [ ] Add next playable app section below first app detail
+- [ ] Reuse `getSimilarPosts()` or simple tag/creator/remix heuristics for MVP recommendations
+- [ ] Add fallback CTA to feed/explore when no next app exists
+- [ ] Ensure iframe touch/scroll interactions are not hijacked by stack behavior
+- [ ] Track next app reveal rate
+- [ ] Track second app play rate
+- [ ] Track 2+ app session rate from Instagram/TikTok/YouTube
+- [ ] Update `/ux-prototype` with “외부 유입 → 첫 앱 전체화면 체험 → 다음 앱 스크롤 진입”
+- [ ] Add QA runbook item for external-entry vertical stack on real mobile
 
 ### Upload with external resource links
 
@@ -75,6 +91,7 @@ MVP is complete when:
 - [x] Category/tag discovery exists
 - [x] Daily playable / most remixed / longest played logic exists
 - [x] Related posts exist on detail
+- [ ] External-entry sessions prefer vertical next-app continuation before search/feed
 - [x] QA: empty states and no-result states
 
 ## P1 Authentication / Guardrails
@@ -107,6 +124,7 @@ MVP is complete when:
 - [x] `/ux-prototype` route created
 - [x] `/ux-prototype` has screen-first mobile mockups
 - [x] Prototype covers external deep link immediate play
+- [ ] Prototype covers external-entry Play-first Vertical Stack
 - [x] Prototype covers upload external links
 - [x] Prototype covers remix social proof, original banner, notification/re-exposure
 - [x] Prototype covers Studio/WES/traffic source

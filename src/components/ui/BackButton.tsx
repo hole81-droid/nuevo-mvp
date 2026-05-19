@@ -1,12 +1,19 @@
 'use client';
 
 import { useRouter } from 'next/navigation';
+import { shouldUseInternalBackFallback } from '@/lib/traffic-source';
 
 export default function BackButton({ fallbackHref = '/' }: { fallbackHref?: string }) {
   const router = useRouter();
 
   const handleClick = () => {
-    if (window.history.length > 1) {
+    const useFallback = shouldUseInternalBackFallback({
+      historyLength: window.history.length,
+      search: window.location.search,
+      referrer: document.referrer,
+    });
+
+    if (!useFallback && window.history.length > 1) {
       router.back();
     } else {
       router.push(fallbackHref);

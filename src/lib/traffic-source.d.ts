@@ -21,3 +21,18 @@ export function summarizeTrafficSources(rows?: Array<{ traffic_source?: string |
   count: number;
   percent: number;
 }>;
+
+export function getExternalEntryCopy(input?: {
+  source?: TrafficSource | string | null;
+  autoplay?: boolean;
+}): {
+  eyebrow: string;
+  title: string;
+  body: string;
+} | null;
+
+export function shouldUseInternalBackFallback(input?: {
+  historyLength?: number;
+  search?: string;
+  referrer?: string;
+}): boolean;

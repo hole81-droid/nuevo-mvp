@@ -1,6 +1,6 @@
 # nuevo Design / UI / UX Reference
 
-**Updated:** 2026-05-18
+**Updated:** 2026-05-19
 **Purpose:** Keep the MVP app, `/ux-flow`, and `/ux-prototype` visually and behaviorally aligned.
 
 ## 1. Product Feeling
@@ -10,6 +10,8 @@ Core visual idea:
 > Black stage, warm paper sheet, bold utilitarian type, clear mobile controls.
 
 nuevo should feel like a fast mobile tool for playable apps, not a marketing landing page and not a generic SaaS dashboard. The app itself is the content. The UI should help people inspect, play, remix, and share with almost no explanation.
+
+For external social traffic, the product should feel closer to Reels/Shorts/TikTok continuity than a directory. A visitor lands on one app, plays it, then scrolls into the next playable app before being asked to search.
 
 ## 2. Design Principles
 
@@ -22,6 +24,7 @@ nuevo should feel like a fast mobile tool for playable apps, not a marketing lan
 - No card-inside-card layouts unless a repeated content item truly needs a frame.
 - No decorative gradient orbs or generic AI glow.
 - Keep feature text short. Let controls and state do the explaining.
+- External-entry sessions use a Play-first Vertical Stack: first app in focus, next app below.
 
 ## 3. Core Tokens
 
@@ -127,8 +130,29 @@ Must communicate:
 - `autoplay=true` means the experience is already running.
 - Source is captured as YouTube/TikTok/Instagram/Reddit/Direct.
 - User can play without login.
+- Back keeps social deep-link visitors inside nuevo instead of ejecting them to the previous social app.
 
 Prototype screen: `/ux-prototype`, “외부 앱 딥링크” and “상세 바로 체험”.
+
+### Play-first Vertical Stack
+
+Must communicate:
+
+- The app is the full-focus content, not a preview card.
+- The next app is available by scrolling down, not by learning search first.
+- The transition is user-controlled scroll, never a forced timed autoplay.
+- Recommended content should feel related: same tag, same creator, remix lineage, or similar play pattern.
+- After 2-3 plays, feed/search/follow CTAs can appear as broader exploration.
+
+Layout guidance:
+
+- Keep top chrome compact on external-entry detail.
+- Keep the embedded app large enough to feel like the main screen.
+- The next-app section should start below the first app/result area with a clear title, creator, reason, and play CTA.
+- Do not place the next app inside nested decorative cards.
+- Avoid UI that steals touch/scroll from the embedded iframe.
+
+Prototype status: needs update. The next `/ux-prototype` pass should add “외부 유입 → 첫 앱 전체화면 체험 → 다음 앱 스크롤 진입”.
 
 ### Upload
 
@@ -170,6 +194,8 @@ Prototype screen: “Fame Studio”.
 Use:
 
 - “바로 체험”
+- “다음 앱 바로 보기”
+- “방금 본 앱과 비슷해요”
 - “이 앱을 다르게 바꿔보기”
 - “N회 리믹스됨”
 - “외부 자료 링크”
@@ -204,6 +230,8 @@ Don’t:
 ## 10. Design QA Checklist
 
 - Does an external visitor understand they can play now?
+- Does an external visitor see a next playable app without searching?
+- Does the vertical stack preserve iframe touch/scroll controls?
 - Does upload clearly accept YouTube/Instagram/TikTok/GitHub links as supporting material?
 - Is remix visible as a core loop, not a tucked-away icon?
 - Is the login boundary clear and non-destructive?

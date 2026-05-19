@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useMemo, useState, useRef } from 'react';
+import { useEffect, useMemo, useState, useRef, useSyncExternalStore } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { Post } from '@/lib/types';
@@ -14,7 +14,7 @@ import { buildCreatorPostPath, buildPostDeepLink } from '@/lib/deep-link';
 import { buildLoginRedirectFromLocation } from '@/lib/protected-action';
 import { getRemixSocialProofLabel, shouldShowRemixSocialProof } from '@/lib/remix-social-proof';
 import { getRemixCtaCopy, shouldShowRemixCta } from '@/lib/remix-cta';
-import { buildTrafficSourcePayload } from '@/lib/traffic-source';
+import { buildTrafficSourcePayload, getExternalEntryCopy } from '@/lib/traffic-source';
 import { buildPostReportPath } from '@/lib/trust-safety';
 import { BOTTOM_NAV_SCROLL_PADDING_CLASS } from '@/lib/bottom-nav-layout';
 import InteractiveDemo from './InteractiveDemo';
@@ -70,6 +70,11 @@ export default function PostDetailClient({
   const [activeReaction, setActiveReaction] = useState<ReactionKey | null>(null);
   const [reactionCounts, setReactionCounts] = useState({ ...reactions });
   const [copied, setCopied] = useState(false);
+  const entryLocationKey = useEntryLocationKey();
+  const entryCopy = useMemo(() => getExternalEntryCopy({
+    source: buildTrafficSourcePayload(parseEntryLocationKey(entryLocationKey)).traffic_source,
+    autoplay,
+  }), [autoplay, entryLocationKey]);
   const remixSocialProof = getRemixSocialProofLabel(repostCount);
   const remixCtaCopy = getRemixCtaCopy();
   const reportPath = buildPostReportPath(post.id, `/post/${post.id}${autoplay ? '?autoplay=true' : ''}`);
@@ -228,6 +233,22 @@ export default function PostDetailClient({
           <div className="mt-3 inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-black text-white text-[13px] font-black">
             {remixSocialProof}
           </div>
+        )}
+        {entryCopy && (
+          <section className="mt-3 rounded-[24px] border-2 border-black bg-[#FFFDF5] px-4 py-3 shadow-[0_14px_28px_rgba(0,0,0,0.08)]">
+            <div className="flex items-start gap-3">
+              <div className="mt-0.5 flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-full bg-black text-white">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+                  <path d="M5 3l14 9-14 9V3z" />
+                </svg>
+              </div>
+              <div className="min-w-0">
+                <div className="text-[11px] font-black uppercase tracking-wider text-[#8A6A22]">{entryCopy.eyebrow}</div>
+                <div className="mt-0.5 text-[16px] font-black tracking-[-0.04em] text-black">{entryCopy.title}</div>
+                <p className="mt-1 text-[12px] leading-snug text-[#666660]">{entryCopy.body}</p>
+              </div>
+            </div>
+          </section>
         )}
 
         {/* Content by type */}
@@ -459,6 +480,23 @@ export default function PostDetailClient({
         <CommentSection postId={post.id} postAuthorId={author.id} inputRef={commentInputRef} requireLoginPath />
       </div>
     </main>
+  );
+}
+
+const subscribeToEntryLocation = () => () => {};
+const getServerEntryLocationKey = () => '\n';
+const getBrowserEntryLocationKey = () => `${window.location.search}\n${document.referrer}`;
+
+function parseEntryLocationKey(key: string) {
+  const [search = '', referrer = ''] = key.split('\n');
+  return { search, referrer };
+}
+
+function useEntryLocationKey() {
+  return useSyncExternalStore(
+    subscribeToEntryLocation,
+    getBrowserEntryLocationKey,
+    getServerEntryLocationKey,
   );
 }
 

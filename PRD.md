@@ -1,8 +1,8 @@
 # nuevo MVP PRD
 
-**Version:** 1.1
-**Updated:** 2026-05-18
-**Scope:** Fame loop + Play loop 중심 MVP
+**Version:** 1.2
+**Updated:** 2026-05-19
+**Scope:** Fame loop + Play-first Vertical Stack 중심 MVP
 
 ## 1. Product Definition
 
@@ -33,10 +33,14 @@ MVP의 목적은 앱 생성기가 아닙니다. 창작자는 이미 Claude Code,
 ```text
 SNS 링크, 피드, 탐색에서 앱 발견
 -> 바로 실행
+-> 외부 유입이면 첫 앱을 전체화면에 가깝게 체험
+-> 아래로 스크롤하면 다음 추천 앱이 바로 이어짐
 -> 마음에 들면 반응/댓글/저장/공유
 -> 직접 바꾸고 싶으면 리믹스
 -> 새 버전이 피드와 원본 상세에 재노출
 ```
+
+외부 SNS에서 들어온 첫 세션은 검색이나 일반 피드 탐색을 먼저 요구하지 않습니다. 사용자는 Instagram Reels, TikTok, YouTube Shorts에서 온 호기심 상태이므로, 첫 앱 체험 후 바로 다음 앱을 제안하는 **Play-first Vertical Stack**을 기본 retention UX로 둡니다.
 
 ### Trust / Data Loop
 
@@ -80,6 +84,8 @@ Required:
 - Autoplay query: `?autoplay=true`
 - Source query: `utm_source=youtube|instagram|tiktok|reddit|direct`
 - Guest access: 로그인 없이 상세 체험 가능
+- Entry context: Instagram/TikTok/YouTube에서 왔다는 짧은 안내
+- Internal back: 소셜 딥링크에서는 뒤로가기가 외부 앱으로 튕기지 않고 nuevo 내부 홈으로 복귀
 - Mobile LCP target: 3초 이하 목표
 
 Current app mapping:
@@ -90,7 +96,30 @@ Current app mapping:
 - `src/components/post/InteractiveDemo.tsx`
 - `src/lib/traffic-source.js`
 
-### 4.2 Upload With External Resource Links
+### 4.2 Play-first Vertical Stack
+
+외부 유입 사용자는 첫 앱 체험 후 바로 다음 앱을 만날 수 있어야 합니다. 피드나 검색으로 되돌려 보내는 것은 보조 경로이며, 기본 경로는 앱 체험이 연속되는 릴스/쇼츠형 세로 스택입니다.
+
+Required:
+
+- External deep-link detail uses an immersive app-first layout
+- The first app remains the hero experience, not a marketing landing page
+- Scrolling down reveals the next recommended playable app
+- Recommendation starts simple: same tag, similar title/text, same creator, remix lineage, or current `getSimilarPosts()` output
+- Next app preview should show title, creator, source reason, and one clear play action
+- After 2-3 app plays, expose feed/search/creator follow as secondary continuation paths
+- Do not auto-advance while the user is actively interacting with an embedded app
+- Respect guest mode: play remains open, social/remix actions keep login guard
+
+Current app mapping:
+
+- `src/app/post/[id]/page.tsx`
+- `src/components/post/PostDetailClient.tsx`
+- `src/components/post/InteractiveDemo.tsx`
+- `src/lib/play-retention.js`
+- `src/lib/traffic-source.js`
+
+### 4.3 Upload With External Resource Links
 
 창작자는 앱 URL과 함께 제작 맥락을 보여주는 외부 자료 링크를 붙일 수 있어야 합니다.
 
@@ -111,7 +140,7 @@ Current app mapping:
 - `src/components/post/PostDetailClient.tsx`
 - `src/components/post/PostCard.tsx`
 
-### 4.3 Remix Fame Loop
+### 4.4 Remix Fame Loop
 
 리믹스는 단순 파생작 기능이 아니라 원본의 Fame을 다시 키우는 성장 루프입니다.
 
@@ -136,7 +165,7 @@ Current app mapping:
 - `src/components/post/PostDetailClient.tsx`
 - `src/app/notifications/page.tsx`
 
-### 4.4 Discovery / Play Retention
+### 4.5 Discovery / Play Retention
 
 Required:
 
@@ -145,6 +174,7 @@ Required:
 - Category and tag entry points
 - Daily playable / most remixed / longest played sections
 - Related posts under detail
+- External deep-link sessions should prefer the Play-first Vertical Stack before asking users to search
 
 Current app mapping:
 
@@ -153,7 +183,7 @@ Current app mapping:
 - `src/lib/explore-filters.js`
 - `src/lib/play-retention.js`
 
-### 4.5 Creator Fame Studio
+### 4.6 Creator Fame Studio
 
 Required:
 
@@ -202,6 +232,10 @@ These pages are not end-user production surfaces. They are alignment tools for p
 Launch validation:
 
 - External deep-link play success rate
+- External deep-link first app completion/meaningful-play rate
+- Next app reveal rate after first app
+- Second app play rate
+- 2+ app session rate from Instagram/TikTok/YouTube
 - Mobile detail LCP for `/post/[id]` and `/post/[id]?autoplay=true`
 - Upload completion rate
 - First play after publish time
@@ -222,5 +256,7 @@ Launch validation:
 
 - Mobile LCP needs real Chrome/device confirmation. The local `npm run qa:lcp` script exists, but the current Windows headless browser hit a GPU startup failure.
 - Instagram/TikTok in-app browser behavior should be tested on real devices.
+- Vertical stack UX must not steal scroll/touch interactions from embedded apps.
+- Recommendation quality can start heuristic-based; do not block MVP on an advanced model.
 - iframe compatibility varies by creator hosting platform and must keep clear diagnostics.
 - Revenue language must stay conservative until real settlement exists.

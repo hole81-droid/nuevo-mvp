@@ -6,6 +6,25 @@
 
 ## 세션 12 — 2026-05-19
 
+### 기획 변경 반영: 외부 유입 후 Play-first Vertical Stack
+
+- Instagram/TikTok/YouTube 외부 유입 사용자는 첫 앱 체험 뒤 검색/피드로 되돌리는 대신, 아래로 스크롤하면 다음 추천 앱이 바로 이어지는 세로 스택을 기본 retention UX로 정했다.
+- PRD/구현 스펙/디자인 기준/태스크/README/Claude context에 같은 용어와 우선순위를 반영했다.
+- 핵심 제품 가설:
+  - 외부 링크 유입 사용자는 검색보다 연속 체험으로 더 오래 남는다.
+  - 첫 앱을 전체화면에 가깝게 체험하고, 다음 앱은 사용자 스크롤로 진입한다.
+  - 자동 넘김은 금지하고 iframe 조작을 방해하지 않는다.
+- 신규 추적 지표:
+  - next app reveal rate
+  - second app play rate
+  - Instagram/TikTok/YouTube 유입의 2+ app session rate
+- 남은 작업:
+  - `/post/[id]` 외부 유입 상세에 next playable app section 추가.
+  - `/ux-prototype`에 “외부 유입 → 첫 앱 전체화면 체험 → 다음 앱 스크롤 진입” 화면 추가.
+  - 실기기 QA에서 iframe touch/scroll 간섭 여부 확인.
+
+---
+
 ### 다음 단계 개발: DB 기반 신고 큐 연결
 
 - 앱스토어/초기 운영 준비 리스크를 줄이기 위해 이메일 중심 게시물 신고 흐름을 DB 기반 moderation queue 중심으로 전환했다.

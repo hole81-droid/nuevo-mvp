@@ -1,11 +1,12 @@
 # nuevo MVP
 
-nuevo is a mobile-first platform for posting already-built AI apps, letting visitors play them instantly from external links, and growing them through reactions, sharing, remix, and creator Fame/WES data.
+nuevo is a mobile-first platform for posting already-built AI apps, letting visitors play them instantly from external links, continuing them into the next playable app, and growing creators through reactions, sharing, remix, and Fame/WES data.
 
 ## Core MVP
 
 - External deep links from YouTube, Instagram, TikTok, Reddit, GitHub, and other pages can open directly into playable detail pages.
 - `?autoplay=true` starts the embedded app immediately.
+- External social visitors should get a Play-first Vertical Stack: first app in focus, next playable app available by scrolling.
 - Upload supports an app URL, tags, and external resource links such as YouTube, Instagram, TikTok, and GitHub.
 - Remix preserves original lineage, shows `N회 리믹스됨`, notifies the original creator, and re-exposes the original app.
 - Creator Studio shows Fame/WES, traffic source breakdown, and CSV export.
@@ -70,7 +71,7 @@ https://nuevo-instagram-test.vercel.app/auth/callback
 Use these internal pages before making more product changes:
 
 - `/ux-flow`: compares the current MVP app with the intended UX flow, including routes, buttons, login guards, state messages, and internal/external movement.
-- `/ux-prototype`: screen-first mobile prototype board for external deep link play, upload with external links, remix UX, Studio/WES, and settings QA.
+- `/ux-prototype`: screen-first mobile prototype board for external deep link play, Play-first Vertical Stack, upload with external links, remix UX, Studio/WES, and settings QA.
 - `/qa`: execution checklist for real-device deep links, mobile LCP, live WES export, and final visual QA. PASS/FAIL/notes and QA target values are stored locally in the browser, with runnable target URL generation, copyable target-link bundles, per-item runbooks, pass criteria, evidence-required notes, evidence-missing filtering, a release gate banner, `npm run qa:lcp` JSON import, WES CSV import, and shareable JSON/Markdown reports that include and restore target URLs.
 
 ## Trust and Safety
