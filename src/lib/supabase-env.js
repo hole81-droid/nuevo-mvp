@@ -17,3 +17,15 @@ export function getSupabaseClientConfig(env = process.env) {
 export function getSupabaseServerConfig(env = process.env) {
   return getSupabaseClientConfig(env);
 }
+
+export function isServiceRoleConfigured(env = process.env) {
+  return Boolean(env.SUPABASE_SERVICE_ROLE_KEY && isSupabaseConfigured(env));
+}
+
+export function getSupabaseAdminConfig(env = process.env) {
+  return {
+    ...getSupabaseServerConfig(env),
+    serviceRoleKey: env.SUPABASE_SERVICE_ROLE_KEY ?? null,
+    adminConfigured: isServiceRoleConfigured(env),
+  };
+}

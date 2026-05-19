@@ -5,6 +5,8 @@ import {
   getSupabaseClientConfig,
   getSupabaseServerConfig,
   isSupabaseConfigured,
+  isServiceRoleConfigured,
+  getSupabaseAdminConfig,
 } from './supabase-env.js';
 
 test('isSupabaseConfigured requires both public Supabase values', () => {
@@ -34,4 +36,33 @@ test('server config exposes whether real Supabase is configured', () => {
     NEXT_PUBLIC_SUPABASE_URL: 'https://demo.supabase.co',
     NEXT_PUBLIC_SUPABASE_ANON_KEY: 'anon',
   }).configured, true);
+});
+
+test('isServiceRoleConfigured requires service role key and public keys', () => {
+  assert.equal(isServiceRoleConfigured({}), false);
+  assert.equal(isServiceRoleConfigured({
+    SUPABASE_SERVICE_ROLE_KEY: 'service-role-secret',
+  }), false, 'service role key alone is not enough');
+  assert.equal(isServiceRoleConfigured({
+    NEXT_PUBLIC_SUPABASE_URL: 'https://demo.supabase.co',
+    NEXT_PUBLIC_SUPABASE_ANON_KEY: 'anon',
+    SUPABASE_SERVICE_ROLE_KEY: 'service-role-secret',
+  }), true);
+});
+
+test('getSupabaseAdminConfig returns null serviceRoleKey when not configured', () => {
+  const config = getSupabaseAdminConfig({});
+  assert.equal(config.adminConfigured, false);
+  assert.equal(config.serviceRoleKey, null);
+});
+
+test('getSupabaseAdminConfig returns serviceRoleKey when all env vars present', () => {
+  const config = getSupabaseAdminConfig({
+    NEXT_PUBLIC_SUPABASE_URL: 'https://demo.supabase.co',
+    NEXT_PUBLIC_SUPABASE_ANON_KEY: 'anon',
+    SUPABASE_SERVICE_ROLE_KEY: 'service-role-secret',
+  });
+  assert.equal(config.adminConfigured, true);
+  assert.equal(config.serviceRoleKey, 'service-role-secret');
+  assert.equal(config.url, 'https://demo.supabase.co');
 });
