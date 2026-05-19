@@ -165,6 +165,32 @@
 
 ---
 
+### 다음 단계 개발: Play-first Vertical Stack 완성
+
+- 외부 SNS 유입 사용자 retention을 위한 Play Mode UX를 완성했다.
+- 신규 파일:
+  - `src/lib/play-mode.js` — Play Mode 라우팅 (`isPlayModeRequested`, `buildPlayModePath`, `getPlayModeContinuation`)
+  - `src/lib/play-mode-analytics.js` — `internal_play_start`, `next_app_reveal`, `next_app_click` sessionStorage 이벤트 추적
+  - `src/lib/supabase-env.js` — Supabase 환경변수 graceful fallback (로컬 dev 기본값 포함)
+- 기존 파일 수정:
+  - `src/components/post/PostDetailClient.tsx` — Play Mode 전용 레이아웃: iframe 우선, `overscroll-contain touch-pan-y`, next-app 카드, fallback CTA
+  - `src/components/post/PostCard.tsx` — 피드 카드에 "바로 체험" primary CTA 추가
+  - `src/app/post/[id]/page.tsx` — `playMode` 분기 렌더 (`isPlayModeRequested`), Play Mode 시 BottomNav 숨김
+  - `src/lib/traffic-source.js` — `getExternalEntryCopy()`, `shouldUseInternalBackFallback()`, ig/tt_bio/yt_shorts alias 정규화
+  - `src/components/ui/BackButton.tsx` — 외부 소셜 autoplay 뒤로가기 → nuevo 홈 fallback
+  - `src/lib/supabase/client.ts`, `server.ts` — `getSupabaseClientConfig()`로 안전한 env 주입
+  - `src/lib/mvp-qa-checklist.js` — `play-mode-external`, `play-mode-internal` QA 항목 추가 (9 → 11개)
+  - `src/app/ux-prototype/page.tsx` — `ExternalPlayModeMock`, `InternalBrowseToPlayMock` 화면으로 교체
+  - `TASK.md` — Play-first Vertical Stack 항목 12개 완료 처리
+
+### 검증 완료
+
+- `node --test src\lib\*.test.mjs` 통과: 111 tests.
+- `npm.cmd run lint` 통과.
+- `npx.cmd tsc --noEmit --pretty false` 통과.
+
+---
+
 ## 세션 10 — 2026-05-18
 
 ### 완료 내역
