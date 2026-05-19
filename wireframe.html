@@ -1,0 +1,1861 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>nuevo — Wireframe Prototype</title>
+<style>
+:root {
+  --black:  #000000;
+  --ink:    #050505;
+  --sheet:  #F8F8F3;
+  --soft:   #EFEFE8;
+  --line:   #D7D7CF;
+  --muted:  #7D7D78;
+  --sheet2: #E2E2DC;
+}
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+body {
+  background: #111;
+  font-family: ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  color: var(--ink);
+  min-height: 100vh;
+}
+
+/* ── LAYOUT ── */
+.layout {
+  display: grid;
+  grid-template-columns: 260px 1fr 280px;
+  min-height: 100vh;
+  gap: 0;
+}
+
+/* ── LEFT SIDEBAR ── */
+.sidebar {
+  background: #1a1a1a;
+  padding: 28px 20px;
+  border-right: 1px solid #2a2a2a;
+  position: sticky;
+  top: 0;
+  height: 100vh;
+  overflow-y: auto;
+}
+.sidebar-logo {
+  font-size: 22px;
+  font-weight: 900;
+  color: white;
+  letter-spacing: -0.05em;
+  margin-bottom: 6px;
+}
+.sidebar-sub {
+  font-size: 11px;
+  color: #888;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  margin-bottom: 28px;
+}
+.flow-btn {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  width: 100%;
+  padding: 12px 14px;
+  border-radius: 12px;
+  border: none;
+  background: transparent;
+  cursor: pointer;
+  text-align: left;
+  margin-bottom: 6px;
+  transition: background 0.15s;
+}
+.flow-btn:hover { background: #2a2a2a; }
+.flow-btn.active { background: white; }
+.flow-btn.active .flow-num { background: var(--black); color: white; }
+.flow-btn.active .flow-name { color: var(--ink); }
+.flow-btn.active .flow-desc { color: var(--muted); }
+.flow-num {
+  width: 24px; height: 24px;
+  border-radius: 50%;
+  background: #333;
+  color: #aaa;
+  font-size: 11px;
+  font-weight: 900;
+  display: flex; align-items: center; justify-content: center;
+  flex-shrink: 0;
+  margin-top: 1px;
+}
+.flow-name { font-size: 13px; font-weight: 900; color: #ddd; line-height: 1.3; }
+.flow-desc { font-size: 11px; color: #666; margin-top: 2px; line-height: 1.4; }
+
+.sidebar-divider { border: none; border-top: 1px solid #2a2a2a; margin: 20px 0; }
+.sidebar-hint { font-size: 11px; color: #555; line-height: 1.6; }
+
+/* ── CENTER: PHONE + NAV ── */
+.center {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 36px 24px;
+  min-height: 100vh;
+}
+.step-bar {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 20px;
+}
+.step-dot {
+  width: 8px; height: 8px;
+  border-radius: 50%;
+  background: #333;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+.step-dot.active { background: white; width: 24px; border-radius: 4px; }
+.phone-wrap { position: relative; }
+.phone-frame {
+  width: 360px;
+  background: #0a0a0a;
+  border-radius: 48px;
+  padding: 10px;
+  box-shadow:
+    0 0 0 1px #2a2a2a,
+    0 40px 80px rgba(0,0,0,0.9),
+    inset 0 0 0 1px rgba(255,255,255,0.06);
+}
+.phone-notch {
+  width: 120px; height: 28px;
+  background: #0a0a0a;
+  border-radius: 0 0 18px 18px;
+  position: absolute;
+  top: 10px; left: 50%;
+  transform: translateX(-50%);
+  z-index: 10;
+  display: flex; align-items: center; justify-content: center;
+}
+.phone-notch-inner {
+  width: 80px; height: 12px;
+  background: #1a1a1a;
+  border-radius: 6px;
+}
+.phone-screen {
+  width: 100%;
+  height: 740px;
+  background: var(--sheet);
+  border-radius: 40px;
+  overflow: hidden;
+  position: relative;
+}
+.status-bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 14px 24px 6px;
+  font-size: 12px;
+  font-weight: 700;
+  background: var(--sheet);
+  position: relative;
+  z-index: 5;
+}
+.status-icons { display: flex; gap: 5px; align-items: center; }
+.status-battery {
+  width: 22px; height: 11px;
+  border: 1.5px solid var(--ink);
+  border-radius: 3px;
+  position: relative;
+}
+.status-battery::after {
+  content: '';
+  position: absolute;
+  right: -4px; top: 50%;
+  transform: translateY(-50%);
+  width: 2px; height: 5px;
+  background: var(--ink);
+  border-radius: 0 1px 1px 0;
+}
+.status-battery-fill {
+  position: absolute;
+  left: 2px; top: 2px; bottom: 2px;
+  width: 70%;
+  background: var(--ink);
+  border-radius: 1px;
+}
+.screen-content { height: calc(740px - 36px); overflow: hidden; }
+
+/* Screen visibility */
+.screen { display: none; height: 100%; }
+.screen.visible { display: block; }
+
+/* ── SCREEN COMPONENTS ── */
+.top-bar {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  height: 52px;
+  padding: 0 16px;
+  border-bottom: 1px solid var(--line);
+  background: var(--sheet);
+}
+.back-btn {
+  width: 32px; height: 32px;
+  border-radius: 50%;
+  background: var(--soft);
+  display: flex; align-items: center; justify-content: center;
+  font-size: 14px; font-weight: 900;
+  flex-shrink: 0;
+}
+.bar-title { font-size: 16px; font-weight: 900; letter-spacing: -0.04em; flex: 1; }
+.bar-right { font-size: 12px; font-weight: 700; color: var(--muted); }
+
+.bottom-nav {
+  position: absolute;
+  bottom: 0; left: 0; right: 0;
+  height: 68px;
+  background: var(--ink);
+  display: flex; align-items: center; justify-content: space-around;
+  padding: 0 8px 10px;
+}
+.nav-item {
+  display: flex; flex-direction: column; align-items: center;
+  gap: 3px; flex: 1;
+  font-size: 9px; font-weight: 900; color: rgba(255,255,255,0.5);
+  cursor: pointer;
+}
+.nav-item.active { color: white; }
+.nav-icon { font-size: 18px; }
+
+.feed-tab-bar {
+  display: flex;
+  border-bottom: 1px solid var(--line);
+  background: var(--sheet);
+}
+.feed-tab {
+  flex: 1;
+  text-align: center;
+  padding: 12px 0;
+  font-size: 13px; font-weight: 900;
+  color: var(--muted);
+  border-bottom: 2px solid transparent;
+}
+.feed-tab.active { color: var(--ink); border-bottom-color: var(--ink); }
+
+.post-card {
+  padding: 14px 16px;
+  border-bottom: 1px solid var(--line);
+  background: var(--sheet);
+}
+.card-header { display: flex; align-items: center; gap: 8px; margin-bottom: 10px; }
+.avatar {
+  width: 32px; height: 32px;
+  border-radius: 50%;
+  background: var(--ink);
+  display: flex; align-items: center; justify-content: center;
+  font-size: 14px; color: white; font-weight: 900;
+  flex-shrink: 0;
+}
+.card-author { font-size: 13px; font-weight: 900; }
+.card-time { font-size: 11px; color: var(--muted); }
+.card-title { font-size: 15px; font-weight: 900; letter-spacing: -0.04em; margin-bottom: 6px; }
+.card-tags { display: flex; gap: 5px; flex-wrap: wrap; margin-bottom: 10px; }
+.tag {
+  padding: 3px 8px;
+  border-radius: 99px;
+  background: var(--soft);
+  font-size: 10px; font-weight: 700;
+}
+.app-preview {
+  height: 120px;
+  border-radius: 12px;
+  background: linear-gradient(135deg, #1a1a2e, #16213e, #0f3460);
+  display: flex; align-items: center; justify-content: center;
+  color: white; font-size: 28px;
+  margin-bottom: 10px;
+  border: 1px solid var(--line);
+  position: relative;
+  overflow: hidden;
+}
+.app-preview-label {
+  position: absolute;
+  bottom: 8px; left: 8px;
+  font-size: 10px; font-weight: 700; color: rgba(255,255,255,0.7);
+  background: rgba(0,0,0,0.4);
+  padding: 2px 6px; border-radius: 4px;
+}
+.play-now-btn {
+  display: flex; align-items: center; justify-content: center;
+  height: 44px; width: 100%;
+  border-radius: 99px;
+  background: var(--black);
+  color: white;
+  font-size: 13px; font-weight: 900;
+  letter-spacing: -0.02em;
+}
+.outline-btn {
+  display: flex; align-items: center; justify-content: center;
+  height: 40px;
+  border-radius: 99px;
+  border: 2px solid var(--line);
+  color: var(--ink);
+  font-size: 12px; font-weight: 900;
+}
+.action-row {
+  display: flex; gap: 6px; margin-top: 10px;
+}
+.action-chip {
+  display: flex; align-items: center; gap: 4px;
+  padding: 6px 10px; border-radius: 99px;
+  background: var(--soft);
+  font-size: 11px; font-weight: 700; color: var(--muted);
+}
+
+/* PLAY MODE */
+.play-header {
+  background: var(--black);
+  color: white;
+  padding: 12px 16px 10px;
+  display: flex; align-items: center; gap: 10px;
+}
+.play-back {
+  width: 30px; height: 30px;
+  border-radius: 50%;
+  background: rgba(255,255,255,0.15);
+  display: flex; align-items: center; justify-content: center;
+  font-size: 13px;
+}
+.play-title { font-size: 15px; font-weight: 900; flex: 1; }
+.play-badge {
+  font-size: 9px; font-weight: 900;
+  background: rgba(255,255,255,0.15);
+  padding: 3px 8px; border-radius: 99px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+.entry-banner {
+  background: #1a1a1a;
+  color: white;
+  padding: 8px 14px;
+  display: flex; align-items: center; gap: 8px;
+  font-size: 11px; font-weight: 700;
+}
+.entry-icon {
+  width: 20px; height: 20px; border-radius: 50%;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 11px;
+}
+.iframe-mock {
+  background: linear-gradient(160deg, #0f0f23 0%, #1a0a2e 50%, #0a1628 100%);
+  display: flex; flex-direction: column;
+  align-items: center; justify-content: center;
+  gap: 8px;
+  color: white;
+  position: relative;
+  overflow: hidden;
+}
+.iframe-mock::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: repeating-linear-gradient(
+    45deg,
+    transparent,
+    transparent 20px,
+    rgba(255,255,255,0.02) 20px,
+    rgba(255,255,255,0.02) 21px
+  );
+}
+.iframe-running {
+  font-size: 11px; font-weight: 700;
+  background: rgba(255,255,255,0.1);
+  padding: 4px 10px; border-radius: 99px;
+  color: rgba(255,255,255,0.7);
+  z-index: 1;
+}
+.iframe-emoji { font-size: 40px; z-index: 1; }
+.iframe-name { font-size: 14px; font-weight: 900; z-index: 1; }
+
+.next-app-section {
+  background: white;
+  border-top: 3px solid var(--soft);
+}
+.next-app-label {
+  padding: 12px 16px 6px;
+  font-size: 10px; font-weight: 900;
+  color: var(--muted);
+  text-transform: uppercase;
+  letter-spacing: 0.12em;
+}
+.next-app-card {
+  padding: 10px 16px 14px;
+  display: flex; gap: 12px; align-items: flex-start;
+}
+.next-app-thumb {
+  width: 56px; height: 56px;
+  border-radius: 12px;
+  background: linear-gradient(135deg, #2d1b69, #11a4d4);
+  display: flex; align-items: center; justify-content: center;
+  font-size: 24px; flex-shrink: 0;
+}
+.next-app-info { flex: 1; }
+.next-app-reason {
+  font-size: 10px; font-weight: 700; color: var(--muted);
+  margin-bottom: 2px;
+}
+.next-app-title { font-size: 14px; font-weight: 900; letter-spacing: -0.03em; }
+.next-app-author { font-size: 11px; color: var(--muted); margin-top: 2px; }
+.scroll-hint {
+  text-align: center;
+  padding: 10px;
+  font-size: 11px; font-weight: 700; color: rgba(255,255,255,0.5);
+  display: flex; flex-direction: column; align-items: center; gap: 2px;
+}
+.scroll-arrow {
+  font-size: 16px;
+  animation: bounce 1.4s ease-in-out infinite;
+}
+@keyframes bounce {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(4px); }
+}
+
+/* REACTION / MODAL */
+.reaction-row {
+  display: flex; gap: 6px; padding: 10px 16px;
+  border-top: 1px solid var(--line);
+  overflow-x: auto;
+}
+.reaction-btn {
+  display: flex; flex-direction: column; align-items: center;
+  padding: 8px 12px; border-radius: 12px;
+  background: var(--soft);
+  font-size: 10px; font-weight: 700; color: var(--muted);
+  flex-shrink: 0;
+}
+.reaction-emoji { font-size: 20px; margin-bottom: 2px; }
+.login-modal {
+  position: absolute;
+  bottom: 0; left: 0; right: 0;
+  background: white;
+  border-radius: 20px 20px 0 0;
+  padding: 20px 20px 32px;
+  box-shadow: 0 -8px 40px rgba(0,0,0,0.15);
+  z-index: 20;
+}
+.modal-handle {
+  width: 36px; height: 4px;
+  background: var(--line);
+  border-radius: 2px;
+  margin: 0 auto 16px;
+}
+.modal-title { font-size: 20px; font-weight: 900; letter-spacing: -0.04em; margin-bottom: 6px; }
+.modal-desc { font-size: 13px; color: var(--muted); line-height: 1.5; margin-bottom: 18px; }
+.google-btn {
+  display: flex; align-items: center; justify-content: center; gap: 8px;
+  height: 52px; width: 100%;
+  border-radius: 99px;
+  background: var(--black);
+  color: white;
+  font-size: 14px; font-weight: 900;
+  margin-bottom: 10px;
+}
+.skip-btn {
+  text-align: center;
+  font-size: 12px; font-weight: 700;
+  color: var(--muted);
+  padding: 8px;
+}
+
+/* REMIX */
+.remix-badge {
+  display: inline-flex; align-items: center; gap: 4px;
+  padding: 4px 10px; border-radius: 99px;
+  background: var(--soft);
+  font-size: 11px; font-weight: 700; color: var(--ink);
+}
+.remix-list-item {
+  display: flex; align-items: center; gap: 10px;
+  padding: 10px 16px;
+  border-bottom: 1px solid var(--line);
+}
+.original-banner {
+  background: var(--soft);
+  border-left: 3px solid var(--ink);
+  padding: 10px 14px;
+  margin: 10px 14px;
+  border-radius: 0 8px 8px 0;
+}
+.orig-label { font-size: 10px; font-weight: 900; color: var(--muted); text-transform: uppercase; letter-spacing: 0.1em; }
+.orig-title { font-size: 13px; font-weight: 900; margin-top: 2px; }
+.form-group { padding: 10px 16px; }
+.form-label { font-size: 11px; font-weight: 700; color: var(--muted); margin-bottom: 4px; }
+.form-input {
+  width: 100%; height: 40px;
+  border-radius: 10px;
+  border: 1.5px solid var(--line);
+  background: white;
+  padding: 0 12px;
+  font-size: 13px;
+  font-family: inherit;
+}
+.form-input-area {
+  width: 100%; height: 60px;
+  border-radius: 10px;
+  border: 1.5px solid var(--line);
+  background: white;
+  padding: 8px 12px;
+  font-size: 12px;
+  font-family: inherit;
+  resize: none;
+}
+.ext-link-row {
+  display: flex; gap: 6px; align-items: center;
+  padding: 6px 16px;
+}
+.ext-link-icon {
+  width: 28px; height: 28px;
+  border-radius: 8px;
+  background: var(--soft);
+  display: flex; align-items: center; justify-content: center;
+  font-size: 14px;
+}
+.ext-link-text { font-size: 12px; font-weight: 700; color: var(--muted); }
+
+/* NOTIF */
+.notif-item {
+  display: flex; gap: 10px;
+  padding: 12px 16px;
+  border-bottom: 1px solid var(--line);
+  align-items: flex-start;
+}
+.notif-dot {
+  width: 8px; height: 8px;
+  border-radius: 50%;
+  background: #3b82f6;
+  margin-top: 5px;
+  flex-shrink: 0;
+}
+.notif-text { font-size: 13px; line-height: 1.5; }
+.notif-text strong { font-weight: 900; }
+.notif-time { font-size: 11px; color: var(--muted); margin-top: 2px; }
+.notif-preview {
+  width: 44px; height: 44px;
+  border-radius: 10px;
+  background: linear-gradient(135deg, #f59e0b, #ef4444);
+  flex-shrink: 0;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 20px;
+}
+
+/* ── RIGHT PANEL ── */
+.right-panel {
+  background: #1a1a1a;
+  padding: 28px 20px;
+  border-left: 1px solid #2a2a2a;
+  position: sticky;
+  top: 0;
+  height: 100vh;
+  overflow-y: auto;
+}
+.panel-section { margin-bottom: 24px; }
+.panel-section-title {
+  font-size: 10px; font-weight: 900;
+  text-transform: uppercase; letter-spacing: 0.12em;
+  color: #666; margin-bottom: 10px;
+}
+.panel-screen-name {
+  font-size: 16px; font-weight: 900; color: white;
+  margin-bottom: 4px; line-height: 1.3;
+}
+.panel-route {
+  font-size: 11px; font-weight: 700; color: #888;
+  font-family: monospace;
+  background: #222;
+  padding: 4px 8px; border-radius: 6px;
+  display: inline-block; margin-bottom: 10px;
+}
+.panel-desc {
+  font-size: 12px; color: #aaa;
+  line-height: 1.6;
+}
+.panel-cta-row { margin-top: 12px; }
+.panel-cta-label { font-size: 10px; font-weight: 700; color: #666; margin-bottom: 4px; }
+.panel-cta-value { font-size: 12px; font-weight: 700; color: #ccc; }
+.annotation {
+  background: #222;
+  border-left: 2px solid #555;
+  padding: 8px 10px;
+  border-radius: 0 6px 6px 0;
+  font-size: 11px; color: #aaa;
+  line-height: 1.5;
+  margin-bottom: 6px;
+}
+.annotation strong { color: #eee; }
+.nav-controls {
+  display: flex; gap: 8px; margin-top: 20px;
+}
+.nav-ctrl-btn {
+  flex: 1; height: 40px;
+  border-radius: 10px;
+  border: none;
+  background: #2a2a2a;
+  color: white;
+  font-size: 13px; font-weight: 700;
+  cursor: pointer;
+  transition: background 0.15s;
+}
+.nav-ctrl-btn:hover { background: #333; }
+.nav-ctrl-btn:disabled { opacity: 0.3; cursor: default; }
+.nav-ctrl-btn.primary {
+  background: white;
+  color: var(--ink);
+}
+.nav-ctrl-btn.primary:hover { background: #f0f0f0; }
+
+/* ── EXTERNAL ENTRY (Instagram mock) ── */
+.ig-frame {
+  height: 100%;
+  background: #000;
+  color: white;
+  display: flex; flex-direction: column;
+}
+.ig-header {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 10px 14px;
+  background: #000;
+}
+.ig-logo { font-size: 18px; font-weight: 900; font-style: italic; }
+.ig-story-bar { display: flex; gap: 3px; padding: 8px 12px 0; }
+.ig-story-seg {
+  flex: 1; height: 2px;
+  background: rgba(255,255,255,0.3);
+  border-radius: 1px;
+}
+.ig-story-seg.done { background: white; }
+.ig-story-user {
+  display: flex; align-items: center; gap: 8px;
+  padding: 8px 12px;
+}
+.ig-avatar {
+  width: 30px; height: 30px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, #f09433, #e6683c, #dc2743, #cc2366, #bc1888);
+  display: flex; align-items: center; justify-content: center;
+  font-size: 12px; font-weight: 900; color: white;
+}
+.ig-story-content {
+  flex: 1;
+  background: linear-gradient(180deg, #1a1a2e 0%, #2d1b69 50%, #11a4d4 100%);
+  display: flex; flex-direction: column;
+  align-items: center; justify-content: center;
+  gap: 12px; padding: 20px;
+}
+.ig-link-btn {
+  background: rgba(255,255,255,0.95);
+  color: #000;
+  border-radius: 99px;
+  padding: 10px 20px;
+  font-size: 13px; font-weight: 900;
+  display: flex; align-items: center; gap: 6px;
+  box-shadow: 0 4px 16px rgba(0,0,0,0.3);
+}
+.tap-arrow {
+  font-size: 20px;
+  animation: bounce 1.4s ease-in-out infinite;
+}
+
+/* STUDIO */
+.stat-grid {
+  display: grid; grid-template-columns: 1fr 1fr;
+  gap: 8px; padding: 10px 16px;
+}
+.stat-card {
+  background: white;
+  border-radius: 12px;
+  padding: 10px 12px;
+  border: 1px solid var(--line);
+}
+.stat-num { font-size: 22px; font-weight: 900; letter-spacing: -0.05em; }
+.stat-label { font-size: 10px; font-weight: 700; color: var(--muted); margin-top: 1px; }
+.wes-bar {
+  margin: 0 16px 8px;
+  background: var(--soft);
+  border-radius: 12px;
+  padding: 12px 14px;
+}
+.wes-score { font-size: 28px; font-weight: 900; letter-spacing: -0.06em; }
+.wes-label { font-size: 10px; font-weight: 700; color: var(--muted); }
+
+/* UPLOAD */
+.upload-step {
+  padding: 12px 16px;
+  display: flex; align-items: center; gap: 10px;
+  border-bottom: 1px solid var(--line);
+}
+.step-circle {
+  width: 28px; height: 28px;
+  border-radius: 50%;
+  background: var(--ink);
+  color: white;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 12px; font-weight: 900; flex-shrink: 0;
+}
+.step-circle.done { background: #22c55e; }
+.step-circle.inactive { background: var(--soft); color: var(--muted); }
+.step-text { font-size: 13px; font-weight: 700; }
+.step-text.inactive { color: var(--muted); }
+
+/* URL CHECK */
+.url-check {
+  margin: 8px 16px;
+  padding: 10px 12px;
+  border-radius: 10px;
+  border: 1.5px solid #22c55e;
+  background: #f0fdf4;
+  font-size: 12px; font-weight: 700;
+  color: #15803d;
+  display: flex; align-items: center; gap: 6px;
+}
+</style>
+</head>
+<body>
+<div class="layout">
+
+<!-- ══ LEFT SIDEBAR ══ -->
+<nav class="sidebar">
+  <div class="sidebar-logo">nuevo</div>
+  <div class="sidebar-sub">Wireframe Prototype</div>
+
+  <button class="flow-btn active" onclick="switchFlow(0)">
+    <div class="flow-num">1</div>
+    <div>
+      <div class="flow-name">외부유입 바로 체험</div>
+      <div class="flow-desc">SNS 딥링크 → Play Mode 즉시 실행</div>
+    </div>
+  </button>
+
+  <button class="flow-btn" onclick="switchFlow(1)">
+    <div class="flow-num">2</div>
+    <div>
+      <div class="flow-name">다음 앱 이어보기</div>
+      <div class="flow-desc">Play-first Vertical Stack</div>
+    </div>
+  </button>
+
+  <button class="flow-btn" onclick="switchFlow(2)">
+    <div class="flow-num">3</div>
+    <div>
+      <div class="flow-name">피드 탐색하기</div>
+      <div class="flow-desc">홈 피드 → 카드 확장 → 바로 체험</div>
+    </div>
+  </button>
+
+  <button class="flow-btn" onclick="switchFlow(3)">
+    <div class="flow-num">4</div>
+    <div>
+      <div class="flow-name">리믹스하기</div>
+      <div class="flow-desc">원본 상세 → 리믹스 → Fame loop</div>
+    </div>
+  </button>
+
+  <hr class="sidebar-divider">
+  <div class="sidebar-hint">
+    ← / → 또는 아래 버튼으로<br>
+    화면을 이동합니다.<br><br>
+    키보드 방향키도 지원됩니다.
+  </div>
+</nav>
+
+<!-- ══ CENTER (PHONE) ══ -->
+<main class="center">
+  <div class="step-bar" id="stepBar"></div>
+
+  <div class="phone-wrap">
+    <div class="phone-frame">
+      <div class="phone-screen">
+        <div class="status-bar">
+          <span style="font-size:13px;font-weight:700">9:41</span>
+          <div class="status-icons">
+            <span style="font-size:11px;font-weight:700">●●●</span>
+            <div class="status-battery">
+              <div class="status-battery-fill"></div>
+            </div>
+          </div>
+        </div>
+        <div class="screen-content" id="screenContent"></div>
+      </div>
+    </div>
+  </div>
+</main>
+
+<!-- ══ RIGHT PANEL ══ -->
+<aside class="right-panel">
+  <div class="panel-section">
+    <div class="panel-section-title">현재 화면</div>
+    <div class="panel-screen-name" id="panelTitle">—</div>
+    <div class="panel-route" id="panelRoute">—</div>
+    <div class="panel-desc" id="panelDesc">—</div>
+  </div>
+
+  <div class="panel-section">
+    <div class="panel-section-title">주요 액션</div>
+    <div class="panel-cta-row">
+      <div class="panel-cta-label">누르는 버튼</div>
+      <div class="panel-cta-value" id="panelCta">—</div>
+    </div>
+    <div class="panel-cta-row" style="margin-top:8px">
+      <div class="panel-cta-label">다음 이동</div>
+      <div class="panel-cta-value" id="panelNext">—</div>
+    </div>
+  </div>
+
+  <div class="panel-section">
+    <div class="panel-section-title">설계 메모</div>
+    <div id="panelAnnotations"></div>
+  </div>
+
+  <div class="nav-controls">
+    <button class="nav-ctrl-btn" id="btnPrev" onclick="prevScreen()">← 이전</button>
+    <button class="nav-ctrl-btn primary" id="btnNext" onclick="nextScreen()">다음 →</button>
+  </div>
+</aside>
+
+</div><!-- /layout -->
+
+<script>
+// ══════════════════════════════════════════════════
+// SCREEN DATA
+// ══════════════════════════════════════════════════
+const flows = [
+
+// ─── FLOW 1: 외부유입 바로 체험 ───────────────────
+{
+  name: '외부유입 바로 체험',
+  screens: [
+    {
+      title: 'Instagram 스토리 링크',
+      route: '(외부 앱)',
+      desc: '창작자가 Instagram 스토리/바이오에 nuevo 딥링크를 공유. 방문자가 링크를 탭하는 시작 시점.',
+      cta: '↑ nuevo 앱 바로 체험 (링크 버튼)',
+      next: '/post/[id]?autoplay=true&utm_source=instagram',
+      annotations: [
+        { strong: 'UTM 파라미터', text: 'utm_source=instagram이 유입 채널 분류에 사용됨' },
+        { strong: '로그인 불필요', text: '게스트 상태에서도 바로 체험 가능' },
+        { strong: '딥링크 형식', text: '@handle/app-slug--postId?autoplay=true' },
+      ],
+      html: `
+        <div class="ig-frame">
+          <div class="ig-header">
+            <div class="ig-logo">Instagram</div>
+            <span style="font-size:18px;color:white">✕</span>
+          </div>
+          <div class="ig-story-bar">
+            <div class="ig-story-seg done"></div>
+            <div class="ig-story-seg done"></div>
+            <div class="ig-story-seg"></div>
+            <div class="ig-story-seg"></div>
+          </div>
+          <div class="ig-story-user">
+            <div class="ig-avatar">M</div>
+            <span style="font-size:13px;font-weight:700;color:white">minsu_lab</span>
+            <span style="font-size:11px;color:rgba(255,255,255,0.5);margin-left:4px">3시간 전</span>
+          </div>
+          <div class="ig-story-content">
+            <div style="font-size:11px;font-weight:700;color:rgba(255,255,255,0.6);text-transform:uppercase;letter-spacing:.1em">NEW AI APP</div>
+            <div style="font-size:28px;font-weight:900;text-align:center;line-height:1.1">감정 위로<br>챗봇 만들었어요 🤖</div>
+            <div style="font-size:13px;color:rgba(255,255,255,0.7);text-align:center">설치 없이 바로 체험!</div>
+            <div class="tap-arrow">↑</div>
+            <div class="ig-link-btn">
+              <span>🔗</span>
+              nuevo에서 바로 체험
+            </div>
+          </div>
+          <div style="padding:10px 14px;font-size:11px;color:rgba(255,255,255,0.4);text-align:center">
+            스토리 링크 탭 → nuevo 앱 상세로 이동
+          </div>
+        </div>
+      `
+    },
+    {
+      title: 'Play Mode 진입',
+      route: '/post/[id]?autoplay=true&utm_source=instagram',
+      desc: 'Instagram에서 유입. autoplay=true로 iframe이 즉시 실행됨. 상단에 유입 출처 배너 표시.',
+      cta: '(자동 실행) 앱이 바로 시작됨',
+      next: '체험 중 상태 → 소셜 액션',
+      annotations: [
+        { strong: 'Play Mode 헤더', text: '검은 배경으로 "바로 체험" 맥락 강조. BottomNav 숨김.' },
+        { strong: '유입 배너', text: '"Instagram에서 왔어요" — getExternalEntryCopy() 결과' },
+        { strong: '즉시 실행', text: 'autoplay=true → iframe 즉시 mount, 탭 필요 없음' },
+      ],
+      html: `
+        <div style="height:100%;display:flex;flex-direction:column;background:var(--sheet)">
+          <div class="play-header">
+            <div class="play-back">←</div>
+            <div class="play-title">바로 체험</div>
+            <div class="play-badge">Play Mode</div>
+          </div>
+          <div class="entry-banner">
+            <div class="entry-icon" style="background:linear-gradient(135deg,#f09433,#dc2743)">📸</div>
+            <div>
+              <div style="font-size:10px;color:rgba(255,255,255,0.5)">Instagram에서 왔어요</div>
+              <div>앱이 바로 실행됩니다</div>
+            </div>
+          </div>
+          <div class="iframe-mock" style="flex:1">
+            <div class="iframe-running">▶ 실행 중</div>
+            <div class="iframe-emoji">🤖</div>
+            <div class="iframe-name" style="font-size:16px;font-weight:900;color:white">감정 위로 챗봇</div>
+            <div style="font-size:11px;color:rgba(255,255,255,0.4);z-index:1">by @minsu_lab</div>
+            <div style="margin-top:12px;padding:8px 14px;background:rgba(255,255,255,0.08);border-radius:10px;width:80%;z-index:1">
+              <div style="font-size:11px;color:rgba(255,255,255,0.5);margin-bottom:4px">오늘 어떤 하루였나요?</div>
+              <div style="height:28px;background:rgba(255,255,255,0.12);border-radius:8px;padding:0 10px;display:flex;align-items:center">
+                <span style="font-size:12px;color:rgba(255,255,255,0.3)">답장하기…</span>
+              </div>
+            </div>
+          </div>
+          <div style="padding:8px 16px;background:white;font-size:11px;color:var(--muted);display:flex;align-items:center;gap:6px;border-top:1px solid var(--line)">
+            <span>💬</span> 반응이나 댓글을 남기려면 로그인이 필요해요
+          </div>
+        </div>
+      `
+    },
+    {
+      title: '소셜 액션 시도',
+      route: '/post/[id]?autoplay=true (체험 중)',
+      desc: '앱 체험 후 반응 버튼 탭 → 로그인 유도 Bottom Sheet 등장. 게스트 플레이는 계속 가능.',
+      cta: '😂 재밌어 (반응 버튼 탭)',
+      next: '로그인 Bottom Sheet 오픈',
+      annotations: [
+        { strong: 'Guest 보호', text: '로그인 없이 체험은 계속 가능. 소셜 액션만 로그인 요구' },
+        { strong: 'next 파라미터', text: '로그인 후 현재 URL로 복귀 (?next= 보존)' },
+        { strong: 'Bottom Sheet', text: 'Half-modal로 현재 체험을 방해하지 않음' },
+      ],
+      html: `
+        <div style="height:100%;display:flex;flex-direction:column;background:var(--sheet);position:relative">
+          <div class="play-header">
+            <div class="play-back">←</div>
+            <div class="play-title">바로 체험</div>
+            <div class="play-badge">Play Mode</div>
+          </div>
+          <div class="iframe-mock" style="height:280px">
+            <div class="iframe-running">▶ 실행 중</div>
+            <div class="iframe-emoji">🤖</div>
+            <div class="iframe-name" style="color:white">감정 위로 챗봇</div>
+          </div>
+          <div style="padding:10px 16px;background:white;border-top:1px solid var(--line)">
+            <div style="font-size:12px;font-weight:900;margin-bottom:8px">반응하기</div>
+            <div class="reaction-row" style="padding:0;border:none;margin-bottom:10px">
+              <div class="reaction-btn">
+                <div class="reaction-emoji">😂</div>
+                <div>재밌어</div>
+              </div>
+              <div class="reaction-btn">
+                <div class="reaction-emoji">🧠</div>
+                <div>천재적</div>
+              </div>
+              <div class="reaction-btn">
+                <div class="reaction-emoji">👽</div>
+                <div>기괴함</div>
+              </div>
+              <div class="reaction-btn">
+                <div class="reaction-emoji">❓</div>
+                <div>뭐야이건</div>
+              </div>
+            </div>
+          </div>
+          <!-- Login Modal -->
+          <div class="login-modal">
+            <div class="modal-handle"></div>
+            <div class="modal-title">반응을 남기려면<br>로그인이 필요해요</div>
+            <div class="modal-desc">Google 계정으로 1초 만에 시작하고<br>반응, 댓글, 저장, 리믹스까지 할 수 있어요.</div>
+            <div class="google-btn">
+              <span style="font-size:16px">G</span>
+              Google로 계속하기
+            </div>
+            <div class="skip-btn">계속 구경만 할게요</div>
+          </div>
+        </div>
+      `
+    },
+    {
+      title: '로그인 완료 → 복귀',
+      route: '/login → /post/[id]?autoplay=true',
+      desc: 'Google 로그인 완료 후 next 파라미터를 통해 원래 앱 상세 화면으로 복귀. 반응 등록 완료.',
+      cta: 'Google로 계속하기',
+      next: '원래 앱 상세로 복귀, 반응 등록됨',
+      annotations: [
+        { strong: '경로 보존', text: '로그인 전 URL이 ?next= 에 저장되어 복귀 보장' },
+        { strong: '신규 유저', text: '첫 로그인이면 /setup (핸들 설정) 거친 후 복귀' },
+        { strong: '반응 등록', text: '로그인 후 바로 반응 DB에 기록됨' },
+      ],
+      html: `
+        <div style="height:100%;display:flex;flex-direction:column;background:var(--sheet)">
+          <div class="play-header">
+            <div class="play-back">←</div>
+            <div class="play-title">바로 체험</div>
+            <div class="play-badge">Play Mode</div>
+          </div>
+          <div class="iframe-mock" style="height:260px">
+            <div class="iframe-running">▶ 실행 중</div>
+            <div class="iframe-emoji">🤖</div>
+            <div class="iframe-name" style="color:white">감정 위로 챗봇</div>
+          </div>
+          <div style="padding:10px 16px;background:white;border-top:1px solid var(--line)">
+            <div style="display:flex;align-items:center;gap:8px;padding:8px 0;border-bottom:1px solid var(--line);margin-bottom:8px">
+              <div style="width:28px;height:28px;border-radius:50%;background:linear-gradient(135deg,#6366f1,#8b5cf6);display:flex;align-items:center;justify-content:center;color:white;font-size:12px;font-weight:900">U</div>
+              <span style="font-size:13px;font-weight:900">user_abc님 안녕하세요 👋</span>
+            </div>
+            <div style="font-size:12px;font-weight:900;margin-bottom:8px">반응하기</div>
+            <div style="display:flex;gap:6px">
+              <div class="reaction-btn" style="background:#fef9c3;color:#854d0e">
+                <div class="reaction-emoji">😂</div>
+                <div>재밌어 1</div>
+              </div>
+              <div class="reaction-btn">
+                <div class="reaction-emoji">🧠</div>
+                <div>천재적</div>
+              </div>
+              <div class="reaction-btn">
+                <div class="reaction-emoji">👽</div>
+                <div>기괴함</div>
+              </div>
+            </div>
+          </div>
+          <div style="padding:8px 16px;background:var(--soft);font-size:11px;color:var(--muted);display:flex;align-items:center;gap:6px">
+            ✓ 반응이 등록됐어요
+          </div>
+        </div>
+      `
+    },
+  ]
+},
+
+// ─── FLOW 2: 다음 앱 이어보기 ─────────────────────
+{
+  name: '다음 앱 이어보기',
+  screens: [
+    {
+      title: '첫 앱 체험 완료',
+      route: '/post/[id]?autoplay=true',
+      desc: '앱 체험 중. 하단에 스크롤 힌트가 등장 — 다음 추천 앱이 있다는 신호. 강제 이동 없음.',
+      cta: '↓ 스크롤 (또는 다음 앱 힌트 탭)',
+      next: '다음 앱 카드 노출 (세로 스크롤)',
+      annotations: [
+        { strong: 'overscroll-contain', text: 'iframe 내부 터치/스크롤을 페이지 스크롤이 가로채지 않음' },
+        { strong: '강제 전환 없음', text: '타이머 자동 넘김 절대 금지. 사용자 스크롤로만 전환' },
+        { strong: '힌트 타이밍', text: '앱 iframe onLoad 3초 후 아래쪽에 살짝 보이기 시작' },
+      ],
+      html: `
+        <div style="height:100%;display:flex;flex-direction:column;background:var(--sheet)">
+          <div class="play-header">
+            <div class="play-back">←</div>
+            <div class="play-title">바로 체험</div>
+            <div class="play-badge">Play Mode</div>
+          </div>
+          <div class="entry-banner" style="background:#1a2a1a">
+            <div class="entry-icon">📸</div>
+            <div style="font-size:11px;color:rgba(255,255,255,0.7)">Instagram에서 왔어요</div>
+          </div>
+          <div class="iframe-mock" style="flex:1;min-height:0">
+            <div class="iframe-running">▶ 체험 중</div>
+            <div class="iframe-emoji">🤖</div>
+            <div class="iframe-name" style="color:white">감정 위로 챗봇</div>
+            <div style="font-size:11px;color:rgba(255,255,255,0.4);z-index:1">@minsu_lab</div>
+          </div>
+          <div style="background:rgba(0,0,0,0.85);padding:10px 0 4px">
+            <div class="scroll-hint" style="color:rgba(255,255,255,0.6)">
+              <div class="scroll-arrow">↓</div>
+              <div>비슷한 앱이 있어요</div>
+            </div>
+          </div>
+          <div style="height:52px;background:linear-gradient(180deg,var(--soft),var(--sheet));display:flex;align-items:center;padding:0 16px;gap:10px">
+            <div style="width:36px;height:36px;border-radius:8px;background:linear-gradient(135deg,#2d1b69,#11a4d4);display:flex;align-items:center;justify-content:center;font-size:16px">🎨</div>
+            <div>
+              <div style="font-size:10px;font-weight:700;color:var(--muted)">다음 앱</div>
+              <div style="font-size:12px;font-weight:900">픽셀 아트 생성기</div>
+            </div>
+          </div>
+        </div>
+      `
+    },
+    {
+      title: '다음 앱 섹션 노출',
+      route: '/post/[id]?autoplay=true (스크롤 후)',
+      desc: '사용자가 아래로 스크롤. 다음 추천 앱 카드 등장. 추천 이유, 창작자, 바로 체험 CTA 포함.',
+      cta: '다음 앱 "바로 체험" 버튼',
+      next: '/post/[nextId]?mode=play&autoplay=true&utm_source=next_app',
+      annotations: [
+        { strong: '추천 근거 표시', text: '"방금 본 앱과 비슷해요" — 태그/창작자/리믹스 기반' },
+        { strong: 'Play 경로', text: 'buildPlayModePath(nextPost.id, {source:"next_app"})' },
+        { strong: 'Fallback', text: '추천 앱 없으면 피드/탐색 CTA로 대체' },
+      ],
+      html: `
+        <div style="height:100%;display:flex;flex-direction:column;background:var(--sheet);overflow:hidden">
+          <div class="play-header">
+            <div class="play-back">←</div>
+            <div class="play-title">바로 체험</div>
+            <div class="play-badge">Play Mode</div>
+          </div>
+          <div class="iframe-mock" style="height:200px;opacity:0.6">
+            <div style="font-size:11px;color:rgba(255,255,255,0.4);z-index:1">▶ 감정 위로 챗봇 (체험 완료)</div>
+          </div>
+          <div class="next-app-section" style="flex:1">
+            <div class="next-app-label">방금 본 앱과 비슷해요</div>
+            <div class="next-app-card">
+              <div class="next-app-thumb">🎨</div>
+              <div class="next-app-info">
+                <div class="next-app-reason">같은 태그 · AI 아트</div>
+                <div class="next-app-title">픽셀 아트 생성기</div>
+                <div class="next-app-author">@sujin_creates</div>
+              </div>
+            </div>
+            <div style="padding:0 16px 12px">
+              <div class="play-now-btn">다음 앱 바로 체험</div>
+            </div>
+            <div style="padding:0 16px 8px;display:flex;gap:6px">
+              <div style="flex:1;height:36px;border-radius:99px;border:1.5px solid var(--line);display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:700;color:var(--muted)">피드로 이동</div>
+              <div style="flex:1;height:36px;border-radius:99px;border:1.5px solid var(--line);display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:700;color:var(--muted)">탐색하기</div>
+            </div>
+            <div style="margin:4px 16px;padding:8px 10px;background:var(--soft);border-radius:8px;font-size:11px;color:var(--muted)">
+              📊 2+ 앱 세션 추적 중 — next_app_reveal 이벤트 기록됨
+            </div>
+          </div>
+        </div>
+      `
+    },
+    {
+      title: '두 번째 앱 Play Mode',
+      route: '/post/[nextId]?mode=play&autoplay=true&utm_source=next_app',
+      desc: '두 번째 앱이 동일한 Play Mode로 실행됨. 세션 연속성 유지. 세 번째 앱 힌트도 준비.',
+      cta: '↓ 스크롤 (세 번째 앱) 또는 피드/탐색으로 이탈',
+      next: '세 번째 앱 or 피드/탐색 CTA',
+      annotations: [
+        { strong: '2nd App Play', text: 'second_app_play 이벤트 → WES/Fame 반영' },
+        { strong: 'utm_source=next_app', text: '두 번째 앱 유입 출처가 next_app으로 기록됨' },
+        { strong: '3회 후', text: '세 번째 이후엔 피드/탐색/팔로우 CTA 강도 높임' },
+      ],
+      html: `
+        <div style="height:100%;display:flex;flex-direction:column;background:var(--sheet)">
+          <div class="play-header">
+            <div class="play-back">←</div>
+            <div class="play-title">바로 체험</div>
+            <div class="play-badge">Play Mode</div>
+          </div>
+          <div style="background:#111;color:rgba(255,255,255,0.6);padding:6px 14px;font-size:10px;font-weight:700;display:flex;align-items:center;gap:6px">
+            <span>→</span> 이어보기 2/3
+          </div>
+          <div class="iframe-mock" style="flex:1">
+            <div class="iframe-running">▶ 실행 중</div>
+            <div class="iframe-emoji">🎨</div>
+            <div class="iframe-name" style="color:white">픽셀 아트 생성기</div>
+            <div style="font-size:11px;color:rgba(255,255,255,0.4);z-index:1">@sujin_creates</div>
+            <div style="display:flex;gap:6px;z-index:1;margin-top:8px">
+              <div style="width:32px;height:32px;background:rgba(255,255,255,0.15);border-radius:6px"></div>
+              <div style="width:32px;height:32px;background:rgba(255,100,100,0.4);border-radius:6px"></div>
+              <div style="width:32px;height:32px;background:rgba(100,255,100,0.4);border-radius:6px"></div>
+              <div style="width:32px;height:32px;background:rgba(100,100,255,0.4);border-radius:6px"></div>
+            </div>
+          </div>
+          <div style="background:rgba(0,0,0,0.85);padding:8px 0 4px">
+            <div class="scroll-hint" style="color:rgba(255,255,255,0.5)">
+              <div class="scroll-arrow">↓</div>
+              <div>더 많은 앱이 있어요</div>
+            </div>
+          </div>
+        </div>
+      `
+    },
+  ]
+},
+
+// ─── FLOW 3: 피드 탐색하기 ────────────────────────
+{
+  name: '피드 탐색하기',
+  screens: [
+    {
+      title: '홈 피드',
+      route: '/',
+      desc: '로그인 없이도 접근 가능한 공개 피드. 추천/팔로잉 탭. 카드 탭 시 인라인 확장.',
+      cta: '카드 탭 (인라인 확장)',
+      next: '카드 확장 상태',
+      annotations: [
+        { strong: '비로그인 허용', text: '피드 탐색과 앱 체험은 게스트도 가능' },
+        { strong: '인라인 확장', text: 'expandedId state — 카드 탭으로 즉시 펼침' },
+        { strong: 'BottomNav', text: '홈/탐색/올리기/알림/MY 5칸 고정 grid' },
+      ],
+      html: `
+        <div style="height:100%;display:flex;flex-direction:column;background:var(--sheet)">
+          <div class="top-bar">
+            <div class="bar-title">nuevo</div>
+            <div class="bar-right">🔔</div>
+          </div>
+          <div class="feed-tab-bar">
+            <div class="feed-tab active">추천</div>
+            <div class="feed-tab">팔로잉</div>
+          </div>
+          <div style="flex:1;overflow:hidden">
+            <!-- Card 1 -->
+            <div class="post-card">
+              <div class="card-header">
+                <div class="avatar">M</div>
+                <div>
+                  <div class="card-author">@minsu_lab</div>
+                  <div class="card-time">2시간 전</div>
+                </div>
+              </div>
+              <div class="card-title">감정 위로 챗봇</div>
+              <div class="card-tags">
+                <span class="tag">AI 채팅</span>
+                <span class="tag">감정</span>
+                <span class="tag">Claude</span>
+              </div>
+              <div class="app-preview">
+                🤖
+                <div class="app-preview-label">탭해서 체험</div>
+              </div>
+              <div class="action-row">
+                <div class="action-chip">😂 12</div>
+                <div class="action-chip">💬 5</div>
+                <div class="action-chip">🔖 28</div>
+                <div class="action-chip" style="margin-left:auto">🔀 3회 리믹스</div>
+              </div>
+            </div>
+            <!-- Card 2 -->
+            <div class="post-card">
+              <div class="card-header">
+                <div class="avatar" style="background:#6366f1">S</div>
+                <div>
+                  <div class="card-author">@sujin_creates</div>
+                  <div class="card-time">5시간 전</div>
+                </div>
+              </div>
+              <div class="card-title">픽셀 아트 생성기</div>
+              <div class="card-tags">
+                <span class="tag">AI 아트</span>
+                <span class="tag">픽셀</span>
+              </div>
+              <div class="app-preview" style="background:linear-gradient(135deg,#1e1b4b,#312e81)">
+                🎨
+                <div class="app-preview-label">탭해서 체험</div>
+              </div>
+            </div>
+          </div>
+          <div class="bottom-nav">
+            <div class="nav-item active"><div class="nav-icon">🏠</div>홈</div>
+            <div class="nav-item"><div class="nav-icon">🔍</div>탐색</div>
+            <div class="nav-item"><div class="nav-icon">＋</div>올리기</div>
+            <div class="nav-item"><div class="nav-icon">🔔</div>알림</div>
+            <div class="nav-item"><div class="nav-icon">👤</div>MY</div>
+          </div>
+        </div>
+      `
+    },
+    {
+      title: '카드 인라인 확장',
+      route: '/ (카드 확장 상태)',
+      desc: '카드를 탭하면 인라인으로 펼쳐짐. 앱 미리보기 + "바로 체험" 주요 CTA 노출.',
+      cta: '바로 체험 (Primary CTA)',
+      next: '/post/[id]?mode=play&autoplay=true&utm_source=feed',
+      annotations: [
+        { strong: '인라인 확장', text: '페이지 이동 없이 카드 자체가 펼쳐짐 (expandedId)' },
+        { strong: '바로 체험 CTA', text: '검은 pill 버튼 — Play Mode로 이동' },
+        { strong: 'stopPropagation', text: '버튼 내부 탭이 카드 collapse로 연결되지 않도록' },
+      ],
+      html: `
+        <div style="height:100%;display:flex;flex-direction:column;background:var(--sheet)">
+          <div class="top-bar">
+            <div class="bar-title">nuevo</div>
+            <div class="bar-right">🔔</div>
+          </div>
+          <div class="feed-tab-bar">
+            <div class="feed-tab active">추천</div>
+            <div class="feed-tab">팔로잉</div>
+          </div>
+          <div style="flex:1;overflow:hidden">
+            <!-- Expanded Card -->
+            <div class="post-card" style="border:2px solid var(--ink)">
+              <div class="card-header">
+                <div class="avatar">M</div>
+                <div>
+                  <div class="card-author">@minsu_lab</div>
+                  <div class="card-time">2시간 전</div>
+                </div>
+                <div style="margin-left:auto;font-size:11px;font-weight:700;color:var(--muted)">접기 ↑</div>
+              </div>
+              <div class="card-title">감정 위로 챗봇</div>
+              <div style="font-size:12px;color:var(--muted);line-height:1.5;margin-bottom:8px">
+                오늘 힘든 일이 있었나요? 공감해주는 AI 챗봇이에요. Claude로 만들었고 바로 실행 가능합니다.
+              </div>
+              <div class="card-tags">
+                <span class="tag">AI 채팅</span>
+                <span class="tag">감정</span>
+                <span class="tag">Claude</span>
+              </div>
+              <div class="app-preview" style="height:140px">
+                🤖
+                <div class="app-preview-label">▶ 탭해서 바로 해보기</div>
+              </div>
+              <!-- 바로 체험 CTA -->
+              <div class="play-now-btn" style="margin-bottom:8px">바로 체험</div>
+              <div class="action-row">
+                <div class="action-chip">😂 12</div>
+                <div class="action-chip">💬 5</div>
+                <div class="action-chip">🔖 28</div>
+                <div class="action-chip" style="margin-left:auto;color:var(--ink);font-weight:900">🔀 리믹스</div>
+              </div>
+            </div>
+          </div>
+          <div class="bottom-nav">
+            <div class="nav-item active"><div class="nav-icon">🏠</div>홈</div>
+            <div class="nav-item"><div class="nav-icon">🔍</div>탐색</div>
+            <div class="nav-item"><div class="nav-icon">＋</div>올리기</div>
+            <div class="nav-item"><div class="nav-icon">🔔</div>알림</div>
+            <div class="nav-item"><div class="nav-icon">👤</div>MY</div>
+          </div>
+        </div>
+      `
+    },
+    {
+      title: '상세 페이지 (일반 진입)',
+      route: '/post/[id]',
+      desc: '피드에서 "바로 체험" 없이 제목/설명 탭으로 진입. iframe은 즉시 실행 안 함 — "탭해서 시작" 대기.',
+      cta: '탭해서 바로 해보기 (iframe 실행)',
+      next: 'iframe 실행 상태',
+      annotations: [
+        { strong: '지연 실행', text: '일반 진입은 LCP 최적화를 위해 iframe 즉시 실행하지 않음' },
+        { strong: '바로 체험 vs 일반', text: '피드 "바로 체험" 클릭 → mode=play, 제목 클릭 → 일반 상세' },
+        { strong: 'BottomNav 유지', text: 'Play Mode가 아니므로 하단 네비게이션 표시됨' },
+      ],
+      html: `
+        <div style="height:100%;display:flex;flex-direction:column;background:var(--sheet)">
+          <div class="top-bar">
+            <div class="back-btn">←</div>
+            <div class="bar-title">작품</div>
+          </div>
+          <div style="flex:1;overflow:hidden">
+            <div style="padding:14px 16px;border-bottom:1px solid var(--line)">
+              <div style="display:flex;align-items:center;gap:8px;margin-bottom:10px">
+                <div class="avatar">M</div>
+                <div>
+                  <div style="font-size:13px;font-weight:900">@minsu_lab</div>
+                  <div style="font-size:11px;color:var(--muted)">2시간 전</div>
+                </div>
+              </div>
+              <div style="font-size:20px;font-weight:900;letter-spacing:-0.04em;margin-bottom:6px">감정 위로 챗봇</div>
+              <div style="font-size:13px;color:var(--muted);line-height:1.5;margin-bottom:10px">
+                오늘 힘든 일이 있었나요? 공감해주는 AI 챗봇. Claude로 만들었어요.
+              </div>
+              <div class="card-tags" style="margin-bottom:12px">
+                <span class="tag">AI 채팅</span><span class="tag">감정</span><span class="tag">Claude</span>
+              </div>
+              <!-- iframe 대기 상태 -->
+              <div style="height:180px;border-radius:14px;background:linear-gradient(160deg,#0f0f23,#1a0a2e);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:8px;border:1px solid var(--line)">
+                <div style="font-size:32px">🤖</div>
+                <div style="font-size:13px;font-weight:900;color:white">감정 위로 챗봇</div>
+                <div style="padding:8px 18px;background:rgba(255,255,255,0.15);border-radius:99px;color:white;font-size:12px;font-weight:700">
+                  ▶ 탭해서 바로 해보기
+                </div>
+              </div>
+            </div>
+            <div style="padding:10px 16px;display:flex;gap:16px;border-bottom:1px solid var(--line)">
+              <div style="text-align:center">
+                <div style="font-size:18px;font-weight:900">47</div>
+                <div style="font-size:10px;color:var(--muted)">체험</div>
+              </div>
+              <div style="text-align:center">
+                <div style="font-size:18px;font-weight:900">12</div>
+                <div style="font-size:10px;color:var(--muted)">반응</div>
+              </div>
+              <div style="text-align:center">
+                <div style="font-size:18px;font-weight:900">3</div>
+                <div style="font-size:10px;color:var(--muted)">리믹스</div>
+              </div>
+            </div>
+          </div>
+          <div class="bottom-nav">
+            <div class="nav-item"><div class="nav-icon">🏠</div>홈</div>
+            <div class="nav-item"><div class="nav-icon">🔍</div>탐색</div>
+            <div class="nav-item"><div class="nav-icon">＋</div>올리기</div>
+            <div class="nav-item"><div class="nav-icon">🔔</div>알림</div>
+            <div class="nav-item active"><div class="nav-icon">👤</div>MY</div>
+          </div>
+        </div>
+      `
+    },
+    {
+      title: '피드 → Play Mode 진입',
+      route: '/post/[id]?mode=play&autoplay=true&utm_source=feed',
+      desc: '피드 카드의 "바로 체험" 버튼 클릭 → Play Mode. 내부 피드 유입이므로 entry 배너는 "피드에서 왔어요".',
+      cta: '체험 중 → 다음 앱 스크롤',
+      next: 'next-app 섹션 노출 (Flow 2와 동일)',
+      annotations: [
+        { strong: 'utm_source=feed', text: '내부 피드 유입으로 분류. 외부 SNS와 구분됨' },
+        { strong: '동일한 Play Mode', text: 'external 유입과 동일한 vertical stack 경험 제공' },
+        { strong: 'internal_play_start', text: '분석 이벤트 기록됨 → WES/Fame 반영' },
+      ],
+      html: `
+        <div style="height:100%;display:flex;flex-direction:column;background:var(--sheet)">
+          <div class="play-header">
+            <div class="play-back">←</div>
+            <div class="play-title">바로 체험</div>
+            <div class="play-badge">Play Mode</div>
+          </div>
+          <div class="entry-banner" style="background:#0f1f0f">
+            <div class="entry-icon">🏠</div>
+            <div>
+              <div style="font-size:10px;color:rgba(255,255,255,0.5)">피드에서 왔어요</div>
+              <div>앱이 바로 실행됩니다</div>
+            </div>
+          </div>
+          <div class="iframe-mock" style="flex:1">
+            <div class="iframe-running">▶ 실행 중</div>
+            <div class="iframe-emoji">🤖</div>
+            <div class="iframe-name" style="color:white">감정 위로 챗봇</div>
+          </div>
+          <div style="background:rgba(0,0,0,0.85);padding:8px 0 4px">
+            <div class="scroll-hint" style="color:rgba(255,255,255,0.5)">
+              <div class="scroll-arrow">↓</div>
+              <div>방금 본 앱과 비슷해요</div>
+            </div>
+          </div>
+        </div>
+      `
+    },
+  ]
+},
+
+// ─── FLOW 4: 리믹스하기 ───────────────────────────
+{
+  name: '리믹스하기',
+  screens: [
+    {
+      title: '앱 상세 — 리믹스 CTA',
+      route: '/post/[id]',
+      desc: '앱 상세 하단에 "3회 리믹스됨" 소셜 증명 + "리믹스하기" CTA. 원본 창작자 Fame loop 시작점.',
+      cta: '리믹스하기 버튼',
+      next: '/upload?remix=[postId]',
+      annotations: [
+        { strong: 'N회 리믹스됨', text: '소셜 증명 배지 — 원본 앱의 신뢰도와 Fame 표시' },
+        { strong: 'remixable=false', text: '창작자가 리믹스 금지 설정 시 버튼 비활성화' },
+        { strong: '리믹스 = Fame', text: '원본에 리믹스가 쌓일수록 WES 상승' },
+      ],
+      html: `
+        <div style="height:100%;display:flex;flex-direction:column;background:var(--sheet)">
+          <div class="top-bar">
+            <div class="back-btn">←</div>
+            <div class="bar-title">작품</div>
+          </div>
+          <div style="flex:1;overflow:hidden">
+            <div style="padding:14px 16px">
+              <div style="display:flex;align-items:center;gap:8px;margin-bottom:10px">
+                <div class="avatar">M</div>
+                <div>
+                  <div style="font-size:13px;font-weight:900">@minsu_lab</div>
+                  <div style="font-size:11px;color:var(--muted)">2시간 전</div>
+                </div>
+              </div>
+              <div style="font-size:20px;font-weight:900;letter-spacing:-0.04em;margin-bottom:6px">감정 위로 챗봇</div>
+              <div style="height:160px;border-radius:14px;background:linear-gradient(160deg,#0f0f23,#1a0a2e);display:flex;align-items:center;justify-content:center;font-size:36px;margin-bottom:10px">🤖</div>
+              <div style="display:flex;gap:8px;margin-bottom:12px">
+                <div class="remix-badge">🔀 3회 리믹스됨</div>
+                <div class="remix-badge">💾 28회 저장</div>
+              </div>
+            </div>
+            <div style="padding:0 16px 12px;border-top:1px solid var(--line);padding-top:12px">
+              <div class="play-now-btn" style="margin-bottom:8px">
+                🔀 이 앱을 리믹스하기
+              </div>
+              <div style="font-size:11px;color:var(--muted);text-align:center">
+                이 앱을 기반으로 새 버전을 만들 수 있어요
+              </div>
+            </div>
+            <div style="padding:10px 16px;border-top:1px solid var(--line)">
+              <div style="font-size:12px;font-weight:900;margin-bottom:8px">이 앱의 리믹스 3개</div>
+              <div class="remix-list-item">
+                <div style="width:36px;height:36px;border-radius:8px;background:linear-gradient(135deg,#f59e0b,#ef4444);display:flex;align-items:center;justify-content:center;font-size:16px">🔥</div>
+                <div>
+                  <div style="font-size:12px;font-weight:900">화가 풀리는 챗봇</div>
+                  <div style="font-size:10px;color:var(--muted)">@alice_dev · 어제</div>
+                </div>
+              </div>
+            </div>
+          </div>
+          <div class="bottom-nav">
+            <div class="nav-item"><div class="nav-icon">🏠</div>홈</div>
+            <div class="nav-item"><div class="nav-icon">🔍</div>탐색</div>
+            <div class="nav-item"><div class="nav-icon">＋</div>올리기</div>
+            <div class="nav-item"><div class="nav-icon">🔔</div>알림</div>
+            <div class="nav-item"><div class="nav-icon">👤</div>MY</div>
+          </div>
+        </div>
+      `
+    },
+    {
+      title: '업로드 — 리믹스 모드',
+      route: '/upload?remix=[postId]',
+      desc: '리믹스 모드 업로드. 원본 배너 상단 표시. 새 앱 URL과 설명 입력. 리믹스 lineage 자동 연결.',
+      cta: '게시하기 버튼',
+      next: '새 리믹스 앱 상세 페이지',
+      annotations: [
+        { strong: '원본 배너', text: '리믹스 대상 앱이 명확히 보임. remixable=false면 차단' },
+        { strong: 'posts.remix_of', text: '게시 시 원본 postId가 lineage로 기록됨' },
+        { strong: '외부 자료 링크', text: 'YouTube/GitHub 등 제작 맥락 최대 3개 첨부 가능' },
+      ],
+      html: `
+        <div style="height:100%;display:flex;flex-direction:column;background:var(--sheet)">
+          <div class="top-bar">
+            <div class="back-btn">←</div>
+            <div class="bar-title">올리기</div>
+          </div>
+          <div style="flex:1;overflow:hidden">
+            <div class="upload-step">
+              <div class="step-circle done">✓</div>
+              <div class="step-text">앱 URL 확인</div>
+            </div>
+            <div class="upload-step">
+              <div class="step-circle">2</div>
+              <div class="step-text">정보 입력</div>
+            </div>
+            <div class="upload-step">
+              <div class="step-circle inactive">3</div>
+              <div class="step-text inactive">게시</div>
+            </div>
+            <!-- Original banner -->
+            <div class="original-banner">
+              <div class="orig-label">원본 앱 (리믹스 중)</div>
+              <div class="orig-title">🤖 감정 위로 챗봇 by @minsu_lab</div>
+            </div>
+            <div class="url-check">
+              ✓ 앱 URL 호환 확인 완료
+            </div>
+            <div class="form-group">
+              <div class="form-label">앱 제목 *</div>
+              <input class="form-input" value="화가 풀리는 챗봇" readonly>
+            </div>
+            <div class="form-group">
+              <div class="form-label">설명</div>
+              <textarea class="form-input-area" readonly>감정 위로 챗봇을 리믹스했어요. 화가 났을 때 더 직접적으로 표현할 수 있게 바꿨습니다.</textarea>
+            </div>
+            <div style="padding:6px 16px 2px;font-size:11px;font-weight:700;color:var(--muted)">외부 자료 링크 (선택)</div>
+            <div class="ext-link-row">
+              <div class="ext-link-icon">▶</div>
+              <div class="ext-link-text">youtube.com/watch?v=… (제작 과정)</div>
+            </div>
+            <div style="padding:10px 16px 0">
+              <div class="play-now-btn">게시하기</div>
+            </div>
+          </div>
+        </div>
+      `
+    },
+    {
+      title: '리믹스 게시 완료',
+      route: '/post/[newRemixId]',
+      desc: '리믹스가 게시됨. 상단에 원본 참조 배너 표시. 원본 창작자에게 알림 전송됨.',
+      cta: '원본 보기 / 공유하기',
+      next: '피드/탐색에 리믹스 노출 + 원본 알림',
+      annotations: [
+        { strong: '원본 참조 배너', text: '상세 상단에 "원본: 감정 위로 챗봇 by @minsu_lab"' },
+        { strong: '알림 발송', text: '원본 창작자(@minsu_lab)에게 리믹스 알림 자동 전송' },
+        { strong: '피드 재노출', text: '리믹스 포스트가 피드/탐색에 노출되어 원본 Fame 상승' },
+      ],
+      html: `
+        <div style="height:100%;display:flex;flex-direction:column;background:var(--sheet)">
+          <div class="top-bar">
+            <div class="back-btn">←</div>
+            <div class="bar-title">작품</div>
+          </div>
+          <div style="flex:1;overflow:hidden">
+            <!-- 원본 참조 배너 -->
+            <div style="background:var(--soft);padding:8px 16px;display:flex;align-items:center;gap:8px;border-bottom:1px solid var(--line)">
+              <div style="font-size:18px">🔀</div>
+              <div>
+                <div style="font-size:10px;font-weight:700;color:var(--muted)">원본 앱의 리믹스</div>
+                <div style="font-size:12px;font-weight:900">감정 위로 챗봇 by @minsu_lab</div>
+              </div>
+              <div style="margin-left:auto;font-size:11px;font-weight:700;color:var(--muted);text-decoration:underline">원본 보기</div>
+            </div>
+            <div style="padding:14px 16px">
+              <div style="display:flex;align-items:center;gap:8px;margin-bottom:10px">
+                <div class="avatar" style="background:linear-gradient(135deg,#f59e0b,#ef4444)">A</div>
+                <div>
+                  <div style="font-size:13px;font-weight:900">@alice_dev</div>
+                  <div style="font-size:11px;color:var(--muted)">방금 전</div>
+                </div>
+              </div>
+              <div style="font-size:20px;font-weight:900;letter-spacing:-0.04em;margin-bottom:8px">화가 풀리는 챗봇 🔥</div>
+              <div style="height:160px;border-radius:14px;background:linear-gradient(160deg,#2d1b00,#7c3400);display:flex;align-items:center;justify-content:center;font-size:40px;margin-bottom:12px">🔥</div>
+              <div style="font-size:13px;color:var(--muted);line-height:1.5;margin-bottom:12px">
+                감정 위로 챗봇 리믹스 버전. 화가 났을 때 직접적으로 표현할 수 있게 바꿨어요.
+              </div>
+              <div class="play-now-btn" style="margin-bottom:8px">바로 체험</div>
+              <div class="outline-btn">공유하기</div>
+            </div>
+          </div>
+          <div class="bottom-nav">
+            <div class="nav-item"><div class="nav-icon">🏠</div>홈</div>
+            <div class="nav-item"><div class="nav-icon">🔍</div>탐색</div>
+            <div class="nav-item"><div class="nav-icon">＋</div>올리기</div>
+            <div class="nav-item"><div class="nav-icon">🔔</div>알림</div>
+            <div class="nav-item active"><div class="nav-icon">👤</div>MY</div>
+          </div>
+        </div>
+      `
+    },
+    {
+      title: '원본 창작자 알림',
+      route: '/notifications (원본 창작자 화면)',
+      desc: '@minsu_lab의 알림 화면. alice_dev가 리믹스를 게시했다는 알림 도착. Fame loop 완성.',
+      cta: '알림 탭 → 리믹스 상세 이동',
+      next: '/post/[remixId] (리믹스 상세)',
+      annotations: [
+        { strong: '알림 트리거', text: 'notifications 테이블에 type=remix 레코드 생성' },
+        { strong: 'Fame 상승', text: '리믹스 알림이 원본 창작자에게 WES +5 포인트' },
+        { strong: '피드 재노출', text: '리믹스 포스트가 팔로워 피드와 탐색에 노출됨' },
+      ],
+      html: `
+        <div style="height:100%;display:flex;flex-direction:column;background:var(--sheet)">
+          <div class="top-bar">
+            <div class="bar-title">알림</div>
+          </div>
+          <div style="flex:1;overflow:hidden">
+            <!-- Remix Notif -->
+            <div class="notif-item" style="background:white">
+              <div class="notif-dot"></div>
+              <div class="notif-preview">🔀</div>
+              <div style="flex:1">
+                <div class="notif-text">
+                  <strong>alice_dev</strong>님이 내 앱을<br>
+                  리믹스했어요 — <strong>화가 풀리는 챗봇</strong>
+                </div>
+                <div class="notif-time">방금 전</div>
+              </div>
+            </div>
+            <!-- Other notifs -->
+            <div class="notif-item">
+              <div style="width:8px;height:8px;flex-shrink:0;margin-top:5px"></div>
+              <div class="notif-preview" style="background:linear-gradient(135deg,#6366f1,#8b5cf6)">😂</div>
+              <div style="flex:1">
+                <div class="notif-text"><strong>sujin_creates</strong>님이 반응했어요 — <strong>재밌어</strong></div>
+                <div class="notif-time">1시간 전</div>
+              </div>
+            </div>
+            <div class="notif-item">
+              <div style="width:8px;height:8px;flex-shrink:0;margin-top:5px"></div>
+              <div class="notif-preview" style="background:linear-gradient(135deg,#22c55e,#16a34a)">💬</div>
+              <div style="flex:1">
+                <div class="notif-text"><strong>user_kim</strong>님이 댓글을 남겼어요</div>
+                <div class="notif-time">3시간 전</div>
+              </div>
+            </div>
+            <div style="margin:12px 16px;padding:12px;background:var(--soft);border-radius:12px">
+              <div style="font-size:11px;font-weight:900;color:var(--muted);margin-bottom:6px">오늘의 Fame</div>
+              <div style="display:flex;gap:12px">
+                <div style="text-align:center">
+                  <div style="font-size:20px;font-weight:900">+5</div>
+                  <div style="font-size:10px;color:var(--muted)">WES (리믹스)</div>
+                </div>
+                <div style="text-align:center">
+                  <div style="font-size:20px;font-weight:900">+1.5</div>
+                  <div style="font-size:10px;color:var(--muted)">WES (반응)</div>
+                </div>
+                <div style="text-align:center">
+                  <div style="font-size:20px;font-weight:900">+2</div>
+                  <div style="font-size:10px;color:var(--muted)">WES (댓글)</div>
+                </div>
+              </div>
+            </div>
+          </div>
+          <div class="bottom-nav">
+            <div class="nav-item"><div class="nav-icon">🏠</div>홈</div>
+            <div class="nav-item"><div class="nav-icon">🔍</div>탐색</div>
+            <div class="nav-item"><div class="nav-icon">＋</div>올리기</div>
+            <div class="nav-item active"><div class="nav-icon">🔔</div>알림</div>
+            <div class="nav-item"><div class="nav-icon">👤</div>MY</div>
+          </div>
+        </div>
+      `
+    },
+    {
+      title: 'Fame Studio — WES 확인',
+      route: '/studio',
+      desc: '원본 창작자가 Studio에서 리믹스 포함 Fame/WES 수치 확인. 유입 채널 breakdown 포함.',
+      cta: 'WES CSV 내보내기',
+      next: '/api/studio/wes-export?month=YYYY-MM',
+      annotations: [
+        { strong: 'Fame 우선', text: '체험 수/시간/반응/리믹스가 수익보다 상단에 위치' },
+        { strong: 'WES 수식', text: '세션×1 + 시간분×0.8 + 반응×1.5 + 댓글×2 + 리믹스×5' },
+        { strong: 'CSV Export', text: 'raw event log 내보내기 — 향후 정산/스폰서십 근거' },
+      ],
+      html: `
+        <div style="height:100%;display:flex;flex-direction:column;background:var(--sheet)">
+          <div class="top-bar">
+            <div class="bar-title">Fame Studio</div>
+            <div class="bar-right">5월</div>
+          </div>
+          <div style="flex:1;overflow:hidden">
+            <div style="padding:12px 16px;background:white;border-bottom:1px solid var(--line)">
+              <div style="display:flex;align-items:center;gap:8px;margin-bottom:4px">
+                <div class="avatar">M</div>
+                <div style="font-size:15px;font-weight:900">@minsu_lab</div>
+                <div style="margin-left:auto;background:var(--ink);color:white;padding:3px 10px;border-radius:99px;font-size:10px;font-weight:900">라이징 파트너</div>
+              </div>
+            </div>
+            <div class="wes-bar">
+              <div class="wes-label">이번 달 WES</div>
+              <div class="wes-score">1,247</div>
+              <div style="font-size:11px;color:var(--muted);margin-top:2px">지난달 대비 +38%</div>
+            </div>
+            <div class="stat-grid">
+              <div class="stat-card">
+                <div class="stat-num">342</div>
+                <div class="stat-label">체험 세션</div>
+              </div>
+              <div class="stat-card">
+                <div class="stat-num">87분</div>
+                <div class="stat-label">총 체험 시간</div>
+              </div>
+              <div class="stat-card">
+                <div class="stat-num">28</div>
+                <div class="stat-label">반응</div>
+              </div>
+              <div class="stat-card">
+                <div class="stat-num">8</div>
+                <div class="stat-label">리믹스 🔀</div>
+              </div>
+            </div>
+            <div style="padding:8px 16px;font-size:12px;font-weight:700;color:var(--muted)">유입 채널</div>
+            <div style="padding:0 16px;display:flex;flex-direction:column;gap:5px">
+              <div style="display:flex;align-items:center;gap:8px;font-size:12px">
+                <span>📸 Instagram</span>
+                <div style="flex:1;height:6px;background:var(--soft);border-radius:3px;overflow:hidden">
+                  <div style="width:45%;height:100%;background:var(--ink)"></div>
+                </div>
+                <span style="font-weight:700;color:var(--muted)">45%</span>
+              </div>
+              <div style="display:flex;align-items:center;gap:8px;font-size:12px">
+                <span>▶ YouTube</span>
+                <div style="flex:1;height:6px;background:var(--soft);border-radius:3px;overflow:hidden">
+                  <div style="width:30%;height:100%;background:var(--ink)"></div>
+                </div>
+                <span style="font-weight:700;color:var(--muted)">30%</span>
+              </div>
+              <div style="display:flex;align-items:center;gap:8px;font-size:12px">
+                <span>♪ TikTok</span>
+                <div style="flex:1;height:6px;background:var(--soft);border-radius:3px;overflow:hidden">
+                  <div style="width:25%;height:100%;background:var(--ink)"></div>
+                </div>
+                <span style="font-weight:700;color:var(--muted)">25%</span>
+              </div>
+            </div>
+            <div style="padding:10px 16px">
+              <div class="outline-btn" style="height:44px;font-size:13px;font-weight:900">
+                📊 WES 데이터 CSV 내보내기
+              </div>
+            </div>
+          </div>
+          <div class="bottom-nav">
+            <div class="nav-item"><div class="nav-icon">🏠</div>홈</div>
+            <div class="nav-item"><div class="nav-icon">🔍</div>탐색</div>
+            <div class="nav-item"><div class="nav-icon">＋</div>올리기</div>
+            <div class="nav-item"><div class="nav-icon">🔔</div>알림</div>
+            <div class="nav-item active"><div class="nav-icon">👤</div>MY</div>
+          </div>
+        </div>
+      `
+    },
+  ]
+},
+]; // end flows
+
+// ══════════════════════════════════════════════════
+// STATE & RENDER
+// ══════════════════════════════════════════════════
+let currentFlow = 0;
+let currentStep = 0;
+
+function render() {
+  const flow = flows[currentFlow];
+  const screen = flow.screens[currentStep];
+
+  // Screen content
+  document.getElementById('screenContent').innerHTML = screen.html;
+
+  // Step dots
+  const stepBar = document.getElementById('stepBar');
+  stepBar.innerHTML = flow.screens.map((_, i) =>
+    `<div class="step-dot ${i === currentStep ? 'active' : ''}" onclick="goToStep(${i})" title="화면 ${i+1}"></div>`
+  ).join('');
+
+  // Right panel
+  document.getElementById('panelTitle').textContent = screen.title;
+  document.getElementById('panelRoute').textContent = screen.route;
+  document.getElementById('panelDesc').textContent = screen.desc;
+  document.getElementById('panelCta').textContent = screen.cta;
+  document.getElementById('panelNext').textContent = screen.next;
+
+  const ann = document.getElementById('panelAnnotations');
+  ann.innerHTML = (screen.annotations || []).map(a =>
+    `<div class="annotation"><strong>${a.strong}:</strong> ${a.text}</div>`
+  ).join('');
+
+  // Nav buttons
+  document.getElementById('btnPrev').disabled = (currentFlow === 0 && currentStep === 0);
+  document.getElementById('btnNext').textContent =
+    (currentStep === flow.screens.length - 1 && currentFlow < flows.length - 1)
+      ? `Flow ${currentFlow + 2} →`
+      : '다음 →';
+  document.getElementById('btnNext').disabled =
+    (currentStep === flow.screens.length - 1 && currentFlow === flows.length - 1);
+
+  // Sidebar active
+  document.querySelectorAll('.flow-btn').forEach((btn, i) => {
+    btn.classList.toggle('active', i === currentFlow);
+  });
+}
+
+function switchFlow(index) {
+  currentFlow = index;
+  currentStep = 0;
+  render();
+}
+
+function goToStep(index) {
+  currentStep = index;
+  render();
+}
+
+function nextScreen() {
+  const flow = flows[currentFlow];
+  if (currentStep < flow.screens.length - 1) {
+    currentStep++;
+  } else if (currentFlow < flows.length - 1) {
+    currentFlow++;
+    currentStep = 0;
+  }
+  render();
+}
+
+function prevScreen() {
+  if (currentStep > 0) {
+    currentStep--;
+  } else if (currentFlow > 0) {
+    currentFlow--;
+    currentStep = flows[currentFlow].screens.length - 1;
+  }
+  render();
+}
+
+// Keyboard navigation
+document.addEventListener('keydown', (e) => {
+  if (e.key === 'ArrowRight') nextScreen();
+  if (e.key === 'ArrowLeft') prevScreen();
+  if (e.key === 'ArrowUp' && currentFlow > 0) switchFlow(currentFlow - 1);
+  if (e.key === 'ArrowDown' && currentFlow < flows.length - 1) switchFlow(currentFlow + 1);
+});
+
+// Init
+render();
+</script>
+</body>
+</html>

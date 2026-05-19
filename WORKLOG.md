@@ -191,6 +191,21 @@
 
 ---
 
+### 다음 단계 개발: 대화형 HTML 와이어프레임 프로토타입
+
+- UI 설계서·스토리보드 기반 핵심 4가지 Flow를 독립형 HTML 클릭스루 프로토타입으로 시각화했다.
+- 파일: `wireframe.html` (프로젝트 루트)
+  - 16개 화면, 4개 Flow
+  - 3단 레이아웃: 좌측 Flow 목록 사이드바 + 중앙 폰 프레임 + 우측 주석 패널
+  - nuevo 디자인 토큰 (`--nuevo-black`, `--nuevo-sheet`, `--nuevo-soft`, `--nuevo-line`, `--nuevo-ink`, `--nuevo-muted`) 적용
+  - 키보드 ←/→ (화면 이동), ↑/↓ (Flow 전환) 지원
+- Flow 1 (4화면): Instagram 인앱 브라우저 진입 → Play Mode (autoplay) → 소셜 액션 로그인 유도 → 로그인 완료
+- Flow 2 (3화면): 첫 앱 전체화면 체험 + 스크롤 힌트 → 다음 앱 카드 → 두 번째 앱 Play Mode
+- Flow 3 (4화면): 홈 피드 → 카드 확장 → 상세 페이지 → 피드에서 Play Mode 진입
+- Flow 4 (5화면): 앱 상세 리믹스 CTA → 리믹스 업로드 모드 → 발행 완료 → 원본 창작자 알림 → Fame Studio
+
+---
+
 ## 세션 10 — 2026-05-18
 
 ### 완료 내역
