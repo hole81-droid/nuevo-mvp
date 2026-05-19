@@ -27,25 +27,26 @@ nuevo should feel like a fast mobile tool for playable apps, not a marketing lan
 
 ```css
 :root {
-  --black: #000000;
-  --ink: #050505;
-  --sheet: #F8F8F3;
-  --sheet-2: #E2E2DC;
-  --soft: #EFEFE8;
-  --line: #D7D7CF;
-  --muted: #7D7D78;
-  --cream: #FFFDF5;
+  --nuevo-black: #000000;
+  --nuevo-ink: #050505;
+  --nuevo-sheet: #F8F8F3;
+  --nuevo-sheet-2: #E2E2DC;
+  --nuevo-soft: #EFEFE8;
+  --nuevo-line: #D7D7CF;
+  --nuevo-muted: #7D7D78;
 }
 ```
 
 Usage:
 
-- `#000000`: background, primary CTA, selected state.
-- `#F8F8F3`: main sheet background.
-- `#EFEFE8`: secondary surface, disabled/soft groups.
-- `#D7D7CF`: borders and dividers.
-- `#050505`: primary text.
-- `#7D7D78`: helper text and metadata.
+- `--nuevo-black` / `#000000`: background stage, primary CTA, selected state.
+- `--nuevo-sheet` / `#F8F8F3`: main sheet background.
+- `--nuevo-soft` / `#EFEFE8`: secondary surface, disabled/soft groups.
+- `--nuevo-line` / `#D7D7CF`: borders and dividers.
+- `--nuevo-ink` / `#050505`: primary text.
+- `--nuevo-muted` / `#7D7D78`: helper text and metadata.
+
+Note: `@theme inline` maps `--color-warm` and `--color-cool` to `#000000`. Use `--nuevo-*` variables directly for design work.
 
 ## 4. Layout Pattern
 
@@ -58,8 +59,8 @@ body {
 
 .app-shell {
   max-width: 430px;
-  min-height: calc(100vh - 80px);
-  margin: 80px auto 0;
+  min-height: calc(100dvh - 12px);
+  margin: 12px auto 0;
   background: #F8F8F3;
   border-radius: 18px 18px 0 0;
   overflow: hidden;

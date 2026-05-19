@@ -16,7 +16,7 @@ MVP의 중심은 수익배분이 아니라 **Fame loop + Play loop**다.
 > **MVP 범위**: SNS 딥링크 즉시 실행 + URL 업로드/미리보기 + 비로그인 체험 + 태그 검색 + 리믹스 소셜 증명 + 창작자 Fame 대시보드
 > **"만들기"** (플랫폼 내 AI 생성) 기능은 Phase 2. `/create` 코드는 남아 있지만 MVP UI 진입점은 없다.
 
-전체 제품 상세: PRD.md | 태스크: TASK.md
+전체 제품 상세: PRD.md | 구현 스펙: PRD_V3.md | 디자인: Design Ref.md | 태스크: TASK.md
 
 ## 제품 우선순위
 
@@ -115,11 +115,20 @@ creator_monthly_wes(author_id, month, sessions, minutes, reactions, comments, re
 
 ## 디자인 토큰
 
-| 이름 | 값 | 용도 |
-|------|-----|------|
-| `--color-warm` | `#E8511A` | 주 브랜드 색 (인터랙티브 컨텐츠, CTA) |
-| `--color-cool` | `#5B3FD4` | 보조 색 (오디오 컨텐츠) |
-| `text-warm` / `bg-warm` | Tailwind 커스텀 클래스 | globals.css에 정의 |
+MVP UI는 모노크롬 black/sheet 시스템을 사용한다. 전체 디자인 원칙은 **Design Ref.md** 참조.
+
+| CSS 변수 | 값 | 용도 |
+|----------|----|------|
+| `--nuevo-black` | `#000000` | 배경 스테이지, primary CTA, 선택 상태 |
+| `--nuevo-sheet` | `#F8F8F3` | 메인 시트 배경 |
+| `--nuevo-soft` | `#EFEFE8` | 보조 서피스 / 비활성 그룹 |
+| `--nuevo-line` | `#D7D7CF` | 테두리 / 구분선 |
+| `--nuevo-ink` | `#050505` | 본문 텍스트 |
+| `--nuevo-muted` | `#7D7D78` | 보조 텍스트 / 메타데이터 |
+
+`@theme inline`에서 `--color-warm`과 `--color-cool`은 모두 `#000000`으로 매핑된다.
+`text-warm` / `bg-warm` Tailwind 클래스는 MVP UI에서 검정색으로 렌더링된다.
+오렌지/퍼플 색상(`#E8511A`, `#5B3FD4`)은 `/create` Phase 2 페이지에서만 인라인 스타일로 사용된다.
 
 모바일 우선: `max-w-[430px] mx-auto`, iPhone 기준.
 
@@ -175,56 +184,66 @@ WES 계산 상수와 티어 로직은 `src/lib/wes.ts`에 둔다. Supabase SQL v
 ### 컨텐츠 타입
 | 타입 | 컬러 | 표시 방식 |
 |------|------|-----------|
-| `interactive` | warm (orange) | iframe 실행 |
-| `audio` | cool (purple) | AudioPlayer |
-| `image` | pink | 이미지 갤러리 |
+| `interactive` | black (warm 토큰 → `#000000`) | iframe 실행 |
+| `audio` | black (cool 토큰 → `#000000`) | AudioPlayer |
+| `image` | black | 이미지 갤러리 |
 
 ## 주요 파일 구조
 
 ```
 src/
 ├── app/
-│   ├── page.tsx                  # 피드
-│   ├── upload/page.tsx           # 올리기 플로우 (3단계)
-│   ├── login/page.tsx            # Google 로그인 ← 신규
-│   ├── setup/page.tsx            # 첫 가입 프로필 설정 ← 신규
-│   ├── create/page.tsx           # Phase 2 (MVP UI 진입점 없음)
-│   ├── demo/[id]/                # iframe 독립 앱 (1,4,6,7,8,9)
+│   ├── page.tsx                        # 피드
+│   ├── [handle]/[slug]/page.tsx        # SNS 딥링크 (@handle 필수) → /post/[id] 리다이렉트
+│   ├── post/[id]/page.tsx              # 앱 상세 / 바로 체험 (?autoplay=true)
+│   ├── upload/page.tsx                 # 올리기 플로우 (?remix=[postId] 포함)
+│   ├── login/page.tsx                  # Google 로그인
+│   ├── setup/page.tsx                  # 첫 가입 프로필 설정
+│   ├── onboarding/page.tsx             # 온보딩
 │   ├── explore/page.tsx
 │   ├── notifications/page.tsx
 │   ├── leaderboard/page.tsx
-│   ├── studio/page.tsx
+│   ├── studio/page.tsx                 # Fame 대시보드 / WES
 │   ├── profile/[username]/page.tsx
 │   ├── settings/page.tsx
+│   ├── settings/delete-account/        # 계정 삭제 요청
+│   ├── terms/page.tsx                  # 공개 이용약관
+│   ├── privacy/page.tsx                # 공개 개인정보처리방침
+│   ├── report/post/[id]/page.tsx       # 게시물 신고
+│   ├── qa/page.tsx                     # 실기기 MVP QA 체크리스트
+│   ├── ux-flow/page.tsx                # 내부 UX 흐름 점검
+│   ├── ux-prototype/page.tsx           # 내부 모바일 프로토타입
+│   ├── create/page.tsx                 # Phase 2 (MVP UI 진입점 없음)
+│   ├── demo/[id]/                      # iframe 독립 앱 (데모용)
 │   ├── brand/page.tsx
 │   └── guide/page.tsx
 ├── components/
-│   ├── feed/FeedClient.tsx       # expandedId 관리
-│   ├── layout/BottomNav.tsx      # 알림 뱃지 포함
-│   ├── post/PostCard.tsx         # compact ↔ expanded
+│   ├── feed/FeedClient.tsx             # expandedId 관리
+│   ├── layout/BottomNav.tsx            # 알림 뱃지 포함
+│   ├── post/PostCard.tsx               # compact ↔ expanded
 │   ├── post/PostDetailClient.tsx
-│   ├── post/CommentSection.tsx   # DB 댓글 + inputRef, replyTo(@mention)
+│   ├── post/CommentSection.tsx         # DB 댓글 + inputRef, replyTo(@mention)
 │   └── profile/ProfileTabsClient.tsx
 ├── contexts/
-│   ├── AuthContext.tsx           # 현재 유저 ← 신규
-│   ├── FollowContext.tsx         # 팔로우 상태
-│   ├── NotificationContext.tsx   # 알림 뱃지
-│   └── SavedContext.tsx          # 저장하기
+│   ├── AuthContext.tsx                 # 현재 유저
+│   ├── FollowContext.tsx               # 팔로우 상태
+│   ├── NotificationContext.tsx         # 알림 뱃지
+│   └── SavedContext.tsx                # 저장하기
 └── lib/
     ├── supabase/
-    │   ├── client.ts             # 브라우저 클라이언트 ← 신규
-    │   ├── server.ts             # 서버 클라이언트 ← 신규
-    │   └── types.ts              # DB 타입 ← 신규
-    ├── social.ts                 # UUID 판별, 댓글/반응 변환 헬퍼
-    ├── types.ts                  # Post, Author 등 프론트 타입
-    └── mock-data.ts              # 목업 데이터 (데모/fallback용)
+    │   ├── client.ts                   # 브라우저 클라이언트
+    │   ├── server.ts                   # 서버 클라이언트
+    │   └── types.ts                    # DB 타입
+    ├── social.ts                       # UUID 판별, 댓글/반응 변환 헬퍼
+    ├── types.ts                        # Post, Author 등 프론트 타입
+    └── mock-data.ts                    # 목업 데이터 (데모/fallback용)
 ```
 
 ## 코딩 규칙
 
 - `'use client'` 지시어: 상태나 이벤트가 있으면 반드시 추가
 - 서버 컴포넌트에서 `params`는 `Promise<{...}>` 타입, `await params` 사용
-- Tailwind 클래스만 사용 (인라인 style은 `--color-warm` 같은 커스텀 값일 때만)
+- Tailwind 클래스만 사용 (인라인 style은 `--nuevo-black` 같은 CSS 변수 참조나 동적 값이 필요할 때만)
 - `stopPropagation()`: 카드 내 버튼들은 반드시 추가 (카드 확장 이벤트 막기)
 - Supabase 서버 클라이언트는 `await createClient()` (cookies() async)
 - 실 데이터 없을 때 graceful fallback: mock-data 사용 가능하나 명시적 주석 필요
