@@ -4,6 +4,37 @@
 
 ---
 
+## 세션 14 — 2026-05-20 (인수인계 정리)
+
+### 다음 단계 개발: PlayShell 완료 패널 반응 → Supabase 영속화
+
+- `PlayShell.tsx`의 done 패널 반응 칩(😂/👽/🧠/❓)이 로컬 state만 토글하던 문제를 해결했다.
+- `PostCard` / `PostDetailClient`와 동일한 upsert/delete + notification 패턴을 적용했다.
+  - 마운트 시 로그인 유저가 있고 `isUuid(post.id)`이면 `post_reactions`에서 기존 반응을 불러와 초기 상태에 반영.
+  - 칩 탭 → optimistic update → `post_reactions` upsert (같은 칩 재탭 시 delete).
+  - 새 반응이 만들어진 경우 `createNotification(type='reaction')` 호출.
+  - 에러 시 이전 상태로 롤백.
+  - mock 데이터(non-UUID ID)는 DB 쓰기 없이 UI만 토글.
+- `activeReaction` 타입을 `string | null` → `ReactionKey | null`로 강타이핑.
+
+### 인수인계 산출물 (오늘부터 다른 개발자 합류)
+
+- `HANDOFF.md`: 기획 방향, 현재 구현 상태, 남은 과제, 운영/검증 명령어, 의사결정 히스토리, 코딩/문서 원칙을 한 페이지에 모은 인수인계 진입점.
+- `TASK.md` `Current focus`를 PlayShell 완료 → 실기기/실데이터 QA 라운드로 갱신.
+
+### 검증 완료
+
+- `npx.cmd tsc --noEmit --pretty false` 통과.
+- `npx.cmd eslint src/components/play/PlayShell.tsx` 통과 (단독).
+- `node --test src\lib\*.test.mjs` — 다음 검증 라운드에서 확인 예정 (lint/tsc는 PR 직전에 다시 일괄 실행).
+
+### 알려진 제약 / Phase 2 후보
+
+- `liked` 상태(상단 좋아요 버튼)는 로컬에서만 토글한다. 스키마에 `likes` 테이블이 없어 별도 결정 필요 (① reactions에 합치기, ② post_likes 신설, ③ Phase 2로 유지).
+- 실기기 QA(Instagram/TikTok/YouTube in-app browser × Play Shell)와 실데이터 WES export QA는 여전히 미완. `/qa` 보드의 해당 항목을 그대로 인계.
+
+---
+
 ## 세션 13 — 2026-05-20
 
 ### 다음 단계 개발: Play Shell (YouTube Shorts형 전체화면 플레이어)

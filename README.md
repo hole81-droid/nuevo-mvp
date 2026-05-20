@@ -104,9 +104,11 @@ If local headless Chrome/Edge fails with a GPU startup error, run the LCP check 
 
 ## Documentation
 
+- `HANDOFF.md`: **first read for new developers** — vision, current status, remaining work, gotchas
 - `PRD.md`: product requirements and MVP intent
 - `PRD_V3.md`: implementation-facing product spec
 - `TASK.md`: current task tracker
 - `Design Ref.md`: UI/UX and visual reference
-- `WORKLOG.md`: session history and operational notes
+- `WORKLOG.md`: full session history including planning discussions (sessions 3 → 14)
 - `AGENTS.md`, `CLAUDE.md`: agent/project context
+- `supabase/schema.sql`: DB single source of truth

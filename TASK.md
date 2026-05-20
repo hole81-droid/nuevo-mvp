@@ -1,7 +1,9 @@
 # nuevo MVP Task Tracker
 
 **Updated:** 2026-05-20
-**Current focus:** Play 탭 (YouTube Shorts형 전체화면 Play Shell) 구현 + 외부 딥링크 전체화면 진입.
+**Current focus:** 실기기/실데이터 QA 라운드 (Instagram/TikTok/YouTube in-app browser × Play Shell, 모바일 LCP, 실 Supabase 데이터 기반 WES export). 신규 합류 개발자는 `HANDOFF.md`부터 읽고 `/qa` 보드의 미완 항목을 우선 진행.
+
+> 새 합류자: **먼저 [`HANDOFF.md`](HANDOFF.md) 읽기** → 로컬 환경 부트 → `/qa` 미완 항목 확인 → P1 잔여 작업.
 
 ## MVP Definition
 
