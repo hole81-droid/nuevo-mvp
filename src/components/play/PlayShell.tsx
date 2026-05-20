@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import type { Post } from '@/lib/types';
 import { useAuth } from '@/contexts/AuthContext';
@@ -10,6 +10,7 @@ import { buildPlayShellPath, PLAY_TOP_CLASS, PLAY_BOTTOM_CLASS, PLAY_DONE_PANEL_
 import type { PlayState } from '@/lib/play-shell';
 import BackButton from '@/components/ui/BackButton';
 import InteractiveDemo from '@/components/post/InteractiveDemo';
+import { buildPlayModeEventPayload, recordPlayModeEvent } from '@/lib/play-mode-analytics';
 
 const REACTIONS = [
   { key: 'funny',  emoji: '😂', label: '웃김'    },
@@ -29,6 +30,28 @@ export default function PlayShell({
   const [liked, setLiked] = useState(false);
   const [activeReaction, setActiveReaction] = useState<string | null>(null);
   const router = useRouter();
+
+  // Track play_start on mount and next_app_reveal when next app is available
+  useEffect(() => {
+    recordPlayModeEvent(buildPlayModeEventPayload({
+      eventName: 'internal_play_start',
+      postId: post.id,
+      search: window.location.search,
+      referrer: document.referrer,
+    }));
+  }, [post.id]);
+
+  useEffect(() => {
+    if (!nextPost) return;
+    recordPlayModeEvent(buildPlayModeEventPayload({
+      eventName: 'next_app_reveal',
+      postId: nextPost.id,
+      fromPostId: post.id,
+      search: window.location.search,
+      referrer: document.referrer,
+    }));
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [nextPost?.id, post.id]);
   const { user } = useAuth();
   const { isSaved, toggle: toggleSave } = useSaved();
   const saved = isSaved(post.id);
@@ -39,6 +62,13 @@ export default function PlayShell({
 
   const handleNext = () => {
     if (nextPost) {
+      recordPlayModeEvent(buildPlayModeEventPayload({
+        eventName: 'next_app_click',
+        postId: nextPost.id,
+        fromPostId: post.id,
+        search: '?utm_source=next_app',
+        referrer: window.location.href,
+      }));
       router.push(buildPlayShellPath(nextPost.id, { source: 'next_app' }));
     } else {
       router.push('/');

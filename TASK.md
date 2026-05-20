@@ -40,14 +40,14 @@ MVP is complete when:
 - [x] Track next app reveal rate
 - [x] Track second app play rate
 - [x] Track 2+ app session rate from Instagram/TikTok/YouTube
-- [ ] Create `src/lib/play-shell.js` — state machine (loading/playing/done) + layout constants
-- [ ] Create `src/components/play/PlayShell.tsx` — full-screen player with top/bottom overlay
-- [ ] Create `src/app/play/page.tsx` — Play 탭 홈 (top interactive post로 진입)
-- [ ] Create `src/app/play/[id]/page.tsx` — 특정 앱 전체화면 Play Shell
-- [ ] Add Play tab to BottomNav (replace 검색 position)
-- [ ] Update `InteractiveDemo.tsx` — add `variant='fullscreen'` for Play Shell
-- [ ] Update `/post/[id]?autoplay=true` → redirect to `/play/[id]`
-- [ ] Ensure iframe touch/scroll interactions are not hijacked (safe zone separation)
+- [x] Create `src/lib/play-shell.js` — state machine (loading/playing/done) + layout constants
+- [x] Create `src/components/play/PlayShell.tsx` — full-screen player with top/bottom overlay
+- [x] Create `src/app/play/page.tsx` — Play 탭 홈 (top interactive post로 진입)
+- [x] Create `src/app/play/[id]/page.tsx` — 특정 앱 전체화면 Play Shell
+- [x] Add Play tab to BottomNav (replace 검색 position)
+- [x] Update `InteractiveDemo.tsx` — add `variant='fullscreen'` for Play Shell
+- [x] Update `/post/[id]?autoplay=true` → redirect to `/play/[id]`
+- [x] Ensure iframe touch/scroll interactions are not hijacked (safe zone separation)
 - [ ] Real mobile QA: Instagram/TikTok/YouTube in-app browsers with Play Shell
 - [ ] Real LCP QA: `/play/[id]` and `/play/[id]?autoplay=true` under 3 seconds target
 

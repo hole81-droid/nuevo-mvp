@@ -4,6 +4,41 @@
 
 ---
 
+## 세션 13 — 2026-05-20
+
+### 다음 단계 개발: Play Shell (YouTube Shorts형 전체화면 플레이어)
+
+- 피드 탭의 인라인 iframe 카드 체험과 분리된 독립 Play 탭을 구현했다.
+- 핵심 아키텍처 결정:
+  - Feed 탭: compact 카드 내 inline iframe (발견 UX)
+  - Play 탭: `fixed inset-0 z-50` 전체화면 Play Shell (YouTube Shorts / Instagram Reels 방식)
+  - 위/아래 오버레이는 iframe 영역 밖 절대 위치 → 터치/스크롤 충돌 없음
+  - 상태 머신: `loading` → `playing` → `done`
+- 신규 파일:
+  - `src/lib/play-shell.js` — 상태 상수, 레이아웃 클래스, `buildPlayShellPath()` 헬퍼
+  - `src/lib/play-shell.d.ts` — TypeScript 선언, `PlayState` 타입
+  - `src/lib/play-mode-analytics.js` — `internal_play_start`, `next_app_reveal`, `next_app_click` 이벤트
+  - `src/components/play/PlayShell.tsx` — 전체화면 플레이어 (상태 머신 + 오버레이 컨트롤 + 완료 패널)
+  - `src/app/play/page.tsx` — Play 탭 홈 (첫 번째 interactive 포스트로 진입)
+  - `src/app/play/[id]/page.tsx` — 특정 앱 Play Shell (next post 포함)
+- 기존 파일 수정:
+  - `src/components/post/InteractiveDemo.tsx` — `variant='fullscreen'` 추가 (`onReady` 콜백 포함)
+  - `src/components/ui/BackButton.tsx` — `variant='inverted'` 추가 (흰색 아이콘, 어두운 배경용)
+  - `src/components/layout/BottomNav.tsx` — 검색 탭 → 플레이 탭 (`/play`) 교체
+  - `src/app/post/[id]/page.tsx` — `?autoplay=true` + interactive → `/play/[id]` redirect
+  - `src/app/page.tsx` — 홈 헤더 우측: 브랜드 아이콘 → 검색 아이콘 (`/explore`) 교체 (검색 접근성 복원)
+  - `src/lib/mvp-qa-checklist.js` — Play Shell QA 항목 4개 추가
+  - `src/app/ux-prototype/page.tsx` — `PlayShellLiveMock`, `PlayShellDoneMock` 화면 추가; FLOW_RAIL + SCREENS 업데이트; BottomTabs 플레이 탭 반영
+  - `TASK.md` — Play 탭 항목 8개 완료 처리
+
+### 검증 완료
+
+- `node --test src\lib\*.test.mjs` 통과: 114 tests.
+- `npm.cmd run lint` 통과.
+- `npx.cmd tsc --noEmit --pretty false` 통과.
+
+---
+
 ## 세션 12 — 2026-05-19
 
 ### 기획 변경 반영: 외부 유입 후 Play-first Vertical Stack

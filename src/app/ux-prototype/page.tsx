@@ -10,7 +10,7 @@ type Screen = {
   content: React.ReactNode;
 };
 
-const FLOW_RAIL = ['외부 딥링크', 'Play Mode', 'Browse to Play', '외부 자료 첨부', '리믹스', 'Fame Studio', '운영 점검'];
+const FLOW_RAIL = ['외부 딥링크', 'Play Shell (체험 중)', 'Play Shell (완료)', 'Browse to Play', '외부 자료 첨부', '리믹스', 'Fame Studio', '운영 점검'];
 
 function Chip({ children, dark = false }: { children: React.ReactNode; dark?: boolean }) {
   return <span className={`rounded-full px-2.5 py-1 text-[10px] font-black ${dark ? 'bg-black text-white' : 'bg-[#EFEFE8] text-[#050505]'}`}>{children}</span>;
@@ -26,7 +26,7 @@ function TopBar({ title, right }: { title: string; right?: string }) {
 }
 
 function BottomTabs({ active }: { active: string }) {
-  const tabs = ['홈', '탐색', '올리기', '알림', '프로필'];
+  const tabs = ['홈', '플레이', '올리기', '알림', 'MY'];
   return (
     <div className="absolute bottom-0 left-0 right-0 flex h-14 items-center justify-around bg-[#30302F] px-2 text-[10px] font-black text-white">
       {tabs.map((tab) => <div key={tab} className={`rounded-full px-3 py-2 ${active === tab ? 'bg-white text-black' : ''}`}>{tab}</div>)}
@@ -82,40 +82,80 @@ function DeepLinkMock() {
   );
 }
 
-function ExternalPlayModeMock() {
+function PlayShellLiveMock() {
   return (
-    <div className="h-full bg-[#F8F8F3]">
-      <TopBar title="바로 체험" right="SNS" />
-      <div className="px-4 py-4">
-        <div className="rounded-[22px] bg-black p-4 text-white">
-          <div className="text-[11px] font-black uppercase tracking-[0.14em] text-white/55">Play Mode</div>
-          <div className="mt-2 text-[22px] font-black leading-[1] tracking-[-0.06em]">앱부터 바로 체험하세요</div>
-          <p className="mt-2 text-[12px] leading-5 text-white/65">
-            아래로 스크롤하면 이어지는 다음 앱을 바로 만날 수 있어요.
-          </p>
-        </div>
-        <div className="mt-4 rounded-[24px] border border-[#D7D7CF] bg-white p-3">
-          <div className="h-52 rounded-[20px] bg-[#EFEFE8] p-4">
-            <div className="flex items-center justify-between">
-              <div className="text-[11px] font-black uppercase tracking-[0.12em] text-[#207A3A]">iframe live</div>
-              <Chip>autoplay=true</Chip>
-            </div>
-            <div className="mt-12 text-center text-[26px] font-black tracking-[-0.06em]">지금 기분은?</div>
-            <div className="mx-auto mt-6 flex w-fit gap-2">
-              <button className="rounded-full bg-black px-5 py-3 text-[12px] font-black text-white">기쁨</button>
-              <button className="rounded-full bg-white px-5 py-3 text-[12px] font-black">불안</button>
-            </div>
+    <div className="relative h-full bg-black text-white">
+      {/* Top overlay */}
+      <div className="absolute inset-x-0 top-0 z-10 flex items-center gap-2 px-3 pt-2 pb-6 bg-gradient-to-b from-black/80 to-transparent" style={{ height: 54 }}>
+        <div className="flex h-9 w-9 items-center justify-center rounded-full bg-white/15 text-[18px]">‹</div>
+        <span className="flex-1 truncate text-center text-[13px] font-black">감정 위로 생성기</span>
+        <span className="w-9 flex-shrink-0" />
+      </div>
+      {/* Simulated iframe content */}
+      <div className="absolute inset-0 flex items-center justify-center bg-gradient-to-b from-[#1a1a2e] to-[#16213e]">
+        <div className="text-center">
+          <div className="text-[11px] font-black uppercase tracking-[0.14em] text-white/40 mb-3">iframe · autoplay</div>
+          <div className="text-[26px] font-black leading-[1.1] tracking-[-0.05em]">지금 기분은?</div>
+          <div className="mt-5 flex gap-3">
+            <button className="rounded-full bg-white px-5 py-2.5 text-[12px] font-black text-black">기쁨</button>
+            <button className="rounded-full border border-white/40 px-5 py-2.5 text-[12px] font-black text-white">불안</button>
           </div>
         </div>
-        <div className="mt-4 rounded-[22px] border-2 border-black bg-[#FFFDF5] p-4">
-          <div className="text-[11px] font-black uppercase tracking-[0.12em] text-[#8A6A22]">Next App</div>
-          <div className="mt-1 text-[18px] font-black tracking-[-0.05em]">다음 앱 바로 보기</div>
-          <p className="mt-1 text-[12px] leading-5 text-[#575752]">방금 본 앱과 비슷한 체험이에요.</p>
-          <div className="mt-3 flex items-center justify-between rounded-[16px] bg-white px-3 py-3 text-[12px] font-black">
-            <span>Emotion card remix</span>
-            <span className="rounded-full bg-black px-3 py-2 text-white">체험</span>
+      </div>
+      {/* Bottom overlay — playing state */}
+      <div className="absolute inset-x-0 bottom-0 z-10 bg-gradient-to-t from-black/85 to-transparent pb-2">
+        <div className="flex items-center justify-around py-2">
+          <div className="flex flex-col items-center gap-1 px-4">
+            <div className="text-[22px]">♡</div>
+            <span className="text-[10px] font-black">좋아요</span>
+          </div>
+          <div className="flex flex-col items-center gap-1 px-4 text-white/60">
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round"><polyline points="20 6 9 17 4 12" /></svg>
+            <span className="text-[10px] font-black">완료</span>
+          </div>
+          <div className="flex flex-col items-center gap-1 px-4">
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round"><path d="M12 19V5M5 12l7-7 7 7" /></svg>
+            <span className="text-[10px] font-black">다음 앱</span>
           </div>
         </div>
+      </div>
+    </div>
+  );
+}
+
+function PlayShellDoneMock() {
+  return (
+    <div className="relative h-full bg-black text-white">
+      {/* Top overlay */}
+      <div className="absolute inset-x-0 top-0 z-10 flex items-center gap-2 px-3 pt-2" style={{ height: 54 }}>
+        <div className="flex h-9 w-9 items-center justify-center rounded-full bg-white/15 text-[18px]">‹</div>
+        <span className="flex-1 truncate text-center text-[13px] font-black">감정 위로 생성기</span>
+        <span className="w-9 flex-shrink-0" />
+      </div>
+      {/* Dimmed iframe */}
+      <div className="absolute inset-0 flex items-center justify-center bg-gradient-to-b from-[#1a1a2e] to-[#16213e] opacity-30">
+        <div className="text-[26px] font-black">지금 기분은?</div>
+      </div>
+      {/* Done slide-up panel */}
+      <div className="absolute inset-x-0 bottom-0 z-10 rounded-t-[28px] bg-[#F8F8F3] px-5 pt-5 pb-6">
+        <div className="text-[11px] font-black uppercase tracking-[0.14em] text-[#7D7D78] mb-3">체험이 끝났어요</div>
+        {/* Reactions */}
+        <div className="grid grid-cols-4 gap-1.5 mb-3">
+          {[['😂','웃김'],['👽','기괴함'],['🧠','천재'],['❓','뭐야']].map(([emoji, label]) => (
+            <div key={label} className="flex flex-col items-center gap-0.5 rounded-2xl border border-[#D7D7CF] bg-white py-2 text-[10px] font-bold text-gray-700">
+              <span className="text-[18px] leading-none">{emoji}</span>
+              <span>{label}</span>
+            </div>
+          ))}
+        </div>
+        {/* Social actions */}
+        <div className="flex gap-2 mb-3">
+          <div className="flex-1 h-9 rounded-full border-2 border-black flex items-center justify-center text-[12px] font-black text-black">리믹스</div>
+          <div className="flex-1 h-9 rounded-full border border-[#D7D7CF] flex items-center justify-center text-[12px] font-black text-gray-700">저장</div>
+          <div className="flex-1 h-9 rounded-full border border-[#D7D7CF] flex items-center justify-center text-[12px] font-black text-gray-700">공유</div>
+        </div>
+        {/* Next CTA */}
+        <div className="h-11 rounded-full bg-black flex items-center justify-center text-[13px] font-black text-white">다음 앱 바로 체험 →</div>
       </div>
     </div>
   );
@@ -234,9 +274,10 @@ function SettingsMock() {
 }
 
 const SCREENS: Screen[] = [
-  { title: '외부 앱 딥링크', route: 'YouTube/TikTok/Instagram -> nuevo', purpose: '외부 SNS에서 링크를 누르면 바로 체험으로 들어오는 첫 순간입니다.', primaryCta: 'nuevo 링크 탭', next: '/[handle]/[slug] -> /post/[id]?autoplay=true', status: '핵심', content: <DeepLinkMock /> },
-  { title: '외부 유입 Play Mode', route: '/post/[id]?autoplay=true', purpose: '앱이 첫 화면입니다. 다음 앱 섹션이 바로 이어지고 피드/검색은 보조 CTA입니다.', primaryCta: '다음 앱 바로 보기', next: '/post/[nextId]?mode=play&autoplay=true&utm_source=next_app', status: 'Play Mode', content: <ExternalPlayModeMock /> },
-  { title: '내부 Browse → Play', route: '/ → /post/[id]?mode=play', purpose: '피드 탐색은 가볍게 유지하고, 바로 체험 CTA 탭 시 Play Mode로 전환합니다.', primaryCta: '바로 체험', next: '/post/[id]?mode=play&autoplay=true&utm_source=feed', status: 'Play Mode', content: <InternalBrowseToPlayMock /> },
+  { title: '외부 앱 딥링크', route: 'YouTube/TikTok/Instagram -> nuevo', purpose: '외부 SNS에서 링크를 누르면 바로 체험으로 들어오는 첫 순간입니다.', primaryCta: 'nuevo 링크 탭', next: '/[handle]/[slug] → /play/[id]?autoplay=true', status: '핵심', content: <DeepLinkMock /> },
+  { title: 'Play Shell (체험 중)', route: '/play/[id]?autoplay=true', purpose: '전체화면 YouTube Shorts/릴스 UX. 위/아래 오버레이는 iframe 영역 밖에 있어 터치 충돌 없음.', primaryCta: '완료 / 다음 앱', next: '/play/[nextId]?autoplay=true&source=next_app', status: '구현', content: <PlayShellLiveMock /> },
+  { title: 'Play Shell (완료)', route: '/play/[id] — done state', purpose: '완료 탭 시 슬라이드업 패널. 반응 4종 + 리믹스/저장/공유 + 다음 앱 CTA.', primaryCta: '다음 앱 바로 체험 →', next: '/play/[nextId]?autoplay=true&source=next_app', status: '구현', content: <PlayShellDoneMock /> },
+  { title: '내부 Browse → Play', route: '/ → /play/[id]', purpose: '피드 탐색은 가볍게 유지하고, 바로 체험 CTA 탭 시 Play Shell로 전환합니다.', primaryCta: '바로 체험', next: '/play/[id]?autoplay=true&utm_source=feed', status: '구현', content: <InternalBrowseToPlayMock /> },
   { title: '올리기 + 외부 자료', route: '/upload', purpose: '앱 URL과 함께 YouTube/Instagram/TikTok/GitHub 같은 제작 맥락을 첨부합니다.', primaryCta: '게시하기', next: '/post/[newId]', status: '구현', content: <UploadMock /> },
   { title: '리믹스 UX', route: '/upload?remix=[postId]', purpose: '원본을 다시 띄우고 새 버전을 만들게 하는 MVP의 핵심 성장 루프입니다.', primaryCta: '이 앱을 다르게 바꿔보기', next: '원본 배너 -> 게시 -> 원작자 알림', status: '구현', content: <RemixMock /> },
   { title: 'Fame Studio', route: '/studio', purpose: '창작자가 체험 성과, 리믹스, 유입 채널, WES export를 확인합니다.', primaryCta: 'CSV export', next: '/api/studio/wes-export', status: '구현', content: <StudioMock /> },

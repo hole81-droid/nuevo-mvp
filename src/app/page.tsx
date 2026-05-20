@@ -63,11 +63,10 @@ export default async function FeedPage() {
           <span className="text-[21px] font-black tracking-[-0.07em] uppercase">
             NUEVO
           </span>
-          <Link href="/brand" className="w-8 h-8 flex items-center justify-center text-gray-500 rounded-full hover:bg-gray-100" title="브랜드 파트너십">
+          <Link href="/explore" className="w-8 h-8 flex items-center justify-center text-gray-500 rounded-full hover:bg-gray-100" aria-label="검색">
             <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
-              <line x1="4" y1="6" x2="20" y2="6" />
-              <line x1="4" y1="12" x2="20" y2="12" />
-              <line x1="4" y1="18" x2="20" y2="18" />
+              <circle cx="11" cy="11" r="8" />
+              <path d="m21 21-4.35-4.35" />
             </svg>
           </Link>
         </div>

@@ -13,10 +13,11 @@ test('covers the remaining real-device MVP QA areas', () => {
   assert.deepEqual(
     getMvpQaSummary(MVP_QA_CHECKLIST),
     {
-      total: 11,
+      total: 15,
       byArea: {
         'external-deeplink': 3,
         'play-mode': 2,
+        'play-shell': 4,
         'mobile-lcp': 2,
         'wes-export': 2,
         'visual-review': 2,
