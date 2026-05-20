@@ -1,6 +1,6 @@
 # nuevo Design / UI / UX Reference
 
-**Updated:** 2026-05-19
+**Updated:** 2026-05-20
 **Purpose:** Keep the MVP app, `/ux-flow`, and `/ux-prototype` visually and behaviorally aligned.
 
 ## 1. Product Feeling
@@ -11,7 +11,7 @@ Core visual idea:
 
 nuevo should feel like a fast mobile tool for playable apps, not a marketing landing page and not a generic SaaS dashboard. The app itself is the content. The UI should help people inspect, play, remix, and share with almost no explanation.
 
-For external social traffic, the product should feel closer to Reels/Shorts/TikTok continuity than a directory. A visitor lands on one app, plays it, then scrolls into the next playable app before being asked to search.
+For external social traffic and the Play tab, the product should feel identical to Reels/Shorts/TikTok: full-screen app experience with always-visible overlay controls. The Play tab is a first-class tab in the bottom nav. Feed is for discovery; Play is for immersive consumption.
 
 ## 2. Design Principles
 
@@ -134,25 +134,43 @@ Must communicate:
 
 Prototype screen: `/ux-prototype`, “외부 앱 딥링크” and “상세 바로 체험”.
 
-### Play-first Vertical Stack
+### Play Tab / Play Shell
 
 Must communicate:
 
-- The app is the full-focus content, not a preview card.
-- The next app is available by scrolling down, not by learning search first.
-- The transition is user-controlled scroll, never a forced timed autoplay.
-- Recommended content should feel related: same tag, same creator, remix lineage, or similar play pattern.
-- After 2-3 plays, feed/search/follow CTAs can appear as broader exploration.
+- The app fills the entire screen. No marketing copy, no feed chrome.
+- Controls are always visible as overlays — never hidden behind a tap gesture.
+- Transitioning to the next app is a button tap, not a swipe (swipe belongs to the app).
+- The top and bottom safe zones are outside the iframe — zero touch conflict.
 
-Layout guidance:
+**Play Shell layout** (reference for implementation and prototype):
 
-- Keep top chrome compact on external-entry detail.
-- Keep the embedded app large enough to feel like the main screen.
-- The next-app section should start below the first app/result area with a clear title, creator, reason, and play CTA.
-- Do not place the next app inside nested decorative cards.
-- Avoid UI that steals touch/scroll from the embedded iframe.
+```
+┌──────────────────────────┐  ← top overlay 54px: ← back | 앱 제목
+│                          │    bg: gradient to-b from-black/70, text: white
+│      iframe 앱            │  ← position: absolute inset-0
+│   (뷰포트 전체)           │    app owns all touch/scroll
+│                          │
+├──────────────────────────┤  ← bottom safe zone 64px
+│ ♡좋아요  ✓완료  ↑다음앱  │    bg: gradient to-t from-black/80, text: white
+└──────────────────────────┘
 
-Prototype status: needs update. The next `/ux-prototype` pass should add “외부 유입 → 첫 앱 전체화면 체험 → 다음 앱 스크롤 진입”.
+[완료 탭 시 — slide-up 패널]
+┌──────────────────────────┐
+│  체험이 끝났어요           │  bg: --nuevo-sheet, rounded-t-[28px]
+│  😂 👽 🧠 ❓ (reactions)  │
+│  [리믹스] [저장] [공유]   │
+│  다음 앱 바로 체험 →       │  primary CTA (bg-black)
+└──────────────────────────┘
+```
+
+**State machine**: loading → playing → done (see PRD_V3.md §4)
+
+**Feed vs Play tab distinction**:
+- Feed (`/`): compact 420px iframe card, discovery and browsing
+- Play (`/play`, `/play/[id]`): full-screen Play Shell, immersive consumption
+
+Prototype screen: needs update to include Play Shell screens.
 
 ### Upload
 
@@ -194,7 +212,10 @@ Prototype screen: “Fame Studio”.
 Use:
 
 - “바로 체험”
+- “다음 앱 바로 체험”
 - “다음 앱 바로 보기”
+- “체험 완료”
+- “건너뛰기”
 - “방금 본 앱과 비슷해요”
 - “이 앱을 다르게 바꿔보기”
 - “N회 리믹스됨”

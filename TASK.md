@@ -1,7 +1,7 @@
 # nuevo MVP Task Tracker
 
-**Updated:** 2026-05-19
-**Current focus:** Make the MVP prove external deep-link play, Play-first Vertical Stack retention, upload with context links, remix growth, creator Fame/WES, and minimum trust/safety readiness.
+**Updated:** 2026-05-20
+**Current focus:** Play 탭 (YouTube Shorts형 전체화면 Play Shell) 구현 + 외부 딥링크 전체화면 진입.
 
 ## MVP Definition
 
@@ -31,18 +31,25 @@ MVP is complete when:
 - [ ] Real mobile QA: Instagram/TikTok/YouTube in-app browsers
 - [ ] Real LCP QA: `/post/[id]` and `/post/[id]?autoplay=true` under 3 seconds target
 
-### Play-first Vertical Stack
+### Play 탭 (YouTube Shorts형 전체화면 Play Shell)
 
 - [x] Define external-entry detail layout for app-first vertical stack
 - [x] Add next playable app section below first app detail
 - [x] Reuse `getSimilarPosts()` or simple tag/creator/remix heuristics for MVP recommendations
 - [x] Add fallback CTA to feed/explore when no next app exists
-- [x] Ensure iframe touch/scroll interactions are not hijacked by stack behavior
 - [x] Track next app reveal rate
 - [x] Track second app play rate
 - [x] Track 2+ app session rate from Instagram/TikTok/YouTube
-- [x] Update `/ux-prototype` with “외부 유입 → 첫 앱 전체화면 체험 → 다음 앱 스크롤 진입”
-- [x] Add QA runbook item for external-entry vertical stack on real mobile
+- [ ] Create `src/lib/play-shell.js` — state machine (loading/playing/done) + layout constants
+- [ ] Create `src/components/play/PlayShell.tsx` — full-screen player with top/bottom overlay
+- [ ] Create `src/app/play/page.tsx` — Play 탭 홈 (top interactive post로 진입)
+- [ ] Create `src/app/play/[id]/page.tsx` — 특정 앱 전체화면 Play Shell
+- [ ] Add Play tab to BottomNav (replace 검색 position)
+- [ ] Update `InteractiveDemo.tsx` — add `variant='fullscreen'` for Play Shell
+- [ ] Update `/post/[id]?autoplay=true` → redirect to `/play/[id]`
+- [ ] Ensure iframe touch/scroll interactions are not hijacked (safe zone separation)
+- [ ] Real mobile QA: Instagram/TikTok/YouTube in-app browsers with Play Shell
+- [ ] Real LCP QA: `/play/[id]` and `/play/[id]?autoplay=true` under 3 seconds target
 
 ### Upload with external resource links
 

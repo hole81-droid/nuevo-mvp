@@ -42,3 +42,4 @@ next-server*.pid
 # typescript
 *.tsbuildinfo
 next-env.d.ts
+.vercel

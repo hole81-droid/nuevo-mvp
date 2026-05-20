@@ -13,9 +13,13 @@ interface Props {
   iframeUrl?: string;
   autoplay?: boolean;
   deferUntilStart?: boolean;
+  /** 'card' (default): bordered 420px card with label bar. 'fullscreen': fills parent, no chrome. */
+  variant?: 'card' | 'fullscreen';
+  /** Called once when the iframe successfully loads. Used by PlayShell to transition state. */
+  onReady?: () => void;
 }
 
-export default function InteractiveDemo({ postId, postTitle, iframeUrl, autoplay = false, deferUntilStart = false }: Props) {
+export default function InteractiveDemo({ postId, postTitle, iframeUrl, autoplay = false, deferUntilStart = false, variant = 'card', onReady }: Props) {
   const [started, setStarted] = useState(false);
   const [loadedUrl, setLoadedUrl] = useState('');
   const [issueUrl, setIssueUrl] = useState('');
@@ -108,6 +112,69 @@ export default function InteractiveDemo({ postId, postTitle, iframeUrl, autoplay
 
     return () => window.clearTimeout(timer);
   }, [loaded, playableUrl, shouldMountFrame]);
+
+  if (variant === 'fullscreen') {
+    return (
+      <div className="relative w-full h-full bg-black">
+        {!playableUrl && (
+          <div className="absolute inset-0 flex flex-col items-center justify-center gap-3 px-8 text-center">
+            <span className="text-[13px] font-black text-white">앱 URL을 실행할 수 없어요</span>
+            <span className="max-w-[240px] text-center text-[12px] text-white/50">
+              {validation.message ?? '올바른 앱 URL이 없습니다.'}
+            </span>
+          </div>
+        )}
+        {playableUrl && !shouldMountFrame && (
+          <button
+            type="button"
+            onClick={() => setStarted(true)}
+            className="absolute inset-0 flex flex-col items-center justify-center gap-4 px-8 text-center bg-black"
+          >
+            <span className="flex h-16 w-16 items-center justify-center rounded-full bg-white text-black shadow-lg">
+              <svg width="24" height="24" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+                <path d="M5 3l14 9-14 9V3z" />
+              </svg>
+            </span>
+            <span className="text-[17px] font-black text-white">탭해서 바로 해보기</span>
+          </button>
+        )}
+        {playableUrl && shouldMountFrame && !loaded && !loadIssue && (
+          <div className="absolute inset-0 flex flex-col items-center justify-center gap-3 bg-black">
+            <div className="w-10 h-10 border-2 border-white border-t-transparent rounded-full animate-spin" />
+            <span className="text-[12px] text-white/60">{loadState.label}</span>
+          </div>
+        )}
+        {playableUrl && loadIssue && !loaded && (
+          <div className="absolute inset-0 z-10 flex flex-col items-center justify-center gap-3 bg-black px-8 text-center">
+            <div className="text-[15px] font-black text-white">앱이 오래 걸려요</div>
+            <p className="text-[12px] text-white/60 leading-snug">
+              앱이 iframe을 막았거나 응답이 느릴 수 있어요.
+            </p>
+            <a href={playableUrl} target="_blank" rel="noopener noreferrer" onClick={(e) => e.stopPropagation()}
+              className="px-5 py-2.5 rounded-full bg-white text-black text-[13px] font-black">
+              새 탭에서 열기
+            </a>
+          </div>
+        )}
+        {playableUrl && shouldMountFrame && (
+          <iframe
+            src={playableUrl}
+            className="w-full h-full border-0"
+            sandbox="allow-scripts allow-forms allow-popups"
+            allow="camera; microphone"
+            onLoad={() => {
+              setLoadedUrl(playableUrl);
+              setIssueUrl('');
+              void startSession();
+              onReady?.();
+            }}
+            style={{ display: loaded ? 'block' : 'none' }}
+            title={postTitle}
+          />
+        )}
+      </div>
+    );
+  }
 
   return (
     <div className="mt-3 rounded-[28px] border-2 border-[#D8D8D0] overflow-hidden bg-[#F7F7F2]">
@@ -207,6 +274,7 @@ export default function InteractiveDemo({ postId, postTitle, iframeUrl, autoplay
               setLoadedUrl(playableUrl);
               setIssueUrl('');
               void startSession();
+              onReady?.();
             }}
             style={{ display: loaded ? 'block' : 'none' }}
             title={postTitle}

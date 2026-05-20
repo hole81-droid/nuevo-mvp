@@ -1,0 +1,11 @@
+{
+  "permissions": {
+    "allow": [
+      "PowerShell(Get-ChildItem \"c:\\\\Users\\\\UX_Lab_Live\\\\Desktop\\\\Nuevo MVP\" -Recurse | Where-Object { $_.Name -match '\\\\.md$' -and $_.FullName -notmatch 'node_modules' } | Select-Object FullName)",
+      "PowerShell(Get-ChildItem \"c:\\\\Users\\\\UX_Lab_Live\\\\Desktop\\\\Nuevo MVP\" | Where-Object { $_.Name -notmatch 'node_modules' } | Select-Object Name, Attributes)",
+      "Bash(ls \"/c/Users/UX_Lab_Live/.claude/projects/c--Users-UX-Lab-Live-Desktop-Nuevo-MVP/memory/\" 2>/dev/null)",
+      "Read(//c/Users/UX_Lab_Live/.claude/projects/c--Users-UX-Lab-Live-Desktop-Nuevo-MVP/**)",
+      "Bash(findstr \"??\")"
+    ]
+  }
+}

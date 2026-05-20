@@ -1,7 +1,7 @@
 # nuevo MVP Product Spec
 
-**Version:** 3.2
-**Updated:** 2026-05-19
+**Version:** 3.3
+**Updated:** 2026-05-20
 **Source of truth:** `PRD.md` for product intent, this file for implementation-facing spec.
 
 ## 1. MVP Scope Summary
@@ -14,9 +14,12 @@ The MVP must prove one thing:
 
 | Route | Purpose | Auth | Required UX |
 | --- | --- | --- | --- |
-| `/` | Public feed | Public | Cards, play entry, share, remix social proof |
-| `/[handle]/[slug]` | Creator deep link | Public | Resolve to post detail, preserve autoplay/source |
-| `/post/[id]` | App detail and play | Public | Guest play, deferred/autoplay iframe, external entry context, next playable app |
+| `/` | Public feed | Public | Cards, compact play entry, share, remix social proof |
+| `/[handle]/[slug]` | Creator deep link | Public | Resolve to `/play/[id]` with autoplay/source preserved |
+| `/post/[id]` | App detail (non-autoplay) | Public | Guest play, deferred iframe, external entry context, next playable app |
+| `/post/[id]?autoplay=true` | External deep link entry | Public | Redirects to `/play/[id]` fullscreen Play Shell |
+| `/play` | Play tab home | Public | First interactive app in fullscreen Play Shell |
+| `/play/[id]` | Fullscreen Play Shell | Public | Full-screen iframe + top/bottom overlay, state machine, next app |
 | `/explore` | Discovery | Public | Search, tags, categories, external-link label search |
 | `/upload` | Post an app | Login | URL check, metadata, tags, external links, publish |
 | `/upload?remix=[postId]` | Remix flow | Login | Original banner, remixability check, lineage |
@@ -68,44 +71,61 @@ https://nuevo.app/post/{id}?autoplay=true&utm_source=tiktok
 - A next playable app is visible by scrolling below the first experience.
 - Login redirect preserves current URL.
 
-## 4. Play-first Vertical Stack Spec
+## 4. Play Tab / Play Shell Spec
 
-### Product Rule
+### Architecture
 
-External SNS users should not be asked to search or understand the feed before getting a second play. The default continuation is a vertical stack: first app in focus, then the next recommended playable app below it.
+Two distinct play modes:
 
-### Layout
+| Mode | Route | iframe size | Use case |
+|---|---|---|---|
+| Feed inline | `/` | 420px compact card | Discovery, browsing |
+| Play Shell | `/play`, `/play/[id]`, `/post/[id]?autoplay=true` | Full viewport | Immersive experience, external entry |
 
-- The first app detail uses an app-first view with minimal chrome.
-- The embedded app remains the main surface above the fold.
-- Below the first app, render a "next playable app" section that can become a full next detail card in later iterations.
-- Keep feed/search/creator profile as secondary CTAs after the user has seen at least one more app option.
+### Play Shell Layout
 
-### Recommendation Source
+```
+fixed inset-0 z-50 bg-black
+├── Top overlay (absolute, z-20, h=54px, gradient from-black/70)
+│     ← BackButton (white)  |  App title (white, truncated)
+├── iframe (absolute inset-0 — full viewport)
+│     app owns 100% of touch/scroll here
+└── Bottom safe zone (absolute bottom-0, z-20, h=64px, gradient from-black/80)
+      [playing]  ♡좋아요  ✓완료  ↑다음앱
+      [done]     slide-up panel: reactions + actions + 다음앱 CTA
+```
 
-MVP recommendation can be heuristic-based:
+### Play Shell State Machine
 
-- `getSimilarPosts()` result from shared tags/title/text
-- Same creator's other apps
-- Remix siblings or original/remix lineage
-- Daily playable / most remixed / longest played fallback
-
-Advanced ranking is explicitly not required for MVP.
+| State | Trigger | Bottom zone UI |
+|---|---|---|
+| `loading` | mount | spinner + "건너뛰기" button |
+| `playing` | iframe `onLoad` | ♡좋아요 / ✓완료 / ↑다음앱 |
+| `done` | user taps 완료 | slide-up panel: reactions + remix/save/share + 다음앱 CTA |
 
 ### Interaction Rules
 
-- Do not auto-scroll or auto-advance while the iframe is being used.
-- Use scroll, not a timed autoplay, as the user-controlled transition.
-- Preserve guest play.
-- Protected actions keep existing login redirect behavior.
-- If no recommendation exists, fall back to public feed/explore CTAs.
+- Top and bottom safe zones are outside the iframe bounds — no touch conflict.
+- No swipe gesture for navigation (reserved for app interaction).
+- No auto-advance. All transitions require explicit button tap.
+- Guest play: 좋아요/저장/리믹스 prompt login; 다음 앱 is open.
+- BackButton in top overlay falls back to nuevo home if referrer is external social.
+
+### Recommendation Source
+
+MVP recommendation (same heuristics as before):
+- `getSimilarPosts()` from shared tags/title/text
+- Same creator's other apps
+- Remix siblings or original/remix lineage
+- Recent interactive posts fallback
 
 ### Acceptance Criteria
 
-- Instagram/TikTok/YouTube deep-link session can move from first app to second app without opening search.
-- Second app exposure is measurable.
-- 2+ app session rate can be tracked separately from generic feed browsing.
-- Touch/scroll behavior does not break embedded app controls.
+- External deep link `?autoplay=true` enters full-screen Play Shell without scroll conflict.
+- In Play Shell, app touch/swipe is not intercepted by the page.
+- User can go to next app from any state (loading/playing/done) without leaving full-screen mode.
+- 2+ app session rate is trackable from Play Shell sessions.
+- Play tab is accessible from BottomNav.
 
 ## 5. Upload Spec
 

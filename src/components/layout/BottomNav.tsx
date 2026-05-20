@@ -25,12 +25,14 @@ const tabs = [
     ),
   },
   {
-    href: '/explore',
-    label: '검색',
+    href: '/play',
+    label: '플레이',
     icon: (filled: boolean) => (
-      <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={filled ? 2.5 : 2} strokeLinecap="round">
-        <circle cx="11" cy="11" r="8" />
-        <path d="m21 21-4.35-4.35" />
+      <svg width="26" height="26" viewBox="0 0 24 24" fill={filled ? 'currentColor' : 'none'} stroke="currentColor" strokeWidth={filled ? 0 : 2} strokeLinecap="round">
+        {filled
+          ? <path d="M5 3l14 9-14 9V3z" />
+          : <path d="M5 3l14 9-14 9V3z" />
+        }
       </svg>
     ),
   },

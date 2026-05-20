@@ -4,9 +4,8 @@ nuevo is a mobile-first platform for posting already-built AI apps, letting visi
 
 ## Core MVP
 
-- External deep links from YouTube, Instagram, TikTok, Reddit, GitHub, and other pages can open directly into playable detail pages.
-- `?autoplay=true` starts the embedded app immediately.
-- External social visitors should get a Play-first Vertical Stack: first app in focus, next playable app available by scrolling.
+- External deep links with `?autoplay=true` from YouTube, Instagram, TikTok, etc. open directly into the full-screen **Play Shell** (YouTube Shorts–like experience).
+- **Play tab** in the bottom nav: full-screen app experience with always-visible overlay controls, state machine (loading → playing → done).
 - Upload supports an app URL, tags, and external resource links such as YouTube, Instagram, TikTok, and GitHub.
 - Remix preserves original lineage, shows `N회 리믹스됨`, notifies the original creator, and re-exposes the original app.
 - Creator Studio shows Fame/WES, traffic source breakdown, and CSV export.
@@ -48,9 +47,12 @@ https://nuevo-instagram-test.vercel.app/auth/callback
 
 | Route | Purpose |
 | --- | --- |
-| `/` | Public feed |
+| `/` | Public feed (compact card player) |
+| `/play` | Play tab — full-screen Shorts/Reels-style app experience |
+| `/play/[id]` | Full-screen Play Shell for a specific app |
 | `/[handle]/[slug]` | Creator deep link |
-| `/post/[id]` | Playable app detail |
+| `/post/[id]` | Playable app detail (non-autoplay) |
+| `/post/[id]?autoplay=true` | External deep link — redirects to `/play/[id]` |
 | `/explore` | Search, tags, categories |
 | `/upload` | Post an app URL and metadata |
 | `/upload?remix=[postId]` | Remix an existing app |

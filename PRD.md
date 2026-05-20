@@ -1,7 +1,7 @@
 # nuevo MVP PRD
 
-**Version:** 1.2
-**Updated:** 2026-05-19
+**Version:** 1.3
+**Updated:** 2026-05-20
 **Scope:** Fame loop + Play-first Vertical Stack 중심 MVP
 
 ## 1. Product Definition
@@ -31,16 +31,16 @@ MVP의 목적은 앱 생성기가 아닙니다. 창작자는 이미 Claude Code,
 ### User Play Loop
 
 ```text
-SNS 링크, 피드, 탐색에서 앱 발견
--> 바로 실행
--> 외부 유입이면 첫 앱을 전체화면에 가깝게 체험
--> 아래로 스크롤하면 다음 추천 앱이 바로 이어짐
--> 마음에 들면 반응/댓글/저장/공유
+SNS 링크 또는 Play 탭에서 앱 발견
+-> 전체화면 Play 탭에서 바로 실행 (외부 유입 + Play 탭 공통)
+-> 하단 safe zone 버튼으로 좋아요 / 체험 완료 / 다음 앱 전환
+-> 체험 완료 패널에서 반응/저장/공유/리믹스
+-> 다음 앱으로 계속 이어보기
 -> 직접 바꾸고 싶으면 리믹스
 -> 새 버전이 피드와 원본 상세에 재노출
 ```
 
-외부 SNS에서 들어온 첫 세션은 검색이나 일반 피드 탐색을 먼저 요구하지 않습니다. 사용자는 Instagram Reels, TikTok, YouTube Shorts에서 온 호기심 상태이므로, 첫 앱 체험 후 바로 다음 앱을 제안하는 **Play-first Vertical Stack**을 기본 retention UX로 둡니다.
+외부 SNS에서 들어온 첫 세션은 검색이나 일반 피드 탐색을 먼저 요구하지 않습니다. 사용자는 Instagram Reels, TikTok, YouTube Shorts에서 온 호기심 상태이므로, 외부 딥링크와 Play 탭 모두 YouTube Shorts·Instagram Reels와 동일한 **전체화면 Play Shell** UX를 사용합니다.
 
 ### Trust / Data Loop
 
@@ -96,28 +96,55 @@ Current app mapping:
 - `src/components/post/InteractiveDemo.tsx`
 - `src/lib/traffic-source.js`
 
-### 4.2 Play-first Vertical Stack
+### 4.2 Play Tab (Shorts/Reels UX)
 
-외부 유입 사용자는 첫 앱 체험 후 바로 다음 앱을 만날 수 있어야 합니다. 피드나 검색으로 되돌려 보내는 것은 보조 경로이며, 기본 경로는 앱 체험이 연속되는 릴스/쇼츠형 세로 스택입니다.
+Play 탭은 YouTube Shorts·Instagram Reels와 동일한 전체화면 앱 체험 탭입니다. 피드 탭과 Play 탭은 목적이 다릅니다.
+
+| | 피드 탭 (`/`) | Play 탭 (`/play`) |
+|---|---|---|
+| iframe 크기 | 카드 안 compact (420px) | 뷰포트 전체화면 |
+| 진입 경위 | 피드 탐색 | Play 탭 직접 진입 / 외부 딥링크 |
+| 목적 | 발견·탐색 | 몰입 체험·연속 소비 |
+
+**Play Shell 레이아웃** (항상 노출 오버레이, tap-to-toggle 없음):
+
+```
+┌──────────────────────────┐  ← 상단 overlay: 뒤로가기 + 앱 제목 (h=54px)
+│                          │
+│      iframe 앱            │  ← 앱이 100% 소유 (터치/스와이프 충돌 없음)
+│   (뷰포트 전체 높이)       │
+│                          │
+├──────────────────────────┤
+│ ♡좋아요   ✓완료   ↑다음앱 │  ← 하단 safe zone (h=64px, 항상 노출)
+└──────────────────────────┘
+```
+
+**앱 상태별 전환**:
+
+- **로딩 중**: 하단 "건너뛰기 →" 버튼 → 다음 앱
+- **체험 중**: 하단 safe zone 좋아요 / 완료 / 다음 앱 버튼 (앱 터치와 분리된 영역)
+- **체험 완료** (`완료` 탭 후): 반응(이모지) + 리믹스/저장/공유 + 큰 "다음 앱 바로 체험" CTA 패널 슬라이드업
 
 Required:
 
-- External deep-link detail uses an immersive app-first layout
-- The first app remains the hero experience, not a marketing landing page
-- Scrolling down reveals the next recommended playable app
-- Recommendation starts simple: same tag, similar title/text, same creator, remix lineage, or current `getSimilarPosts()` output
-- Next app preview should show title, creator, source reason, and one clear play action
-- After 2-3 app plays, expose feed/search/creator follow as secondary continuation paths
-- Do not auto-advance while the user is actively interacting with an embedded app
-- Respect guest mode: play remains open, social/remix actions keep login guard
+- `/play` BottomNav 탭: 인터랙티브 앱 전체화면 체험 입장점
+- `/play/[id]`: 특정 앱 전체화면 Play Shell
+- 외부 딥링크 `?autoplay=true` → `/play/[id]` 전체화면으로 진입
+- iframe이 뷰포트를 채우는 동안 상단/하단 safe zone만 nuevo 컨트롤
+- 탭/스와이프는 앱에 온전히 전달됨 (scroll conflict 없음)
+- 하단 safe zone: 좋아요(요로그인 유도) / 완료 / 다음 앱 (항상 노출)
+- 완료 패널: 이모지 반응 + 리믹스/저장/공유 + 다음 앱 CTA
+- 다음 앱: `getSimilarPosts()` / 같은 태그 / 같은 창작자 / 리믹스 lineage fallback
+- Guest play 유지: 반응·저장·리믹스만 로그인 유도
 
 Current app mapping:
 
-- `src/app/post/[id]/page.tsx`
-- `src/components/post/PostDetailClient.tsx`
+- `src/app/play/page.tsx`
+- `src/app/play/[id]/page.tsx`
+- `src/components/play/PlayShell.tsx`
+- `src/lib/play-shell.js`
 - `src/components/post/InteractiveDemo.tsx`
 - `src/lib/play-retention.js`
-- `src/lib/traffic-source.js`
 
 ### 4.3 Upload With External Resource Links
 
@@ -256,7 +283,8 @@ Launch validation:
 
 - Mobile LCP needs real Chrome/device confirmation. The local `npm run qa:lcp` script exists, but the current Windows headless browser hit a GPU startup failure.
 - Instagram/TikTok in-app browser behavior should be tested on real devices.
-- Vertical stack UX must not steal scroll/touch interactions from embedded apps.
+- Play Shell safe zone separation (top 54px + bottom 64px) must not consume app touch events.
+- iframe scroll/touch conflict is eliminated by the full-screen approach; safe zones are outside the iframe bounds.
 - Recommendation quality can start heuristic-based; do not block MVP on an advanced model.
 - iframe compatibility varies by creator hosting platform and must keep clear diagnostics.
 - Revenue language must stay conservative until real settlement exists.

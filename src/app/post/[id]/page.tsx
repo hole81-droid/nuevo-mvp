@@ -2,7 +2,7 @@ import type { Metadata } from 'next';
 import { mockPosts } from '@/lib/mock-data';
 import BackButton from '@/components/ui/BackButton';
 import BottomNav from '@/components/layout/BottomNav';
-import { notFound } from 'next/navigation';
+import { notFound, redirect } from 'next/navigation';
 import PostDetailClient from '@/components/post/PostDetailClient';
 import { createClient } from '@/lib/supabase/server';
 import { DbPostWithAuthor, mapDbPostToPost } from '@/lib/post-mapper';
@@ -12,6 +12,7 @@ import { isUuid } from '@/lib/social';
 import { isAutoplayRequested } from '@/lib/deep-link';
 import { getSimilarPosts } from '@/lib/play-retention';
 import { isPlayModeRequested } from '@/lib/play-mode';
+import { buildPlayShellPath } from '@/lib/play-shell';
 import type { Post } from '@/lib/types';
 
 interface Props {
@@ -134,6 +135,17 @@ export default async function PostDetailPage({ params, searchParams }: Props) {
   const post = await getPost(id);
   if (!post) notFound();
   const autoplay = isAutoplayRequested(resolvedSearchParams);
+
+  // External autoplay entries use the full-screen Play Shell
+  if (autoplay && post.contentType === 'interactive') {
+    const source = typeof resolvedSearchParams.utm_source === 'string'
+      ? resolvedSearchParams.utm_source
+      : typeof resolvedSearchParams.source === 'string'
+        ? resolvedSearchParams.source
+        : undefined;
+    redirect(buildPlayShellPath(id, { source }));
+  }
+
   const playMode = isPlayModeRequested(resolvedSearchParams);
   const [relatedPosts, remixPosts] = await Promise.all([
     getRelatedPosts(post),

@@ -14,7 +14,7 @@ MVP의 중심은 수익배분이 아니라 **Fame loop + Play loop**다.
 - 일반 사용자는 짧고 재밌는 앱을 가입 없이 만지고, 저장하고, 친구에게 보내고, 리믹스한다.
 - WES와 수익배분은 "큰돈 보장"이 아니라 성과/신뢰/향후 정산 근거로 다룬다.
 
-> **MVP 범위**: SNS 딥링크 즉시 실행 + Play-first Vertical Stack + URL 업로드/미리보기 + 비로그인 체험 + 태그 검색 + 리믹스 소셜 증명 + 창작자 Fame 대시보드
+> **MVP 범위**: SNS 딥링크 즉시 실행 + **Play 탭 (YouTube Shorts형 전체화면)** + URL 업로드/미리보기 + 비로그인 체험 + 태그 검색 + 리믹스 소셜 증명 + 창작자 Fame 대시보드
 > **"만들기"** (플랫폼 내 AI 생성) 기능은 Phase 2. `/create` 코드는 남아 있지만 MVP UI 진입점은 없다.
 
 전체 제품 상세: PRD.md | 구현 스펙: PRD_V3.md | 디자인: Design Ref.md | 태스크: TASK.md
@@ -168,16 +168,26 @@ MVP 핵심 진입은 외부 SNS에서 오는 딥링크다.
 - 외부 소셜 autoplay 진입에서는 사용자가 어디서 왔고 앱이 실행 중임을 짧게 알려준다.
 - 외부 소셜 autoplay 진입의 뒤로가기는 외부 앱으로 튕기지 않고 nuevo 내부 홈으로 복귀시킨다.
 
-### Play-first Vertical Stack
+### Play 탭 / Play Shell (YouTube Shorts형 전체화면)
 
-외부 유입 사용자는 검색/피드를 먼저 학습하는 사람이 아니라 링크 하나를 눌러 들어온 사람이다. 첫 앱을 체험한 뒤에는 일반 피드로 되돌리는 대신, 아래로 스크롤하면 다음 추천 앱이 바로 이어지는 릴스/쇼츠형 세로 스택을 기본 continuation으로 둔다.
+**피드 탭** (`/`): 카드 안 compact 420px iframe. 발견·탐색 목적.
+**Play 탭** (`/play`, `/play/[id]`): 뷰포트 전체화면 Play Shell. 몰입 체험·연속 소비 목적.
 
-- 첫 화면은 앱 체험이 주인공이다. 마케팅 문구나 탐색 설명이 iframe보다 앞서면 안 된다.
-- 전환은 timed autoplay가 아니라 사용자 스크롤이다.
-- iframe 조작 중에는 자동 넘김/강제 스크롤을 하지 않는다.
-- 추천은 MVP에서 `getSimilarPosts()`, 같은 태그, 같은 창작자, 리믹스 lineage, daily/most-remixed/longest-played fallback 정도의 휴리스틱으로 충분하다.
-- 피드/검색은 첫 앱 이후의 보조 CTA이며, 외부 유입 첫 세션의 기본 경로가 아니다.
-- 성공 지표는 next app reveal rate, second app play rate, 2+ app session rate로 본다.
+Play Shell 구조 (`src/components/play/PlayShell.tsx`):
+- `fixed inset-0 z-50 bg-black`
+- 상단 overlay (h=54px, `absolute top-0 z-20`, gradient from-black/70): 뒤로가기 + 앱 제목
+- iframe: `absolute inset-0` — 앱이 100% 터치/스와이프 소유
+- 하단 safe zone (h=64px, `absolute bottom-0 z-20`, gradient from-black/80): 좋아요/완료/다음앱 버튼
+
+앱 상태별 전환 (`src/lib/play-shell.js`):
+- `loading`: 건너뛰기 버튼
+- `playing`: ♡좋아요 / ✓완료 / ↑다음앱
+- `done`: slide-up 패널 (반응 + 리믹스/저장/공유 + 다음앱 CTA)
+
+외부 딥링크 `?autoplay=true` → `/play/[id]`로 redirect.
+탭/스와이프는 앱에 온전히 전달됨 (safe zone은 iframe 경계 밖).
+추천: `getSimilarPosts()`, 같은 태그, 같은 창작자, 리믹스 lineage fallback.
+성공 지표: next app reveal rate, second app play rate, 2+ app session rate.
 
 ### Fame 대시보드 / WES 집계
 
