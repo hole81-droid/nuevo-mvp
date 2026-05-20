@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import type { Post } from '@/lib/types';
 import { useAuth } from '@/contexts/AuthContext';
@@ -11,6 +11,9 @@ import type { PlayState } from '@/lib/play-shell';
 import BackButton from '@/components/ui/BackButton';
 import InteractiveDemo from '@/components/post/InteractiveDemo';
 import { buildPlayModeEventPayload, recordPlayModeEvent } from '@/lib/play-mode-analytics';
+import { createClient } from '@/lib/supabase/client';
+import { isUuid, type ReactionKey } from '@/lib/social';
+import { createNotification } from '@/lib/notification-events';
 
 const REACTIONS = [
   { key: 'funny',  emoji: '😂', label: '웃김'    },
@@ -28,8 +31,10 @@ export default function PlayShell({
 }) {
   const [playState, setPlayState] = useState<PlayState>('loading');
   const [liked, setLiked] = useState(false);
-  const [activeReaction, setActiveReaction] = useState<string | null>(null);
+  const [activeReaction, setActiveReaction] = useState<ReactionKey | null>(null);
   const router = useRouter();
+  const supabase = useMemo(() => createClient(), []);
+  const useDbSocial = isUuid(post.id);
 
   // Track play_start on mount and next_app_reveal when next app is available
   useEffect(() => {
@@ -56,8 +61,59 @@ export default function PlayShell({
   const { isSaved, toggle: toggleSave } = useSaved();
   const saved = isSaved(post.id);
 
+  useEffect(() => {
+    if (!user || !useDbSocial) return;
+    supabase
+      .from('post_reactions')
+      .select('reaction')
+      .match({ post_id: post.id, user_id: user.id })
+      .maybeSingle()
+      .then(({ data }) => {
+        const row = data as { reaction: ReactionKey } | null;
+        if (row) setActiveReaction(row.reaction);
+      });
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [post.id, user?.id]);
+
   const requireLogin = () => {
     router.push(buildLoginRedirectFromLocation(window.location));
+  };
+
+  const handleReaction = async (key: ReactionKey) => {
+    if (!user) { requireLogin(); return; }
+
+    const previousReaction = activeReaction;
+
+    if (activeReaction === key) {
+      setActiveReaction(null);
+    } else {
+      setActiveReaction(key);
+    }
+
+    if (!useDbSocial) return;
+
+    const { error } = previousReaction === key
+      ? await supabase
+          .from('post_reactions')
+          .delete()
+          .match({ post_id: post.id, user_id: user.id })
+      : await supabase
+          .from('post_reactions')
+          .upsert({ post_id: post.id, user_id: user.id, reaction: key } as never);
+
+    if (!error) {
+      if (previousReaction === null) {
+        await createNotification(supabase, {
+          recipientId: post.author.id,
+          actorId: user.id,
+          type: 'reaction',
+          postId: post.id,
+        });
+      }
+      return;
+    }
+
+    setActiveReaction(previousReaction);
   };
 
   const handleNext = () => {
@@ -188,7 +244,7 @@ export default function PlayShell({
               return (
                 <button
                   key={key}
-                  onClick={() => setActiveReaction(isActive ? null : key)}
+                  onClick={() => handleReaction(key)}
                   className={`flex flex-col items-center gap-1 py-2.5 rounded-2xl border text-[12px] font-bold transition-colors ${
                     isActive
                       ? 'border-black bg-black text-white'
