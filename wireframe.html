@@ -716,6 +716,89 @@ body {
   color: #15803d;
   display: flex; align-items: center; gap: 6px;
 }
+
+/* ── PLAY SHELL (YouTube Shorts / Instagram Reels) ── */
+.ps-screen {
+  height: 100%; background: #000;
+  position: relative; overflow: hidden;
+}
+.ps-top {
+  position: absolute; top: 0; left: 0; right: 0; z-index: 10;
+  height: 54px;
+  display: flex; align-items: center; gap: 8px; padding: 0 12px;
+  background: linear-gradient(to bottom, rgba(0,0,0,0.82) 0%, transparent 100%);
+}
+.ps-back {
+  width: 32px; height: 32px; border-radius: 50%;
+  background: rgba(255,255,255,0.18);
+  display: flex; align-items: center; justify-content: center;
+  color: white; font-size: 15px; font-weight: 900; flex-shrink: 0;
+}
+.ps-title {
+  flex: 1; text-align: center;
+  font-size: 13px; font-weight: 900; color: white;
+  letter-spacing: -0.02em;
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+}
+.ps-bottom-bar {
+  position: absolute; bottom: 0; left: 0; right: 0; z-index: 10;
+  background: linear-gradient(to top, rgba(0,0,0,0.88) 0%, transparent 100%);
+  padding-bottom: 6px;
+}
+.ps-actions {
+  display: flex; justify-content: space-around; padding: 10px 0 6px;
+}
+.ps-action {
+  display: flex; flex-direction: column; align-items: center;
+  gap: 4px; color: white; font-size: 9px; font-weight: 900;
+}
+.ps-action-icon { font-size: 20px; line-height: 1; }
+.ps-action.muted { color: rgba(255,255,255,0.5); }
+.ps-done-panel {
+  position: absolute; bottom: 0; left: 0; right: 0; z-index: 10;
+  background: var(--sheet);
+  border-radius: 24px 24px 0 0;
+  padding: 14px 14px 18px;
+  box-shadow: 0 -18px 44px rgba(0,0,0,0.5);
+}
+.ps-done-title {
+  font-size: 9px; font-weight: 900;
+  text-transform: uppercase; letter-spacing: 0.14em;
+  color: var(--muted); margin-bottom: 10px;
+}
+.ps-reaction-grid {
+  display: grid; grid-template-columns: repeat(4, 1fr);
+  gap: 5px; margin-bottom: 8px;
+}
+.ps-reaction-btn {
+  display: flex; flex-direction: column; align-items: center;
+  gap: 2px; padding: 7px 4px;
+  border-radius: 12px; border: 1px solid var(--line); background: white;
+}
+.ps-reaction-btn .remoji { font-size: 18px; }
+.ps-reaction-btn .rlabel { font-size: 9px; font-weight: 700; color: #555; }
+.ps-reaction-btn.active { background: var(--ink); border-color: var(--ink); }
+.ps-reaction-btn.active .rlabel { color: white; }
+.ps-social-row { display: flex; gap: 5px; margin-bottom: 7px; }
+.ps-social-btn {
+  flex: 1; height: 34px; border-radius: 99px;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 11px; font-weight: 900;
+  border: 1.5px solid var(--line); color: var(--ink);
+}
+.ps-social-btn.remix { border-color: var(--ink); border-width: 2px; }
+.ps-next-cta {
+  height: 42px; border-radius: 99px;
+  background: var(--ink); color: white;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 12px; font-weight: 900;
+}
+
+/* Status bar — dark variant for Play Shell */
+.status-bar.dark { background: #000 !important; color: white; }
+.status-bar.dark .status-battery { border-color: rgba(255,255,255,0.65); }
+.status-bar.dark .status-battery-fill { background: rgba(255,255,255,0.65); }
+.status-bar.dark .status-battery::after { background: rgba(255,255,255,0.65); }
 </style>
 </head>
 <body>
@@ -730,7 +813,7 @@ body {
     <div class="flow-num">1</div>
     <div>
       <div class="flow-name">외부유입 바로 체험</div>
-      <div class="flow-desc">SNS 딥링크 → Play Mode 즉시 실행</div>
+      <div class="flow-desc">SNS 딥링크 → Play Shell 전체화면</div>
     </div>
   </button>
 
@@ -738,7 +821,7 @@ body {
     <div class="flow-num">2</div>
     <div>
       <div class="flow-name">다음 앱 이어보기</div>
-      <div class="flow-desc">Play-first Vertical Stack</div>
+      <div class="flow-desc">Play Shell — playing→done→next app</div>
     </div>
   </button>
 
@@ -877,152 +960,138 @@ const flows = [
       `
     },
     {
-      title: 'Play Mode 진입',
-      route: '/post/[id]?autoplay=true&utm_source=instagram',
-      desc: 'Instagram에서 유입. autoplay=true로 iframe이 즉시 실행됨. 상단에 유입 출처 배너 표시.',
-      cta: '(자동 실행) 앱이 바로 시작됨',
-      next: '체험 중 상태 → 소셜 액션',
+      title: 'Play Shell 진입',
+      route: '/play/[id]?autoplay=true&utm_source=instagram',
+      desc: 'autoplay=true → /play/[id] 서버 redirect. 전체화면 Play Shell에서 앱 즉시 실행. 상단·하단 오버레이는 iframe 영역 밖에 absolute 배치.',
+      cta: '완료 버튼 탭 → done state',
+      next: 'done state 슬라이드업 패널',
+      darkStatusBar: true,
       annotations: [
-        { strong: 'Play Mode 헤더', text: '검은 배경으로 "바로 체험" 맥락 강조. BottomNav 숨김.' },
-        { strong: '유입 배너', text: '"Instagram에서 왔어요" — getExternalEntryCopy() 결과' },
-        { strong: '즉시 실행', text: 'autoplay=true → iframe 즉시 mount, 탭 필요 없음' },
+        { strong: 'autoplay redirect', text: '/post/[id]?autoplay=true → /play/[id]?autoplay=true 서버 redirect' },
+        { strong: 'safe zone 분리', text: '상단 54px·하단 64px 오버레이가 iframe bounds 밖 → 터치/스크롤 충돌 없음' },
+        { strong: 'state machine', text: 'loading(건너뛰기) → playing(완료/다음앱) → done(슬라이드업 패널)' },
       ],
       html: `
-        <div style="height:100%;display:flex;flex-direction:column;background:var(--sheet)">
-          <div class="play-header">
-            <div class="play-back">←</div>
-            <div class="play-title">바로 체험</div>
-            <div class="play-badge">Play Mode</div>
-          </div>
-          <div class="entry-banner">
-            <div class="entry-icon" style="background:linear-gradient(135deg,#f09433,#dc2743)">📸</div>
-            <div>
-              <div style="font-size:10px;color:rgba(255,255,255,0.5)">Instagram에서 왔어요</div>
-              <div>앱이 바로 실행됩니다</div>
-            </div>
-          </div>
-          <div class="iframe-mock" style="flex:1">
+        <div class="ps-screen">
+          <div class="iframe-mock" style="position:absolute;inset:0">
             <div class="iframe-running">▶ 실행 중</div>
             <div class="iframe-emoji">🤖</div>
-            <div class="iframe-name" style="font-size:16px;font-weight:900;color:white">감정 위로 챗봇</div>
+            <div class="iframe-name" style="color:white">감정 위로 챗봇</div>
             <div style="font-size:11px;color:rgba(255,255,255,0.4);z-index:1">by @minsu_lab</div>
             <div style="margin-top:12px;padding:8px 14px;background:rgba(255,255,255,0.08);border-radius:10px;width:80%;z-index:1">
               <div style="font-size:11px;color:rgba(255,255,255,0.5);margin-bottom:4px">오늘 어떤 하루였나요?</div>
-              <div style="height:28px;background:rgba(255,255,255,0.12);border-radius:8px;padding:0 10px;display:flex;align-items:center">
+              <div style="height:28px;background:rgba(255,255,255,0.12);border-radius:8px;display:flex;align-items:center;padding:0 10px">
                 <span style="font-size:12px;color:rgba(255,255,255,0.3)">답장하기…</span>
               </div>
             </div>
           </div>
-          <div style="padding:8px 16px;background:white;font-size:11px;color:var(--muted);display:flex;align-items:center;gap:6px;border-top:1px solid var(--line)">
-            <span>💬</span> 반응이나 댓글을 남기려면 로그인이 필요해요
+          <div class="ps-top">
+            <div class="ps-back">←</div>
+            <div class="ps-title">감정 위로 챗봇</div>
+            <div style="width:32px"></div>
+          </div>
+          <div class="ps-bottom-bar">
+            <div style="font-size:9px;font-weight:700;color:rgba(255,255,255,0.4);text-align:center;padding:4px 0 2px;letter-spacing:.06em">📸 INSTAGRAM에서 왔어요</div>
+            <div class="ps-actions">
+              <div class="ps-action"><div class="ps-action-icon">♡</div>좋아요</div>
+              <div class="ps-action muted"><div class="ps-action-icon">✓</div>완료</div>
+              <div class="ps-action"><div class="ps-action-icon">↑</div>다음 앱</div>
+            </div>
           </div>
         </div>
       `
     },
     {
-      title: '소셜 액션 시도',
-      route: '/post/[id]?autoplay=true (체험 중)',
-      desc: '앱 체험 후 반응 버튼 탭 → 로그인 유도 Bottom Sheet 등장. 게스트 플레이는 계속 가능.',
-      cta: '😂 재밌어 (반응 버튼 탭)',
-      next: '로그인 Bottom Sheet 오픈',
+      title: 'done state → 로그인 유도',
+      route: '/play/[id] (done state)',
+      desc: '완료 버튼 탭 → 슬라이드업 패널 등장. 반응 탭 → 로그인 Bottom Sheet. 게스트는 다음 앱 CTA는 그대로 사용 가능.',
+      cta: '😂 웃김 (반응 버튼 탭)',
+      next: '로그인 Bottom Sheet',
+      darkStatusBar: true,
       annotations: [
-        { strong: 'Guest 보호', text: '로그인 없이 체험은 계속 가능. 소셜 액션만 로그인 요구' },
-        { strong: 'next 파라미터', text: '로그인 후 현재 URL로 복귀 (?next= 보존)' },
-        { strong: 'Bottom Sheet', text: 'Half-modal로 현재 체험을 방해하지 않음' },
+        { strong: 'done panel', text: '완료 탭 시 rounded-t-28px 시트 패널이 슬라이드업 — 페이지 이동 없음' },
+        { strong: 'Guest 보호', text: '반응/저장/리믹스만 로그인 요구. 다음 앱 CTA는 비로그인도 사용' },
+        { strong: 'next 파라미터', text: '로그인 후 /play/[id] 복귀 → 반응 등록 완료' },
       ],
       html: `
-        <div style="height:100%;display:flex;flex-direction:column;background:var(--sheet);position:relative">
-          <div class="play-header">
-            <div class="play-back">←</div>
-            <div class="play-title">바로 체험</div>
-            <div class="play-badge">Play Mode</div>
+        <div class="ps-screen">
+          <div class="iframe-mock" style="position:absolute;inset:0;opacity:.28">
+            <div class="iframe-emoji" style="font-size:32px">🤖</div>
+            <div class="iframe-name" style="color:rgba(255,255,255,0.5)">감정 위로 챗봇</div>
           </div>
-          <div class="iframe-mock" style="height:280px">
-            <div class="iframe-running">▶ 실행 중</div>
-            <div class="iframe-emoji">🤖</div>
-            <div class="iframe-name" style="color:white">감정 위로 챗봇</div>
+          <div class="ps-top">
+            <div class="ps-back">←</div>
+            <div class="ps-title">감정 위로 챗봇</div>
+            <div style="width:32px"></div>
           </div>
-          <div style="padding:10px 16px;background:white;border-top:1px solid var(--line)">
-            <div style="font-size:12px;font-weight:900;margin-bottom:8px">반응하기</div>
-            <div class="reaction-row" style="padding:0;border:none;margin-bottom:10px">
-              <div class="reaction-btn">
-                <div class="reaction-emoji">😂</div>
-                <div>재밌어</div>
-              </div>
-              <div class="reaction-btn">
-                <div class="reaction-emoji">🧠</div>
-                <div>천재적</div>
-              </div>
-              <div class="reaction-btn">
-                <div class="reaction-emoji">👽</div>
-                <div>기괴함</div>
-              </div>
-              <div class="reaction-btn">
-                <div class="reaction-emoji">❓</div>
-                <div>뭐야이건</div>
-              </div>
+          <div class="ps-done-panel">
+            <div class="ps-done-title">체험이 끝났어요</div>
+            <div class="ps-reaction-grid">
+              <div class="ps-reaction-btn"><div class="remoji">😂</div><div class="rlabel">웃김</div></div>
+              <div class="ps-reaction-btn"><div class="remoji">👽</div><div class="rlabel">기괴함</div></div>
+              <div class="ps-reaction-btn"><div class="remoji">🧠</div><div class="rlabel">천재</div></div>
+              <div class="ps-reaction-btn"><div class="remoji">❓</div><div class="rlabel">뭐야</div></div>
             </div>
+            <div class="ps-social-row">
+              <div class="ps-social-btn remix">리믹스</div>
+              <div class="ps-social-btn">저장</div>
+              <div class="ps-social-btn">공유</div>
+            </div>
+            <div class="ps-next-cta">다음 앱 바로 체험 →</div>
           </div>
-          <!-- Login Modal -->
-          <div class="login-modal">
+          <!-- Login modal on top of done panel -->
+          <div class="login-modal" style="border-radius:20px 20px 0 0">
             <div class="modal-handle"></div>
-            <div class="modal-title">반응을 남기려면<br>로그인이 필요해요</div>
-            <div class="modal-desc">Google 계정으로 1초 만에 시작하고<br>반응, 댓글, 저장, 리믹스까지 할 수 있어요.</div>
-            <div class="google-btn">
-              <span style="font-size:16px">G</span>
-              Google로 계속하기
-            </div>
+            <div class="modal-title" style="font-size:17px">반응을 남기려면<br>로그인이 필요해요</div>
+            <div class="modal-desc">Google 계정으로 1초 만에 시작하고<br>반응, 저장, 리믹스까지 할 수 있어요.</div>
+            <div class="google-btn"><span style="font-size:16px">G</span>Google로 계속하기</div>
             <div class="skip-btn">계속 구경만 할게요</div>
           </div>
         </div>
       `
     },
     {
-      title: '로그인 완료 → 복귀',
-      route: '/login → /post/[id]?autoplay=true',
-      desc: 'Google 로그인 완료 후 next 파라미터를 통해 원래 앱 상세 화면으로 복귀. 반응 등록 완료.',
+      title: '로그인 완료 → Play Shell 복귀',
+      route: '/login → /play/[id] (done state)',
+      desc: 'Google 로그인 후 ?next= 경로로 Play Shell done state 복귀. 반응 등록 완료. 다음 앱 CTA 바로 사용 가능.',
       cta: 'Google로 계속하기',
-      next: '원래 앱 상세로 복귀, 반응 등록됨',
+      next: '반응 등록됨 → 다음 앱 바로 체험',
+      darkStatusBar: true,
       annotations: [
-        { strong: '경로 보존', text: '로그인 전 URL이 ?next= 에 저장되어 복귀 보장' },
-        { strong: '신규 유저', text: '첫 로그인이면 /setup (핸들 설정) 거친 후 복귀' },
-        { strong: '반응 등록', text: '로그인 후 바로 반응 DB에 기록됨' },
+        { strong: '경로 보존', text: '로그인 전 /play/[id] URL이 ?next= 에 저장 → 복귀 보장' },
+        { strong: '신규 유저', text: '첫 로그인 → /setup (핸들 설정) 거친 후 /play/[id] 복귀' },
+        { strong: '반응 등록', text: '로그인 복귀 직후 반응 DB에 기록, done panel 반응 버튼 선택 상태 표시' },
       ],
       html: `
-        <div style="height:100%;display:flex;flex-direction:column;background:var(--sheet)">
-          <div class="play-header">
-            <div class="play-back">←</div>
-            <div class="play-title">바로 체험</div>
-            <div class="play-badge">Play Mode</div>
+        <div class="ps-screen">
+          <div class="iframe-mock" style="position:absolute;inset:0;opacity:.28">
+            <div class="iframe-emoji" style="font-size:32px">🤖</div>
+            <div class="iframe-name" style="color:rgba(255,255,255,0.5)">감정 위로 챗봇</div>
           </div>
-          <div class="iframe-mock" style="height:260px">
-            <div class="iframe-running">▶ 실행 중</div>
-            <div class="iframe-emoji">🤖</div>
-            <div class="iframe-name" style="color:white">감정 위로 챗봇</div>
+          <div class="ps-top">
+            <div class="ps-back">←</div>
+            <div class="ps-title">감정 위로 챗봇</div>
+            <div style="width:32px"></div>
           </div>
-          <div style="padding:10px 16px;background:white;border-top:1px solid var(--line)">
-            <div style="display:flex;align-items:center;gap:8px;padding:8px 0;border-bottom:1px solid var(--line);margin-bottom:8px">
-              <div style="width:28px;height:28px;border-radius:50%;background:linear-gradient(135deg,#6366f1,#8b5cf6);display:flex;align-items:center;justify-content:center;color:white;font-size:12px;font-weight:900">U</div>
-              <span style="font-size:13px;font-weight:900">user_abc님 안녕하세요 👋</span>
+          <div class="ps-done-panel">
+            <div style="display:flex;align-items:center;gap:6px;margin-bottom:10px;padding:6px 8px;background:white;border-radius:10px;border:1px solid var(--line)">
+              <div style="width:22px;height:22px;border-radius:50%;background:linear-gradient(135deg,#6366f1,#8b5cf6);display:flex;align-items:center;justify-content:center;color:white;font-size:10px;font-weight:900">U</div>
+              <span style="font-size:11px;font-weight:900;color:var(--ink)">user_abc님 👋</span>
+              <span style="font-size:10px;color:#22c55e;font-weight:700;margin-left:auto">✓ 반응 등록됨</span>
             </div>
-            <div style="font-size:12px;font-weight:900;margin-bottom:8px">반응하기</div>
-            <div style="display:flex;gap:6px">
-              <div class="reaction-btn" style="background:#fef9c3;color:#854d0e">
-                <div class="reaction-emoji">😂</div>
-                <div>재밌어 1</div>
-              </div>
-              <div class="reaction-btn">
-                <div class="reaction-emoji">🧠</div>
-                <div>천재적</div>
-              </div>
-              <div class="reaction-btn">
-                <div class="reaction-emoji">👽</div>
-                <div>기괴함</div>
-              </div>
+            <div class="ps-done-title">체험이 끝났어요</div>
+            <div class="ps-reaction-grid">
+              <div class="ps-reaction-btn active"><div class="remoji">😂</div><div class="rlabel">웃김 1</div></div>
+              <div class="ps-reaction-btn"><div class="remoji">👽</div><div class="rlabel">기괴함</div></div>
+              <div class="ps-reaction-btn"><div class="remoji">🧠</div><div class="rlabel">천재</div></div>
+              <div class="ps-reaction-btn"><div class="remoji">❓</div><div class="rlabel">뭐야</div></div>
             </div>
-          </div>
-          <div style="padding:8px 16px;background:var(--soft);font-size:11px;color:var(--muted);display:flex;align-items:center;gap:6px">
-            ✓ 반응이 등록됐어요
+            <div class="ps-social-row">
+              <div class="ps-social-btn remix">리믹스</div>
+              <div class="ps-social-btn">저장</div>
+              <div class="ps-social-btn">공유</div>
+            </div>
+            <div class="ps-next-cta">다음 앱 바로 체험 →</div>
           </div>
         </div>
       `
@@ -1035,131 +1104,126 @@ const flows = [
   name: '다음 앱 이어보기',
   screens: [
     {
-      title: '첫 앱 체험 완료',
-      route: '/post/[id]?autoplay=true',
-      desc: '앱 체험 중. 하단에 스크롤 힌트가 등장 — 다음 추천 앱이 있다는 신호. 강제 이동 없음.',
-      cta: '↓ 스크롤 (또는 다음 앱 힌트 탭)',
-      next: '다음 앱 카드 노출 (세로 스크롤)',
+      title: 'Play Shell — 체험 중',
+      route: '/play/[id]?autoplay=true',
+      desc: 'Play Shell 전체화면. 앱이 iframe 전체를 차지하고 상단/하단 오버레이만 iframe 밖에 배치. 완료 버튼으로 done state 전환.',
+      cta: '완료 버튼 탭 (또는 다음 앱 ↑)',
+      next: 'done state — 슬라이드업 패널',
+      darkStatusBar: true,
       annotations: [
-        { strong: 'overscroll-contain', text: 'iframe 내부 터치/스크롤을 페이지 스크롤이 가로채지 않음' },
-        { strong: '강제 전환 없음', text: '타이머 자동 넘김 절대 금지. 사용자 스크롤로만 전환' },
-        { strong: '힌트 타이밍', text: '앱 iframe onLoad 3초 후 아래쪽에 살짝 보이기 시작' },
+        { strong: 'iframe safe zone', text: '상단 54px·하단 64px 오버레이 — iframe bounds 밖 absolute. 터치/스크롤 충돌 없음' },
+        { strong: '완료 버튼', text: '완료 탭 → playing에서 done으로 state 전환. 타이머 자동 전환 없음' },
+        { strong: '다음 앱 ↑', text: '완료 누르지 않고 다음 앱 직접 탭 가능 — done panel 없이 즉시 이동' },
       ],
       html: `
-        <div style="height:100%;display:flex;flex-direction:column;background:var(--sheet)">
-          <div class="play-header">
-            <div class="play-back">←</div>
-            <div class="play-title">바로 체험</div>
-            <div class="play-badge">Play Mode</div>
-          </div>
-          <div class="entry-banner" style="background:#1a2a1a">
-            <div class="entry-icon">📸</div>
-            <div style="font-size:11px;color:rgba(255,255,255,0.7)">Instagram에서 왔어요</div>
-          </div>
-          <div class="iframe-mock" style="flex:1;min-height:0">
+        <div class="ps-screen">
+          <div class="iframe-mock" style="position:absolute;inset:0">
             <div class="iframe-running">▶ 체험 중</div>
             <div class="iframe-emoji">🤖</div>
             <div class="iframe-name" style="color:white">감정 위로 챗봇</div>
             <div style="font-size:11px;color:rgba(255,255,255,0.4);z-index:1">@minsu_lab</div>
-          </div>
-          <div style="background:rgba(0,0,0,0.85);padding:10px 0 4px">
-            <div class="scroll-hint" style="color:rgba(255,255,255,0.6)">
-              <div class="scroll-arrow">↓</div>
-              <div>비슷한 앱이 있어요</div>
-            </div>
-          </div>
-          <div style="height:52px;background:linear-gradient(180deg,var(--soft),var(--sheet));display:flex;align-items:center;padding:0 16px;gap:10px">
-            <div style="width:36px;height:36px;border-radius:8px;background:linear-gradient(135deg,#2d1b69,#11a4d4);display:flex;align-items:center;justify-content:center;font-size:16px">🎨</div>
-            <div>
-              <div style="font-size:10px;font-weight:700;color:var(--muted)">다음 앱</div>
-              <div style="font-size:12px;font-weight:900">픽셀 아트 생성기</div>
-            </div>
-          </div>
-        </div>
-      `
-    },
-    {
-      title: '다음 앱 섹션 노출',
-      route: '/post/[id]?autoplay=true (스크롤 후)',
-      desc: '사용자가 아래로 스크롤. 다음 추천 앱 카드 등장. 추천 이유, 창작자, 바로 체험 CTA 포함.',
-      cta: '다음 앱 "바로 체험" 버튼',
-      next: '/post/[nextId]?mode=play&autoplay=true&utm_source=next_app',
-      annotations: [
-        { strong: '추천 근거 표시', text: '"방금 본 앱과 비슷해요" — 태그/창작자/리믹스 기반' },
-        { strong: 'Play 경로', text: 'buildPlayModePath(nextPost.id, {source:"next_app"})' },
-        { strong: 'Fallback', text: '추천 앱 없으면 피드/탐색 CTA로 대체' },
-      ],
-      html: `
-        <div style="height:100%;display:flex;flex-direction:column;background:var(--sheet);overflow:hidden">
-          <div class="play-header">
-            <div class="play-back">←</div>
-            <div class="play-title">바로 체험</div>
-            <div class="play-badge">Play Mode</div>
-          </div>
-          <div class="iframe-mock" style="height:200px;opacity:0.6">
-            <div style="font-size:11px;color:rgba(255,255,255,0.4);z-index:1">▶ 감정 위로 챗봇 (체험 완료)</div>
-          </div>
-          <div class="next-app-section" style="flex:1">
-            <div class="next-app-label">방금 본 앱과 비슷해요</div>
-            <div class="next-app-card">
-              <div class="next-app-thumb">🎨</div>
-              <div class="next-app-info">
-                <div class="next-app-reason">같은 태그 · AI 아트</div>
-                <div class="next-app-title">픽셀 아트 생성기</div>
-                <div class="next-app-author">@sujin_creates</div>
+            <div style="margin-top:10px;padding:8px 14px;background:rgba(255,255,255,0.08);border-radius:10px;width:80%;z-index:1">
+              <div style="font-size:11px;color:rgba(255,255,255,0.5);margin-bottom:4px">오늘 어떤 하루였나요?</div>
+              <div style="height:26px;background:rgba(255,255,255,0.12);border-radius:8px;display:flex;align-items:center;padding:0 10px">
+                <span style="font-size:11px;color:rgba(255,255,255,0.3)">답장하기…</span>
               </div>
             </div>
-            <div style="padding:0 16px 12px">
-              <div class="play-now-btn">다음 앱 바로 체험</div>
-            </div>
-            <div style="padding:0 16px 8px;display:flex;gap:6px">
-              <div style="flex:1;height:36px;border-radius:99px;border:1.5px solid var(--line);display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:700;color:var(--muted)">피드로 이동</div>
-              <div style="flex:1;height:36px;border-radius:99px;border:1.5px solid var(--line);display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:700;color:var(--muted)">탐색하기</div>
-            </div>
-            <div style="margin:4px 16px;padding:8px 10px;background:var(--soft);border-radius:8px;font-size:11px;color:var(--muted)">
-              📊 2+ 앱 세션 추적 중 — next_app_reveal 이벤트 기록됨
+          </div>
+          <div class="ps-top">
+            <div class="ps-back">←</div>
+            <div class="ps-title">감정 위로 챗봇</div>
+            <div style="width:32px"></div>
+          </div>
+          <div class="ps-bottom-bar">
+            <div class="ps-actions">
+              <div class="ps-action"><div class="ps-action-icon">♡</div>좋아요</div>
+              <div class="ps-action muted"><div class="ps-action-icon">✓</div>완료</div>
+              <div class="ps-action"><div class="ps-action-icon">↑</div>다음 앱</div>
             </div>
           </div>
         </div>
       `
     },
     {
-      title: '두 번째 앱 Play Mode',
-      route: '/post/[nextId]?mode=play&autoplay=true&utm_source=next_app',
-      desc: '두 번째 앱이 동일한 Play Mode로 실행됨. 세션 연속성 유지. 세 번째 앱 힌트도 준비.',
-      cta: '↓ 스크롤 (세 번째 앱) 또는 피드/탐색으로 이탈',
-      next: '세 번째 앱 or 피드/탐색 CTA',
+      title: 'Play Shell — done state',
+      route: '/play/[id] (done state)',
+      desc: '완료 버튼 탭 시 슬라이드업 패널 등장. 반응 4종 + 리믹스/저장/공유 + "다음 앱 바로 체험 →" CTA. 피드로 돌아가기 fallback 포함.',
+      cta: '다음 앱 바로 체험 →',
+      next: '/play/[nextId]?autoplay=true&source=next_app',
+      darkStatusBar: true,
       annotations: [
-        { strong: '2nd App Play', text: 'second_app_play 이벤트 → WES/Fame 반영' },
-        { strong: 'utm_source=next_app', text: '두 번째 앱 유입 출처가 next_app으로 기록됨' },
-        { strong: '3회 후', text: '세 번째 이후엔 피드/탐색/팔로우 CTA 강도 높임' },
+        { strong: 'next_app_click', text: '"다음 앱 바로 체험 →" 탭 시 next_app_click 이벤트 → WES/Fame 반영' },
+        { strong: '슬라이드업 패널', text: 'rounded-t-28px sheet 패널 — 페이지 이동 없이 현재 화면 위에 오버레이' },
+        { strong: 'Fallback CTA', text: '추천 앱 없으면 "피드로 돌아가기" 버튼으로 대체' },
       ],
       html: `
-        <div style="height:100%;display:flex;flex-direction:column;background:var(--sheet)">
-          <div class="play-header">
-            <div class="play-back">←</div>
-            <div class="play-title">바로 체험</div>
-            <div class="play-badge">Play Mode</div>
+        <div class="ps-screen">
+          <div class="iframe-mock" style="position:absolute;inset:0;opacity:.22">
+            <div class="iframe-emoji" style="font-size:32px">🤖</div>
+            <div class="iframe-name" style="color:rgba(255,255,255,0.4)">감정 위로 챗봇</div>
           </div>
-          <div style="background:#111;color:rgba(255,255,255,0.6);padding:6px 14px;font-size:10px;font-weight:700;display:flex;align-items:center;gap:6px">
-            <span>→</span> 이어보기 2/3
+          <div class="ps-top">
+            <div class="ps-back">←</div>
+            <div class="ps-title">감정 위로 챗봇</div>
+            <div style="width:32px"></div>
           </div>
-          <div class="iframe-mock" style="flex:1">
+          <div class="ps-done-panel">
+            <div class="ps-done-title">체험이 끝났어요</div>
+            <div class="ps-reaction-grid">
+              <div class="ps-reaction-btn"><div class="remoji">😂</div><div class="rlabel">웃김</div></div>
+              <div class="ps-reaction-btn"><div class="remoji">👽</div><div class="rlabel">기괴함</div></div>
+              <div class="ps-reaction-btn"><div class="remoji">🧠</div><div class="rlabel">천재</div></div>
+              <div class="ps-reaction-btn"><div class="remoji">❓</div><div class="rlabel">뭐야</div></div>
+            </div>
+            <div class="ps-social-row">
+              <div class="ps-social-btn remix">리믹스</div>
+              <div class="ps-social-btn">저장</div>
+              <div class="ps-social-btn">공유</div>
+            </div>
+            <div class="ps-next-cta">다음 앱 바로 체험 →</div>
+            <div style="margin-top:6px;padding:6px 8px;background:var(--soft);border-radius:8px;font-size:10px;color:var(--muted)">
+              📊 next_app_reveal · next_app_click 이벤트 기록됨
+            </div>
+          </div>
+        </div>
+      `
+    },
+    {
+      title: '두 번째 앱 Play Shell',
+      route: '/play/[nextId]?autoplay=true&source=next_app',
+      desc: '두 번째 앱도 동일한 Play Shell. "이어보기 2/n" 표시로 연속 세션 인지. 완료 → done state → 세 번째 앱 또는 피드.',
+      cta: '완료 → done state',
+      next: 'done state or 피드로 돌아가기',
+      darkStatusBar: true,
+      annotations: [
+        { strong: 'source=next_app', text: '두 번째 앱 유입 출처 → WES/Fame에 second_app_play 반영' },
+        { strong: '연속 체험 레이블', text: '"이어보기 2/n" — Play Shell 상단에 세션 연속성 표시' },
+        { strong: '3회 이후', text: 'done panel 하단에 "피드로 돌아가기" CTA 강도 높임 (선택 구현)' },
+      ],
+      html: `
+        <div class="ps-screen">
+          <div class="iframe-mock" style="position:absolute;inset:0;background:linear-gradient(160deg,#0d2040 0%,#1b3a6b 50%,#0a2240 100%)">
             <div class="iframe-running">▶ 실행 중</div>
             <div class="iframe-emoji">🎨</div>
             <div class="iframe-name" style="color:white">픽셀 아트 생성기</div>
             <div style="font-size:11px;color:rgba(255,255,255,0.4);z-index:1">@sujin_creates</div>
-            <div style="display:flex;gap:6px;z-index:1;margin-top:8px">
-              <div style="width:32px;height:32px;background:rgba(255,255,255,0.15);border-radius:6px"></div>
-              <div style="width:32px;height:32px;background:rgba(255,100,100,0.4);border-radius:6px"></div>
-              <div style="width:32px;height:32px;background:rgba(100,255,100,0.4);border-radius:6px"></div>
-              <div style="width:32px;height:32px;background:rgba(100,100,255,0.4);border-radius:6px"></div>
+            <div style="display:flex;gap:5px;z-index:1;margin-top:10px">
+              <div style="width:28px;height:28px;background:rgba(255,255,255,0.15);border-radius:5px"></div>
+              <div style="width:28px;height:28px;background:rgba(255,100,100,0.45);border-radius:5px"></div>
+              <div style="width:28px;height:28px;background:rgba(100,255,130,0.45);border-radius:5px"></div>
+              <div style="width:28px;height:28px;background:rgba(100,160,255,0.45);border-radius:5px"></div>
             </div>
           </div>
-          <div style="background:rgba(0,0,0,0.85);padding:8px 0 4px">
-            <div class="scroll-hint" style="color:rgba(255,255,255,0.5)">
-              <div class="scroll-arrow">↓</div>
-              <div>더 많은 앱이 있어요</div>
+          <div class="ps-top">
+            <div class="ps-back">←</div>
+            <div class="ps-title">픽셀 아트 생성기</div>
+            <div style="font-size:9px;font-weight:900;color:rgba(255,255,255,0.55);background:rgba(255,255,255,0.12);padding:3px 7px;border-radius:99px;white-space:nowrap">이어보기 2/n</div>
+          </div>
+          <div class="ps-bottom-bar">
+            <div class="ps-actions">
+              <div class="ps-action"><div class="ps-action-icon">♡</div>좋아요</div>
+              <div class="ps-action muted"><div class="ps-action-icon">✓</div>완료</div>
+              <div class="ps-action"><div class="ps-action-icon">↑</div>다음 앱</div>
             </div>
           </div>
         </div>
@@ -1181,7 +1245,7 @@ const flows = [
       annotations: [
         { strong: '비로그인 허용', text: '피드 탐색과 앱 체험은 게스트도 가능' },
         { strong: '인라인 확장', text: 'expandedId state — 카드 탭으로 즉시 펼침' },
-        { strong: 'BottomNav', text: '홈/탐색/올리기/알림/MY 5칸 고정 grid' },
+        { strong: 'BottomNav', text: '홈/플레이/올리기/알림/MY 5칸 고정 grid — 검색은 홈 헤더 아이콘으로 이동' },
       ],
       html: `
         <div style="height:100%;display:flex;flex-direction:column;background:var(--sheet)">
@@ -1242,7 +1306,7 @@ const flows = [
           </div>
           <div class="bottom-nav">
             <div class="nav-item active"><div class="nav-icon">🏠</div>홈</div>
-            <div class="nav-item"><div class="nav-icon">🔍</div>탐색</div>
+            <div class="nav-item"><div class="nav-icon">▶</div>플레이</div>
             <div class="nav-item"><div class="nav-icon">＋</div>올리기</div>
             <div class="nav-item"><div class="nav-icon">🔔</div>알림</div>
             <div class="nav-item"><div class="nav-icon">👤</div>MY</div>
@@ -1307,7 +1371,7 @@ const flows = [
           </div>
           <div class="bottom-nav">
             <div class="nav-item active"><div class="nav-icon">🏠</div>홈</div>
-            <div class="nav-item"><div class="nav-icon">🔍</div>탐색</div>
+            <div class="nav-item"><div class="nav-icon">▶</div>플레이</div>
             <div class="nav-item"><div class="nav-icon">＋</div>올리기</div>
             <div class="nav-item"><div class="nav-icon">🔔</div>알림</div>
             <div class="nav-item"><div class="nav-icon">👤</div>MY</div>
@@ -1374,7 +1438,7 @@ const flows = [
           </div>
           <div class="bottom-nav">
             <div class="nav-item"><div class="nav-icon">🏠</div>홈</div>
-            <div class="nav-item"><div class="nav-icon">🔍</div>탐색</div>
+            <div class="nav-item"><div class="nav-icon">▶</div>플레이</div>
             <div class="nav-item"><div class="nav-icon">＋</div>올리기</div>
             <div class="nav-item"><div class="nav-icon">🔔</div>알림</div>
             <div class="nav-item active"><div class="nav-icon">👤</div>MY</div>
@@ -1383,39 +1447,42 @@ const flows = [
       `
     },
     {
-      title: '피드 → Play Mode 진입',
-      route: '/post/[id]?mode=play&autoplay=true&utm_source=feed',
-      desc: '피드 카드의 "바로 체험" 버튼 클릭 → Play Mode. 내부 피드 유입이므로 entry 배너는 "피드에서 왔어요".',
-      cta: '체험 중 → 다음 앱 스크롤',
-      next: 'next-app 섹션 노출 (Flow 2와 동일)',
+      title: '피드 → Play Shell 진입',
+      route: '/play/[id]?autoplay=true&utm_source=feed',
+      desc: '피드 카드의 "바로 체험" 버튼 → Play Shell. 외부 유입과 동일한 전체화면 UX. utm_source=feed로 내부 유입 분류.',
+      cta: '완료 → done state',
+      next: 'done state — Flow 2 done panel과 동일',
+      darkStatusBar: true,
       annotations: [
-        { strong: 'utm_source=feed', text: '내부 피드 유입으로 분류. 외부 SNS와 구분됨' },
-        { strong: '동일한 Play Mode', text: 'external 유입과 동일한 vertical stack 경험 제공' },
-        { strong: 'internal_play_start', text: '분석 이벤트 기록됨 → WES/Fame 반영' },
+        { strong: 'utm_source=feed', text: '내부 피드 유입 분류 — 외부 SNS와 구분. WES/Fame에 기록' },
+        { strong: '동일한 Play Shell', text: '외부 유입과 완전히 동일한 전체화면 UX — 진입 경로 무관하게 같은 경험' },
+        { strong: 'internal_play_start', text: '분석 이벤트 → WES 세션 카운트 + Fame 반영' },
       ],
       html: `
-        <div style="height:100%;display:flex;flex-direction:column;background:var(--sheet)">
-          <div class="play-header">
-            <div class="play-back">←</div>
-            <div class="play-title">바로 체험</div>
-            <div class="play-badge">Play Mode</div>
-          </div>
-          <div class="entry-banner" style="background:#0f1f0f">
-            <div class="entry-icon">🏠</div>
-            <div>
-              <div style="font-size:10px;color:rgba(255,255,255,0.5)">피드에서 왔어요</div>
-              <div>앱이 바로 실행됩니다</div>
-            </div>
-          </div>
-          <div class="iframe-mock" style="flex:1">
+        <div class="ps-screen">
+          <div class="iframe-mock" style="position:absolute;inset:0">
             <div class="iframe-running">▶ 실행 중</div>
             <div class="iframe-emoji">🤖</div>
             <div class="iframe-name" style="color:white">감정 위로 챗봇</div>
+            <div style="font-size:11px;color:rgba(255,255,255,0.4);z-index:1">@minsu_lab</div>
+            <div style="margin-top:10px;padding:8px 14px;background:rgba(255,255,255,0.08);border-radius:10px;width:80%;z-index:1">
+              <div style="font-size:11px;color:rgba(255,255,255,0.5);margin-bottom:4px">오늘 어떤 하루였나요?</div>
+              <div style="height:26px;background:rgba(255,255,255,0.12);border-radius:8px;display:flex;align-items:center;padding:0 10px">
+                <span style="font-size:11px;color:rgba(255,255,255,0.3)">답장하기…</span>
+              </div>
+            </div>
           </div>
-          <div style="background:rgba(0,0,0,0.85);padding:8px 0 4px">
-            <div class="scroll-hint" style="color:rgba(255,255,255,0.5)">
-              <div class="scroll-arrow">↓</div>
-              <div>방금 본 앱과 비슷해요</div>
+          <div class="ps-top">
+            <div class="ps-back">←</div>
+            <div class="ps-title">감정 위로 챗봇</div>
+            <div style="width:32px"></div>
+          </div>
+          <div class="ps-bottom-bar">
+            <div style="font-size:9px;font-weight:700;color:rgba(255,255,255,0.38);text-align:center;padding:4px 0 2px;letter-spacing:.05em">🏠 피드에서 왔어요</div>
+            <div class="ps-actions">
+              <div class="ps-action"><div class="ps-action-icon">♡</div>좋아요</div>
+              <div class="ps-action muted"><div class="ps-action-icon">✓</div>완료</div>
+              <div class="ps-action"><div class="ps-action-icon">↑</div>다음 앱</div>
             </div>
           </div>
         </div>
@@ -1482,7 +1549,7 @@ const flows = [
           </div>
           <div class="bottom-nav">
             <div class="nav-item"><div class="nav-icon">🏠</div>홈</div>
-            <div class="nav-item"><div class="nav-icon">🔍</div>탐색</div>
+            <div class="nav-item"><div class="nav-icon">▶</div>플레이</div>
             <div class="nav-item"><div class="nav-icon">＋</div>올리기</div>
             <div class="nav-item"><div class="nav-icon">🔔</div>알림</div>
             <div class="nav-item"><div class="nav-icon">👤</div>MY</div>
@@ -1594,7 +1661,7 @@ const flows = [
           </div>
           <div class="bottom-nav">
             <div class="nav-item"><div class="nav-icon">🏠</div>홈</div>
-            <div class="nav-item"><div class="nav-icon">🔍</div>탐색</div>
+            <div class="nav-item"><div class="nav-icon">▶</div>플레이</div>
             <div class="nav-item"><div class="nav-icon">＋</div>올리기</div>
             <div class="nav-item"><div class="nav-icon">🔔</div>알림</div>
             <div class="nav-item active"><div class="nav-icon">👤</div>MY</div>
@@ -1668,7 +1735,7 @@ const flows = [
           </div>
           <div class="bottom-nav">
             <div class="nav-item"><div class="nav-icon">🏠</div>홈</div>
-            <div class="nav-item"><div class="nav-icon">🔍</div>탐색</div>
+            <div class="nav-item"><div class="nav-icon">▶</div>플레이</div>
             <div class="nav-item"><div class="nav-icon">＋</div>올리기</div>
             <div class="nav-item active"><div class="nav-icon">🔔</div>알림</div>
             <div class="nav-item"><div class="nav-icon">👤</div>MY</div>
@@ -1756,7 +1823,7 @@ const flows = [
           </div>
           <div class="bottom-nav">
             <div class="nav-item"><div class="nav-icon">🏠</div>홈</div>
-            <div class="nav-item"><div class="nav-icon">🔍</div>탐색</div>
+            <div class="nav-item"><div class="nav-icon">▶</div>플레이</div>
             <div class="nav-item"><div class="nav-icon">＋</div>올리기</div>
             <div class="nav-item"><div class="nav-icon">🔔</div>알림</div>
             <div class="nav-item active"><div class="nav-icon">👤</div>MY</div>
@@ -1798,6 +1865,9 @@ function render() {
   ann.innerHTML = (screen.annotations || []).map(a =>
     `<div class="annotation"><strong>${a.strong}:</strong> ${a.text}</div>`
   ).join('');
+
+  // Dark status bar for Play Shell screens
+  document.querySelector('.status-bar').classList.toggle('dark', !!screen.darkStatusBar);
 
   // Nav buttons
   document.getElementById('btnPrev').disabled = (currentFlow === 0 && currentStep === 0);
